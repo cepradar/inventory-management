@@ -3,33 +3,25 @@ package com.inventory.model;
 import jakarta.persistence.*;
 
 @Entity
-@Table(name = "roles")
-public class Role {
+public class Permisos {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
     @Column(nullable = false, unique = true)
-    private String name;
+    private String name; // Ejemplo: "CREATE_PRODUCT", "DELETE_PRODUCT", etc.
 
     // Constructor vacío requerido por JPA
-    public Role() {
-    }
+    public Permisos() {}
 
-    // Constructor personalizado
-    public Role(Long id, String name) {
-        this.id = id;
+    public Permisos(String name) {
         this.name = name;
     }
 
-    // Getters y setters
+    // Getters y Setters
     public Long getId() {
         return id;
-    }
-
-    public void setId(Long id) {
-        this.id = id;
     }
 
     public String getName() {

@@ -1,7 +1,9 @@
-// React Component: AdminPage
+// AdminPage.js
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import '../styles/AdminPage.css';
+import ProfileMenu from './ProfileMenu'; // Ajusta la ruta si es necesario
+
 
 function AdminPage() {
   const [products, setProducts] = useState([]);
@@ -10,11 +12,19 @@ function AdminPage() {
   const [categoryForm, setCategoryForm] = useState('');
   const [formType, setFormType] = useState(null);
   const [editingProductId, setEditingProductId] = useState(null);
+  const [userName, setUserName] = useState([]);  // Asegúrate de definir userName correctamente aquí
+  const [showProfileMenu, setShowProfileMenu] = useState(false); // Estado para mostrar u ocultar el menú de perfil
+  const [submenuVisible, setSubmenuVisible] = useState(false);
   const navigate = useNavigate();
 
   useEffect(() => {
     fetchProducts();
     fetchCategories();
+    // Aquí podrías obtener el nombre de usuario, por ejemplo, desde el localStorage, si es necesario
+    const storedUserName = localStorage.getItem('userName');
+    if (storedUserName) {
+      setUserName(storedUserName);  // Si tienes el nombre en el localStorage
+    }
   }, []);
 
   const verifyToken = () => {
@@ -68,17 +78,49 @@ function AdminPage() {
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
-    if (formType === 'product') {
-      setProductForm({ ...productForm, [name]: value });
-    } else if (formType === 'category') {
+    if (name === 'categoryName') {
       setCategoryForm(value);
+    } else {
+      setProductForm({ ...productForm, [name]: value });
+    }
+  };
+
+  const handleFormSubmit = (e, type) => {
+    e.preventDefault();
+    if (type === 'product') {
+      editingProductId ? handleUpdateProduct(e) : handleAddProduct(e);
+    } else if (type === 'category') {
+      handleAddCategory(e);
     }
   };
 
   const handleAddProduct = async (e) => {
     e.preventDefault();
+  
+    // Validar que todos los campos requeridos estén completos
+    if (!productForm.name || !productForm.description || !productForm.price || !productForm.quantity || !productForm.categoryId) {
+      alert('Por favor, llena todos los campos.');
+      return;
+    }
+  
+    // Asegúrate de que los valores de price y quantity sean válidos
+    if (isNaN(productForm.price) || isNaN(productForm.quantity)) {
+      alert('El precio y la cantidad deben ser números válidos.');
+      return;
+    }
+  
     const token = verifyToken();
     if (!token) return;
+  
+    // Crear los datos del producto para enviarlos al backend
+    const productData = {
+      name: productForm.name,
+      description: productForm.description,
+      price: parseFloat(productForm.price),
+      quantity: parseInt(productForm.quantity, 10),
+      categoryId: parseInt(productForm.categoryId, 10),
+    };
+    
     try {
       const response = await fetch('http://localhost:8080/products/agregar', {
         method: 'POST',
@@ -86,19 +128,25 @@ function AdminPage() {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${token}`,
         },
-        body: JSON.stringify(productForm),
+        body: JSON.stringify(productData),
       });
+  
       if (response.ok) {
+        // Si la respuesta es correcta, actualizar la lista de productos
         fetchProducts();
         setProductForm({ name: '', description: '', price: '', quantity: '', categoryId: '' });
         setFormType(null);
       } else {
-        console.error('Error al agregar producto:', response.statusText);
+        // Si la respuesta no es ok, mostrar un error detallado
+        const errorData = await response.json();
+        alert(`Error al agregar producto: ${errorData.message || response.statusText}`);
       }
     } catch (error) {
       console.error('Error al agregar producto:', error);
+      alert('Hubo un error al agregar el producto. Intenta nuevamente más tarde.');
     }
   };
+  
 
   const handleAddCategory = async (e) => {
     e.preventDefault();
@@ -178,21 +226,20 @@ function AdminPage() {
     if (!confirmDelete) return;
 
     const response = await fetch(`http://localhost:8080/products/eliminar/${productId}`, {
-        method: 'DELETE',
-        headers: {
-            'Authorization': `Bearer ${token}`,
-        },
+      method: 'DELETE',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+      },
     });
 
     if (response.ok) {
-        fetchProducts(); // Actualizar la lista de productos después de eliminar
+      fetchProducts(); // Actualizar la lista de productos después de eliminar
     } else if (response.status === 404) {
-        alert('Producto no encontrado.');
+      alert('Producto no encontrado.');
     } else {
-        console.error('Error al eliminar el producto:', response.statusText);
+      console.error('Error al eliminar el producto:', response.statusText);
     }
-};
-
+  };
 
   const handleCancelEdit = () => {
     setProductForm({ name: '', description: '', price: '', quantity: '', categoryId: '' });
@@ -200,93 +247,125 @@ function AdminPage() {
     setFormType(null);
   };
 
+  const toggleProfileMenu = () => {
+    setShowProfileMenu(!showProfileMenu);
+  };
+
+  const toggleSubmenu = () => {
+    setSubmenuVisible(!submenuVisible); // Cambiar visibilidad del submenú
+  };
+
   return (
     <div className="admin-container">
       <div className="sidebar">
-        <h3>Admin Dashboard</h3>
+        {/* Foto de perfil y mensaje de bienvenida */}
+        <div className="profile-section">
+          <img
+            src="https://via.placeholder.com/50" // Puedes reemplazar esto con la imagen del perfil
+            alt="Foto de Perfil"
+            className="profile-image"
+          />
+          <div className="profile-text">
+            <h2>Bienvenido, {userName}</h2>
+            <p>Dashboard</p>
+          </div>
+        </div>
+
+        {/* Botones del sidebar */}
         <nav>
           <ul>
-            <li><button onClick={() => fetchProducts()}>Ver Productos</button></li>
-            <li>
-              <button onClick={() => setFormType(formType === 'product' ? null : 'product')}>
-                {formType === 'product' ? 'Cancelar Agregar Producto' : 'Agregar Producto'}
-              </button>
-            </li>
-            <li>
-              <button onClick={() => setFormType(formType === 'category' ? null : 'category')}>
-                {formType === 'category' ? 'Cancelar Crear Categoría' : 'Crear Categoría'}
-              </button>
-            </li>
+            <li><button onClick={toggleSubmenu}>Ver Productos</button></li>
+            {submenuVisible && (
+              <div className="submenu">
+                <li>
+                  <button onClick={() => setFormType(formType === 'product' ? null : 'product')}>
+                    {formType === 'product' ? 'Cancelar Agregar Producto' : 'Agregar Producto'}
+                  </button>
+                </li>
+                <li>
+                  <button onClick={() => setFormType(formType === 'category' ? null : 'category')}>
+                    {formType === 'category' ? 'Cancelar Crear Categoría' : 'Crear Categoría'}
+                  </button>
+                </li>
+              </div>
+            )}
           </ul>
         </nav>
       </div>
 
       <div className="main-content">
         <h2>Gestión de Productos</h2>
-        {formType === 'product' && (
-          <div className="product-form active">
-            <h3>{editingProductId ? 'Editar Producto' : 'Agregar Producto'}</h3>
-            <form onSubmit={editingProductId ? handleUpdateProduct : handleAddProduct}>
-              <input
-                type="text"
-                name="name"
-                placeholder="Nombre del Producto"
-                value={productForm.name || ''}
-                onChange={handleInputChange}
-              />
-              <input
-                type="text"
-                name="description"
-                placeholder="Descripción"
-                value={productForm.description || ''}
-                onChange={handleInputChange}
-              />
-              <input
-                type="number"
-                name="price"
-                placeholder="Precio"
-                value={productForm.price || ''}
-                onChange={handleInputChange}
-              />
-              <input
-                type="number"
-                name="quantity"
-                placeholder="Cantidad"
-                value={productForm.quantity || ''}
-                onChange={handleInputChange}
-                readOnly={!!editingProductId}
-              />
-              <select
-                name="categoryId"
-                value={productForm.categoryId || ''}
-                onChange={handleInputChange}
-              >
-                <option value="">Seleccionar Categoría</option>
-                {categories.map(category => (
-                  <option key={category.id} value={category.id}>{category.name}</option>
-                ))}
-              </select>
-              <button type="submit">{editingProductId ? 'Actualizar Producto' : 'Agregar Producto'}</button>
+
+        {/* Mostrar formulario dependiendo del tipo de formulario */}
+        {formType && (
+          <div className={`${formType}-form active`}>
+            <h3>{formType === 'product' ? (editingProductId ? 'Editar Producto' : 'Agregar Producto') : 'Crear Categoría'}</h3>
+            <form onSubmit={(e) => handleFormSubmit(e, formType)}>
+              {formType === 'product' ? (
+                <>
+                {/* Campos del formulario para productos */}
+                  <input
+                    type="text"
+                    name="name"
+                    placeholder="Nombre del Producto"
+                    value={productForm.name || ''}
+                    onChange={handleInputChange}
+                    autoComplete="off" // Cambia según el contexto si el autocompletado es relevante
+                  />
+                  <input
+                    type="text"
+                    name="description"
+                    placeholder="Descripción"
+                    value={productForm.description || ''}
+                    onChange={handleInputChange}
+                    autoComplete="off" // Cambia según el contexto si el autocompletado es relevante
+                  />
+                  <input
+                    type="number"
+                    name="price"
+                    placeholder="Precio"
+                    value={productForm.price || ''}
+                    onChange={handleInputChange}
+                    autoComplete="off" // Cambia según el contexto si el autocompletado es relevante
+                  />
+                  <input
+                    type="number"
+                    name="quantity"
+                    placeholder="Cantidad"
+                    value={productForm.quantity || ''}
+                    onChange={handleInputChange}
+                    readOnly={!!editingProductId}
+                    autoComplete="off" // Cambia según el contexto si el autocompletado es relevante
+                  />
+                  <select
+                    name="categoryId"
+                    value={productForm.categoryId || ''}
+                    onChange={handleInputChange}
+                    autoComplete="off" // Cambia según el contexto si el autocompletado es relevante
+                  >
+                    <option value="">Seleccionar Categoría</option>
+                    {categories.map(category => (
+                      <option key={category.id} value={category.id}>{category.name}</option>
+                    ))}
+                  </select>
+                </>
+              ) : (
+                <input
+                  type="text"
+                  name="categoryName"
+                  placeholder="Nombre de la Categoría"
+                  value={categoryForm || ''}
+                  onChange={handleInputChange}
+                  autoComplete="off" // Cambia según el contexto si el autocompletado es relevante
+                />
+              )}
+              <button type="submit">
+                {formType === 'product' ? (editingProductId ? 'Actualizar Producto' : 'Agregar Producto') : 'Crear Categoría'}
+              </button>
             </form>
-            {editingProductId && (
+            {formType === 'product' && editingProductId && (
               <button onClick={handleCancelEdit} className="cancel-button">Cancelar Edición</button>
             )}
-          </div>
-        )}
-
-        {formType === 'category' && (
-          <div className="category-form active">
-            <h3>Crear Categoría</h3>
-            <form onSubmit={handleAddCategory}>
-              <input
-                type="text"
-                name="categoryName"
-                placeholder="Nombre de la Categoría"
-                value={categoryForm || ''}
-                onChange={handleInputChange}
-              />
-              <button type="submit">Crear Categoría</button>
-            </form>
           </div>
         )}
 

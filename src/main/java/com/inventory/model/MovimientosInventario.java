@@ -4,7 +4,7 @@ import jakarta.persistence.*;
 import java.time.LocalDateTime;
 
 @Entity
-public class InventoryMovement {
+public class MovimientosInventario {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -15,11 +15,11 @@ public class InventoryMovement {
 
     @ManyToOne
     @JoinColumn(name = "product_id", nullable = false)
-    private Product product;
+    private Productos product;
 
-    public InventoryMovement() {}
+    public MovimientosInventario() {}
 
-    public InventoryMovement(String type, int quantity, Product product) {
+    public MovimientosInventario(String type, int quantity, Productos product) {
         this.type = type;
         this.quantity = quantity;
         this.date = LocalDateTime.now();

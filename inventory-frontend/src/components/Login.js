@@ -13,6 +13,7 @@ function Login() {
     setIsLoading(true);
     if (!username || !password) {
       setMessage('Por favor, completa todos los campos.');
+      setIsLoading(false); // Restablecer aquí
       return;
     }
     try {
@@ -40,8 +41,8 @@ function Login() {
         } else if (role === 'USER') {
           navigate('/user');
         } else {
-          setMessage('Rol no reconocido: ' + role);
-        }
+          navigate('/unknown-role'); // Página para manejar roles desconocidos
+        }        
       } else {
         const errorData = await response.json();
         setMessage(errorData.message || 'Credenciales incorrectas');
@@ -49,15 +50,17 @@ function Login() {
     } catch (error) {
       console.error('Error:', error);
       setMessage('Error en el servidor');
-    }finally {
+    } finally {
       setIsLoading(false);
+      setUsername('');
+      setPassword('');
     }
   };
 
   return (
-    <div>
+    <div className="login-container">
       <h1>Login</h1>
-      <form onSubmit={handleLogin}>
+      <form onSubmit={handleLogin} className="login-form">
         <input
           type="text"
           placeholder="Usuario"
@@ -70,9 +73,11 @@ function Login() {
           value={password}
           onChange={(e) => setPassword(e.target.value)}
         />
-        <button type="submit">Iniciar Sesión</button>
+        <button type="submit" disabled={isLoading}>
+          {isLoading ? 'Cargando...' : 'Iniciar Sesión'}
+        </button>
       </form>
-      <p>{message}</p>
+      {message && <p className="login-message">{message}</p>}
     </div>
   );
 }

@@ -1,13 +1,12 @@
 package com.inventory.repository;
 
-import com.inventory.model.Category;
+import com.inventory.model.TiposDeEvento;
 
 import java.util.Optional;
-
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
 @Repository
-public interface CategoryRepository extends JpaRepository<Category, Long> {
-    Optional<Category> findByName(String name);
+public interface TiposDeEventoRepository extends JpaRepository<TiposDeEvento, Long> {
+    Optional<TiposDeEvento> findByNombre(String nombre);
 }

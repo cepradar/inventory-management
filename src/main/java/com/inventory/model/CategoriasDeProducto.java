@@ -1,29 +1,19 @@
 package com.inventory.model;
 
 import jakarta.persistence.*;
-import java.util.List;
 
 @Entity
-public class Category {
+public class CategoriasDeProducto {
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
-
+    @Column(nullable = false, unique = true)
     private String name;
     private String description;
 
-    @OneToMany(mappedBy = "category")
-    private List<Product> products;
+    public CategoriasDeProducto() {}
 
-    public Category() {}
-
-    public Category(String name, String description) {
+    public CategoriasDeProducto(String name, String description) {
         this.name = name;
         this.description = description;
-    }
-
-    public Long getId() {
-        return id;
     }
 
     public String getName() {
@@ -41,14 +31,4 @@ public class Category {
     public void setDescription(String description) {
         this.description = description;
     }
-
-    public List<Product> getProducts() {
-        return products;
-    }
-
-    public void setProducts(List<Product> products) {
-        this.products = products;
-    }
-
-    
 }

@@ -1,9 +1,7 @@
 package com.inventory.config;
 
-import com.inventory.service.UserService;
+import com.inventory.service.UsuarioService;
 import com.inventory.util.JwtFilter;
-
-import jakarta.servlet.Filter;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -26,7 +24,7 @@ public class SecurityConfig {
     }
 
     @Bean
-    public DaoAuthenticationProvider authenticationProvider(UserService userService) {
+    public DaoAuthenticationProvider authenticationProvider(UsuarioService userService) {
         DaoAuthenticationProvider authProvider = new DaoAuthenticationProvider();
         authProvider.setUserDetailsService(userService);
         authProvider.setPasswordEncoder(securityService.passwordEncoder());

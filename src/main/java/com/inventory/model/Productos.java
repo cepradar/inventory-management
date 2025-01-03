@@ -1,10 +1,12 @@
 package com.inventory.model;
 
 import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.inventory.dto.ProductosDto;
+
 import jakarta.persistence.*;
 
 @Entity
-public class Product {
+public class Productos {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -18,11 +20,11 @@ public class Product {
     @JsonBackReference // Evita la serialización recursiva
     @ManyToOne(fetch = FetchType.EAGER)  // Puedes cambiarlo a LAZY si es necesario
     @JoinColumn(name = "category_id", nullable = false)
-    private Category category;
+    private CategoriasDeProducto category;
 
-    public Product() {}
+    public Productos() {}
 
-    public Product(String name, double price, int quantity, Category category) {
+    public Productos(String name, double price, int quantity, CategoriasDeProducto category) {
         this.name = name;
         this.price = price;
         this.quantity = quantity;
@@ -31,6 +33,10 @@ public class Product {
 
     public Long getId() {
         return id;
+    }
+
+    public void setId(Long id) {
+        this.id = id;
     }
 
     public String getName() {
@@ -57,11 +63,11 @@ public class Product {
         this.quantity = quantity;
     }
 
-    public Category getCategory() {
+    public CategoriasDeProducto getCategory() {
         return category;
     }
 
-    public void setCategory(Category category) {
+    public void setCategory(CategoriasDeProducto category) {
         this.category = category;
     }
 
@@ -71,11 +77,6 @@ public class Product {
     
     public void setDescription(String description) {
         this.description = description;
-    }
-
-    public void setId(Long id2) {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'setId'");
     }
 
 }

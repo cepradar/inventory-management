@@ -1,11 +1,11 @@
 package com.inventory.controller;
 
-import com.inventory.dto.ProductDto;
-import com.inventory.dto.ProductUpdateDto;
-import com.inventory.model.Category;
-import com.inventory.model.Product;
-import com.inventory.service.CategoryService;
-import com.inventory.service.ProductService;
+import com.inventory.dto.CategoriasDeProductoDto;
+import com.inventory.dto.ProductosDto;
+import com.inventory.model.CategoriasDeProducto;
+import com.inventory.model.Productos;
+import com.inventory.service.CategoriaDeProductosService;
+import com.inventory.service.ProductoService;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -20,21 +20,26 @@ import java.util.Optional;
 public class ProductController {
 
     @Autowired
-    private ProductService productService;
+    private ProductoService productService;
 
     @Autowired
-    private CategoryService categoryService;
+    private CategoriaDeProductosService categoryService;
 
     @PostMapping("/agregar")
-    public ResponseEntity<Product> agregarProducto(@RequestBody Product product) {
-        if (product.getCategory() == null || product.getCategory().getId() == null) {
+    public ResponseEntity<Productos> agregarProducto(@RequestBody ProductosDto productDto) {
+        // Verificar si el ID de la categoría está presente
+        if (productDto.getCategoryId() == null) {
             throw new RuntimeException("Se debe seleccionar una categoría");
         }
-        Category categoria = categoryService.obtenerCategoriaPorId(product.getCategory().getId())
+
+        // Buscar la categoría por el ID
+        CategoriasDeProductoDto categoria = categoryService.obtenerCategoriaPorNombre(productDto.getName())
                 .orElseThrow(() -> new RuntimeException("Categoría no encontrada"));
 
-        product.setCategory(categoria);
-        Product nuevoProducto = productService.agregarProducto(product);
+        // Guardar el nuevo producto
+        Productos nuevoProducto = productService.agregarProducto(productDto);
+
+        // Retornar el nuevo producto con un código de estado HTTP 201 (CREADO)
         return ResponseEntity.status(HttpStatus.CREATED).body(nuevoProducto);
     }
 
@@ -45,61 +50,58 @@ public class ProductController {
      * Category nuevaCategoria = categoryService.crearCategoria(nombre);
      * return ResponseEntity.status(HttpStatus.CREATED).body(nuevaCategoria);
      * }
+     * 
+     * 
+     * @GetMapping("/categorias")
+     * public ResponseEntity<List<CategoriasDeProducto>> obtenerCategorias() {
+     * List<CategoriasDeProducto> categorias = categoryService.obtenerCategorias();
+     * return ResponseEntity.ok(categorias);
+     * }
      */
 
-    @GetMapping("/categorias")
-    public ResponseEntity<List<Category>> obtenerCategorias() {
-        List<Category> categorias = categoryService.obtenerCategorias();
-        return ResponseEntity.ok(categorias);
-    }
-
     @GetMapping("/listar")
-    public ResponseEntity<List<ProductDto>> obtenerProductos() {
-        List<ProductDto> productosDTO = productService.obtenerProductos();
+    public ResponseEntity<List<ProductosDto>> obtenerProductos() {
+        List<ProductosDto> productosDTO = productService.obtenerProductos();
         return ResponseEntity.ok(productosDTO);
     }
 
     @PutMapping("/actualizar/{id}")
-    public ResponseEntity<ProductDto> actualizarProducto(
+    public ResponseEntity<ProductosDto> actualizarProducto(
             @PathVariable Long id,
-            @RequestBody ProductUpdateDto productUpdateDto) {
+            @RequestBody ProductosDto productosDto) {
         // Verificar si el producto existe
-        Optional<Product> productoExistente = productService.obtenerProductoPorId(id);
+        Optional<ProductosDto> productoExistente = productService.obtenerProductoPorId(productosDto.getId());
         if (productoExistente.isEmpty()) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null); // Producto no encontrado
         }
 
         // Actualizar los campos del producto
-        Product producto = productoExistente.get();
-        producto.setName(productUpdateDto.getName());
-        producto.setDescription(productUpdateDto.getDescription());
-        producto.setPrice(productUpdateDto.getPrice());
-        producto.setQuantity(productUpdateDto.getQuantity());
+        Productos producto = ProductosDto.toProducto(productosDto);
 
         // Manejar la categoría
-        if (productUpdateDto.getCategoryId() != null) {
-            Category categoria = categoryService.obtenerCategoriaPorId(productUpdateDto.getCategoryId())
+        if (productosDto.getName() != null) {
+            CategoriasDeProductoDto categoria = categoryService.obtenerCategoriaPorNombre(productosDto.getCategoryId())
                     .orElseThrow(() -> new RuntimeException("Categoría no encontrada"));
-            producto.setCategory(categoria);
+            producto.setCategory(CategoriasDeProductoDto.toCategoria(categoria));
         }
 
-        Product productoActualizado = productService.actualizarProducto(producto);
+        Productos productoActualizado = productService.actualizarProducto(productosDto);
 
         // Convertir el producto actualizado a DTO antes de devolverlo
-        ProductDto productoDto = new ProductDto(productoActualizado);
+        ProductosDto productoDto = new ProductosDto(productoActualizado);
         return ResponseEntity.ok(productoDto);
     }
 
     @DeleteMapping("/eliminar/{id}")
-    public ResponseEntity<Void> eliminarProducto(@PathVariable Long id) {
+    public ResponseEntity<Void> eliminarProducto(@PathVariable Long id, ProductosDto productosDto) {
         // Verificar si el producto existe
-        Optional<Product> productoExistente = productService.obtenerProductoPorId(id);
+        Optional<ProductosDto> productoExistente = productService.obtenerProductoPorId(productosDto.getId());
         if (productoExistente.isEmpty()) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).build(); // Producto no encontrado
         }
 
         // Eliminar el producto
-        productService.eliminarProducto(id);
+        productService.eliminarProducto(productosDto);
         return ResponseEntity.status(HttpStatus.NO_CONTENT).build();
     }
 
