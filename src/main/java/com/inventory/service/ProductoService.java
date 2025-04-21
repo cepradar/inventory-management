@@ -1,8 +1,11 @@
 package com.inventory.service;
 
-import com.inventory.dto.ProductosDto;
-import com.inventory.model.Productos;
-import com.inventory.repository.ProductosRepository;
+import com.inventory.dto.ProductDto;
+import com.inventory.model.CategoryProduct;
+import com.inventory.model.Product;
+import com.inventory.repository.CategoryProductRepository;
+import com.inventory.repository.ProductRepository;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -14,43 +17,59 @@ import java.util.stream.Collectors;
 public class ProductoService {
 
     @Autowired
-    private ProductosRepository productRepository;
+    private CategoryProductRepository categoryRepository;
 
-    public Productos agregarProducto(ProductosDto productDto) {
-        // Convertimos el ProductDto en Producto
-        Productos producto = ProductosDto.toProducto(productDto);
+    @Autowired
+    private ProductRepository productRepository;
 
-        // Guardamos el Producto en la base de datos
+    public Product agregarProducto(ProductDto productDto) {
+        if (productDto.getId() != null) {
+            Optional<Product> productoExiste = productRepository.findById(productDto.getId());
+            if (productoExiste.isPresent()) {
+                throw new RuntimeException("El producto ya existe");
+            }
+        }
+        
+    
+        // 🔥 Validar que la categoría existe
+        Long categoryId = productDto.getCategoryId();
+        CategoryProduct categoria = categoryRepository.findById(categoryId)
+            .orElseThrow(() -> new RuntimeException("La categoría con id " + categoryId + " no existe"));
+    
+        // 🔧 Convertir DTO a entidad y setear categoría real
+        Product producto = ProductDto.toProducto(productDto);
+        producto.setCategory(categoria); // Esta categoría sí existe en la BD
+    
         return productRepository.save(producto);
     }
 
-     public List<ProductosDto> obtenerProductos() {
+     public List<ProductDto> obtenerProductos() {
         // Obtenemos todos los productos desde la base de datos
-        List<Productos> productos = productRepository.findAll();
+        List<Product> productos = productRepository.findAll();
     
         // Convertimos la lista de productos a una lista de ProductDto
         return productos.stream()
-                        .map(ProductosDto::new) // Convierte cada producto en ProductDTO
+                        .map(ProductDto::new) // Convierte cada producto en ProductDTO
                         .collect(Collectors.toList());
     }
 
-    public Optional<ProductosDto> obtenerProductoPorId(Long id) {
+    public Optional<ProductDto> obtenerProductoPorId(Long id) {
         // Buscamos el producto por ID
-        Optional<Productos> producto = productRepository.findById(id);
+        Optional<Product> producto = productRepository.findById(id);
         
         // Si se encuentra, lo convertimos a ProductDto y lo devolvemos
-        return producto.map(ProductosDto::new);
+        return producto.map(ProductDto::new);
     }
 
-    public Productos actualizarProducto(ProductosDto productDto) {
+    public Product actualizarProducto(ProductDto productDto) {
         // Convertimos el ProductDto a Producto
-        Productos producto = ProductosDto.toProducto(productDto);
+        Product producto = ProductDto.toProducto(productDto);
 
         // Guardamos el Producto actualizado
         return productRepository.save(producto);
     }
 
-    public void eliminarProducto(ProductosDto productDto) {
+    public void eliminarProducto(ProductDto productDto) {
         // Obtenemos el id del ProductDto
         Long id = productDto.getId();
         

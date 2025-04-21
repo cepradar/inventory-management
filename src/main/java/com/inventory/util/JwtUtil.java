@@ -34,16 +34,19 @@ public class JwtUtil {
         }
         // Usar una clave generada desde secretKey
         Key key = Keys.hmacShaKeyFor(secretKey.getBytes());
-    
+
+        String token = Jwts.builder()
+        .setSubject(username)
+        .claim("role", role) // Agregar el rol como claim
+        .setIssuedAt(new Date())
+        .setExpiration(new Date(System.currentTimeMillis() + expirationTime))
+        .signWith(key, SignatureAlgorithm.HS512)
+        .compact();
+        System.out.println("Token generado: " + token);
         // Generar el token con username y role
-        return Jwts.builder()
-            .setSubject(username)
-            .claim("role", role) // Agregar el rol como claim
-            .setIssuedAt(new Date())
-            .setExpiration(new Date(System.currentTimeMillis() + expirationTime))
-            .signWith(key, SignatureAlgorithm.HS512)
-            .compact();
-    }
+        return token;
+            
+        }
 
     private Claims extractClaims(String token) {
         try {

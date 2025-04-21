@@ -1,6 +1,5 @@
 package com.inventory.controller;
 
-import com.inventory.model.MovimientosInventario;
 import com.inventory.service.MovimientosInventarioService;
 
 import org.springframework.beans.factory.annotation.Autowired;

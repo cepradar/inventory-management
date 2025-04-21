@@ -3,7 +3,7 @@ package com.inventory.model;
 import jakarta.persistence.*;
 
 @Entity
-public class PermisosDeUsuario {
+public class Permisos_Usuario {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -11,7 +11,7 @@ public class PermisosDeUsuario {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", nullable = false)
-    private Usuarios user;
+    private User user;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "permission_id", nullable = false)
@@ -21,9 +21,9 @@ public class PermisosDeUsuario {
     private boolean isActive;  // Nuevo campo para indicar si el permiso está activo o inactivo
 
     // Constructor vacío requerido por JPA
-    public PermisosDeUsuario() {}
+    public Permisos_Usuario() {}
 
-    public PermisosDeUsuario(Usuarios user, Permisos permission) {
+    public Permisos_Usuario(User user, Permisos permission) {
         this.user = user;
         this.permission = permission;
         this.isActive = false;
@@ -34,11 +34,11 @@ public class PermisosDeUsuario {
         return id;
     }
 
-    public Usuarios getUser() {
+    public User getUser() {
         return user;
     }
 
-    public void setUser(Usuarios user) {
+    public void setUser(User user) {
         this.user = user;
     }
 

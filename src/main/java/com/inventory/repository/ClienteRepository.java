@@ -1,10 +1,11 @@
 package com.inventory.repository;
 
-import com.inventory.model.Rol;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
+import com.inventory.model.Cliente;
+
 @Repository
-public interface RolesRepository extends JpaRepository<Rol, String> {
-    Rol findByName(String name);
+public interface ClienteRepository extends JpaRepository<Cliente, Long> {
+    Cliente findByNit(Long nitBuscado); 
 }

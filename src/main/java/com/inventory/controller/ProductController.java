@@ -1,9 +1,8 @@
 package com.inventory.controller;
 
-import com.inventory.dto.CategoriasDeProductoDto;
-import com.inventory.dto.ProductosDto;
-import com.inventory.model.CategoriasDeProducto;
-import com.inventory.model.Productos;
+import com.inventory.dto.CategoryProductDto;
+import com.inventory.dto.ProductDto;
+import com.inventory.model.Product;
 import com.inventory.service.CategoriaDeProductosService;
 import com.inventory.service.ProductoService;
 
@@ -26,21 +25,18 @@ public class ProductController {
     private CategoriaDeProductosService categoryService;
 
     @PostMapping("/agregar")
-    public ResponseEntity<Productos> agregarProducto(@RequestBody ProductosDto productDto) {
-        // Verificar si el ID de la categoría está presente
-        if (productDto.getCategoryId() == null) {
-            throw new RuntimeException("Se debe seleccionar una categoría");
+    public ResponseEntity<ProductDto> agregarProducto(@RequestBody ProductDto productDto) {
+        try {
+            // Convertimos el DTO a la entidad correspondiente para la creación
+            Product productoCreado = productService.agregarProducto(productDto);
+            // Convertimos la entidad creada de nuevo a un DTO para la respuesta
+            ProductDto productoRespuesta = new ProductDto(productoCreado);
+            return new ResponseEntity<>(productoRespuesta, HttpStatus.CREATED);
+            // CategoriasDeProducto createdCategory = CategoriasDeProductoDto.toCategoria(category);
+            // return new ResponseEntity<>(createdCategory, HttpStatus.CREATED);
+        } catch (RuntimeException e) {
+            return new ResponseEntity<>(null, HttpStatus.BAD_REQUEST); // En caso de error, como categoría duplicada
         }
-
-        // Buscar la categoría por el ID
-        CategoriasDeProductoDto categoria = categoryService.obtenerCategoriaPorNombre(productDto.getName())
-                .orElseThrow(() -> new RuntimeException("Categoría no encontrada"));
-
-        // Guardar el nuevo producto
-        Productos nuevoProducto = productService.agregarProducto(productDto);
-
-        // Retornar el nuevo producto con un código de estado HTTP 201 (CREADO)
-        return ResponseEntity.status(HttpStatus.CREATED).body(nuevoProducto);
     }
 
     /*
@@ -60,42 +56,42 @@ public class ProductController {
      */
 
     @GetMapping("/listar")
-    public ResponseEntity<List<ProductosDto>> obtenerProductos() {
-        List<ProductosDto> productosDTO = productService.obtenerProductos();
+    public ResponseEntity<List<ProductDto>> obtenerProductos() {
+        List<ProductDto> productosDTO = productService.obtenerProductos();
         return ResponseEntity.ok(productosDTO);
     }
 
     @PutMapping("/actualizar/{id}")
-    public ResponseEntity<ProductosDto> actualizarProducto(
+    public ResponseEntity<ProductDto> actualizarProducto(
             @PathVariable Long id,
-            @RequestBody ProductosDto productosDto) {
+            @RequestBody ProductDto productosDto) {
         // Verificar si el producto existe
-        Optional<ProductosDto> productoExistente = productService.obtenerProductoPorId(productosDto.getId());
+        Optional<ProductDto> productoExistente = productService.obtenerProductoPorId(productosDto.getId());
         if (productoExistente.isEmpty()) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null); // Producto no encontrado
         }
 
         // Actualizar los campos del producto
-        Productos producto = ProductosDto.toProducto(productosDto);
+        Product producto = ProductDto.toProducto(productosDto);
 
         // Manejar la categoría
         if (productosDto.getName() != null) {
-            CategoriasDeProductoDto categoria = categoryService.obtenerCategoriaPorNombre(productosDto.getCategoryId())
+            CategoryProductDto categoria = categoryService.obtenerCategoriaPorNombre(productosDto.getName())
                     .orElseThrow(() -> new RuntimeException("Categoría no encontrada"));
-            producto.setCategory(CategoriasDeProductoDto.toCategoria(categoria));
+            producto.setCategory(CategoryProductDto.toCategoria(categoria));
         }
 
-        Productos productoActualizado = productService.actualizarProducto(productosDto);
+        Product productoActualizado = productService.actualizarProducto(productosDto);
 
         // Convertir el producto actualizado a DTO antes de devolverlo
-        ProductosDto productoDto = new ProductosDto(productoActualizado);
+        ProductDto productoDto = new ProductDto(productoActualizado);
         return ResponseEntity.ok(productoDto);
     }
 
     @DeleteMapping("/eliminar/{id}")
-    public ResponseEntity<Void> eliminarProducto(@PathVariable Long id, ProductosDto productosDto) {
+    public ResponseEntity<Void> eliminarProducto(@PathVariable Long id, ProductDto productosDto) {
         // Verificar si el producto existe
-        Optional<ProductosDto> productoExistente = productService.obtenerProductoPorId(productosDto.getId());
+        Optional<ProductDto> productoExistente = productService.obtenerProductoPorId(productosDto.getId());
         if (productoExistente.isEmpty()) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).build(); // Producto no encontrado
         }

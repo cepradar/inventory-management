@@ -14,7 +14,7 @@ import jakarta.persistence.Table;
 
 @Entity
 @Table(name = "eventos_producto")
-public class EventosDeProducto {
+public class EventoProducto {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -22,23 +22,30 @@ public class EventosDeProducto {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "usuario_username", nullable = false)
-    private Usuarios usuario;
+    private User usuario;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "tipoDeEvento_id", nullable = false)
-    private TiposDeEvento tipoDeEvento;
+    private TipoEvento tipoDeEvento;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "producto_id", nullable = false)
-    private Productos producto;
+    private Product producto;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "cliente_nit")
+    private Cliente cliente;
 
     @Column(nullable = false)
     private LocalDateTime fechaEvento;
+    
+    private Integer cantidad;
+    private String observacion;
 
     // Constructor vacío requerido por JPA
-    public EventosDeProducto() {}
+    public EventoProducto() {}
 
-    public EventosDeProducto(Long id, Usuarios usuario, TiposDeEvento tipoDeEvento, Productos producto,
+    public EventoProducto(Long id, User usuario, TipoEvento tipoDeEvento, Product producto,
             LocalDateTime fechaEvento) {
         this.id = id;
         this.usuario = usuario;
@@ -47,30 +54,44 @@ public class EventosDeProducto {
         this.fechaEvento = fechaEvento;
     }
 
+    public Long getId() {
+        return id;
+    }
 
+    public void setId(Long id) {
+        this.id = id;
+    }
 
-    public Usuarios getUsuario() {
+    public User getUsuario() {
         return usuario;
     }
 
-    public void setUsuario(Usuarios usuario) {
+    public void setUsuario(User usuario) {
         this.usuario = usuario;
     }
 
-    public TiposDeEvento getTipoDeEvento() {
+    public TipoEvento getTipoDeEvento() {
         return tipoDeEvento;
     }
 
-    public void setTipoDeEvento(TiposDeEvento tipoDeEvento) {
+    public void setTipoDeEvento(TipoEvento tipoDeEvento) {
         this.tipoDeEvento = tipoDeEvento;
     }
 
-    public Productos getProducto() {
+    public Product getProducto() {
         return producto;
     }
 
-    public void setProducto(Productos producto) {
+    public void setProducto(Product producto) {
         this.producto = producto;
+    }
+
+    public Cliente getCliente() {
+        return cliente;
+    }
+
+    public void setCliente(Cliente cliente) {
+        this.cliente = cliente;
     }
 
     public LocalDateTime getFechaEvento() {
@@ -80,4 +101,23 @@ public class EventosDeProducto {
     public void setFechaEvento(LocalDateTime fechaEvento) {
         this.fechaEvento = fechaEvento;
     }
+
+    public Integer getCantidad() {
+        return cantidad;
+    }
+
+    public void setCantidad(Integer cantidad) {
+        this.cantidad = cantidad;
+    }
+
+    public String getObservacion() {
+        return observacion;
+    }
+
+    public void setObservacion(String observacion) {
+        this.observacion = observacion;
+    }
+
+    
+    
 }

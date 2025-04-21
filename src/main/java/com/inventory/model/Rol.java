@@ -4,18 +4,18 @@ import jakarta.persistence.*;
 
 @Entity
 @Table(name = "roles")
-public class Roles {
+public class Rol {
 
     @Id
     @Column(nullable = false, unique = true)
     private String name;
 
     // Constructor vacío requerido por JPA
-    public Roles() {
+    public Rol() {
     }
 
     // Constructor personalizado
-    public Roles(String name) {
+    public Rol(String name) {
         this.name = name;
     }
 

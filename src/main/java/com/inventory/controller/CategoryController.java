@@ -1,7 +1,7 @@
 package com.inventory.controller;
 
-import com.inventory.dto.CategoriasDeProductoDto;
-import com.inventory.model.CategoriasDeProducto;
+import com.inventory.dto.CategoryProductDto;
+import com.inventory.model.CategoryProduct;
 import com.inventory.service.CategoriaDeProductosService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -13,26 +13,26 @@ import java.util.Optional;
 
 @RestController
 @RequestMapping("/api/categories")
-public class CategoriaController {
+public class CategoryController {
 
     @Autowired
     private CategoriaDeProductosService categoryService;
 
     // Obtener todas las categorías
-    @GetMapping
-    public ResponseEntity<List<CategoriasDeProductoDto>> obtenerCategorias() {
+    @GetMapping("/listarCategoria")
+    public ResponseEntity<List<CategoryProductDto>> obtenerCategorias() {
         return ResponseEntity.ok(categoryService.obtenerCategorias());
     }
 
     // Crear una nueva categoría
-    @PostMapping
-    public ResponseEntity<CategoriasDeProductoDto> crearCategoria(@RequestBody CategoriasDeProductoDto category) {
+    @PostMapping("/crearCategoria")
+    public ResponseEntity<CategoryProductDto> crearCategoria(@RequestBody CategoryProductDto category) {
         try {
              // Convertimos el DTO a la entidad correspondiente para la creación
-             CategoriasDeProducto categoriaCreada = categoryService.crearCategoria(category);
+             CategoryProduct categoriaCreada = categoryService.crearCategoria(category);
  
              // Convertimos la entidad creada de nuevo a un DTO para la respuesta
-             CategoriasDeProductoDto categoriaRespuesta = new CategoriasDeProductoDto(categoriaCreada);
+             CategoryProductDto categoriaRespuesta = new CategoryProductDto(categoriaCreada);
              return new ResponseEntity<>(categoriaRespuesta, HttpStatus.CREATED);
            // CategoriasDeProducto createdCategory = CategoriasDeProductoDto.toCategoria(category);
            // return new ResponseEntity<>(createdCategory, HttpStatus.CREATED);
@@ -42,21 +42,21 @@ public class CategoriaController {
     }
 
      // Editar una categoría
-     @PutMapping("/{id}")
-     public ResponseEntity<CategoriasDeProductoDto> editarCategoria(@PathVariable String id, @RequestBody CategoriasDeProductoDto categoriaDto) {
+     @PutMapping("/editarCategoria/{id}")
+     public ResponseEntity<CategoryProductDto> editarCategoria(@PathVariable String id, @RequestBody CategoryProductDto categoriaDto) {
          // Buscar la categoría por ID
-         Optional<CategoriasDeProductoDto> categoriaExistente = categoryService.obtenerCategoriaPorNombre(categoriaDto.getName());
+         Optional<CategoryProductDto> categoriaExistente = categoryService.obtenerCategoriaPorNombre(categoriaDto.getName());
  
          if (categoriaExistente.isPresent()) {
-             CategoriasDeProductoDto categoriaActualizada = categoriaExistente.get();
+             CategoryProductDto categoriaActualizada = categoriaExistente.get();
              categoriaActualizada.setName(categoriaDto.getName());
              categoriaActualizada.setDescription(categoriaDto.getDescription());
  
              // Actualizamos la categoría
-             CategoriasDeProducto categoriaGuardada = categoryService.actualizarCategoria(categoriaActualizada);
+             CategoryProduct categoriaGuardada = categoryService.actualizarCategoria(categoriaActualizada);
  
              // Convertimos la categoría actualizada a DTO antes de enviarla
-             CategoriasDeProductoDto categoriaRespuesta = new CategoriasDeProductoDto(categoriaGuardada);
+             CategoryProductDto categoriaRespuesta = new CategoryProductDto(categoriaGuardada);
              return new ResponseEntity<>(categoriaRespuesta, HttpStatus.OK);
          }
  
@@ -65,8 +65,8 @@ public class CategoriaController {
      }
 
     // Eliminar una categoría
-    @DeleteMapping("/{id}")
-    public ResponseEntity<Void> eliminarCategoria(@PathVariable String id, @RequestBody CategoriasDeProductoDto categoriaDto) {
+    @DeleteMapping("/eliminarCategoria/{id}")
+    public ResponseEntity<Void> eliminarCategoria(@PathVariable String id, @RequestBody CategoryProductDto categoriaDto) {
         try {
             // Llamamos al servicio para eliminar la categoría
             categoryService.eliminarCategoria(categoriaDto);

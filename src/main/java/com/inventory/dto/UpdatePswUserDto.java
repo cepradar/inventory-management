@@ -1,41 +1,47 @@
 package com.inventory.dto;
 
-import com.inventory.model.Roles;
-import com.inventory.model.Usuarios;
+import com.inventory.model.Rol;
+import com.inventory.model.User;
 
 import ch.qos.logback.core.subst.Token;
 
-public class ActualizarPSWUsuarioDto {
+public class UpdatePswUserDto {
     
     private String username;
     private String newPassword;    
-    private Roles role;
+    private Rol role;
     private byte[] profilePicture;
     private Token token;
 
     // Constructor
-    
 
-    // Getters y Setters
-    public String getUsername() {
-        return username;
-    }
-
-    public ActualizarPSWUsuarioDto(Usuarios usuarios) {
+    public UpdatePswUserDto(User usuarios) {
         this.username = usuarios.getUsername();
         this.newPassword = usuarios.getPassword();
         this.role = usuarios.getRole();
         this.profilePicture = usuarios.getProfilePicture();
     }
 
-    public ActualizarPSWUsuarioDto() {
+
+    public UpdatePswUserDto(String username, String newPassword, Rol rol) {
+        this.username = username;
+        this.newPassword = newPassword;
+        this.role = rol;
     }
 
-    public Roles getRole() {
+    public UpdatePswUserDto() {
+    }
+
+    // Getters y Setters
+    public String getUsername() {
+        return username;
+    }
+
+    public Rol getRole() {
         return role;
     }
 
-    public void setRole(Roles role) {
+    public void setRole(Rol role) {
         this.role = role;
     }
 
@@ -45,11 +51,6 @@ public class ActualizarPSWUsuarioDto {
 
     public void setProfilePicture(byte[] profilePicture) {
         this.profilePicture = profilePicture;
-    }
-
-    public ActualizarPSWUsuarioDto(String username, String newPassword, byte[] profilePicture, String role) {
-        this.username = username;
-        this.newPassword = newPassword;
     }
 
     public void setUsername(String username) {
@@ -64,12 +65,12 @@ public class ActualizarPSWUsuarioDto {
         this.newPassword = newPassword;
     }
 
-    public static Usuarios toUsuarios(ActualizarPSWUsuarioDto usuariosDto) {
-        Usuarios usuarios = new Usuarios();
+    public static User toUsuarios(UpdatePswUserDto usuariosDto) {
+        User usuarios = new User();
         usuarios.setUsername(usuariosDto.getUsername());
         usuarios.setPassword(usuariosDto.getNewPassword());
-        usuarios.setRole(usuarios.getRole());
-        usuarios.setProfilePicture(usuarios.getProfilePicture());
+        usuarios.setRole(usuariosDto.getRole());
+        usuarios.setProfilePicture(usuariosDto.getProfilePicture());
 
         return usuarios;
     }

@@ -11,7 +11,7 @@ import java.util.Collections;
 
 @Entity
 @Table(name = "usuarios")
-public class Usuarios implements UserDetails {
+public class User implements UserDetails {
     @Id
     @Column(nullable = false, unique = true)
     private String username;
@@ -21,17 +21,17 @@ public class Usuarios implements UserDetails {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "roles_name", nullable = false)
-    private Roles role;
+    private Rol role;
 
     @Lob
     @Column(nullable = true) // El campo es opcional
     private byte[] profilePicture;
 
     // Constructor
-    public Usuarios() {
+    public User() {
     }
 
-    public Usuarios(String username, String password, Roles role, byte[] profilePicture) {
+    public User(String username, String password, Rol role, byte[] profilePicture) {
         this.username = username;
         this.password = password;
         this.role = role;
@@ -58,11 +58,11 @@ public class Usuarios implements UserDetails {
         this.password = password;
     }
 
-    public Roles getRole() {
+    public Rol getRole() {
         return role;
     }
 
-    public void setRole(Roles role) {
+    public void setRole(Rol role) {
         this.role = role;
     }
 

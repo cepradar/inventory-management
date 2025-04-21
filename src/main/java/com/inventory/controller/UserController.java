@@ -1,11 +1,11 @@
 package com.inventory.controller;
 
-import com.inventory.dto.ActualizarPSWUsuarioDto;
+import com.inventory.dto.UpdatePswUserDto;
+import com.inventory.dto.UserDto;
 import com.inventory.dto.LoginRequest;
 import com.inventory.dto.RegisterRequest;
-import com.inventory.dto.UsuariosDto;
-import com.inventory.model.Roles;
-import com.inventory.model.Usuarios;
+import com.inventory.model.Rol;
+import com.inventory.model.User;
 import com.inventory.service.UsuarioService;
 import com.inventory.util.JwtUtil;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -38,9 +38,9 @@ public class UserController {
     private JwtUtil jwtUtil;
 
     @PostMapping("/register")
-    public Usuarios registerUser(@RequestBody RegisterRequest registerRequest) {
+    public User registerUser(@RequestBody RegisterRequest registerRequest) {
         //Convertir la solicitud a Dto
-        ActualizarPSWUsuarioDto actualizarPSWUsuarioDto = new ActualizarPSWUsuarioDto(registerRequest.getUsername(), registerRequest.getPassword(), null, registerRequest.getRole());
+        UpdatePswUserDto actualizarPSWUsuarioDto = new UpdatePswUserDto(registerRequest.getUsername(), registerRequest.getPassword(), registerRequest.getRole());
         // Registrar un nuevo usuario con nombre de usuario, contraseña y rol
         return userService.registerUser(actualizarPSWUsuarioDto);
     }
@@ -51,7 +51,7 @@ public class UserController {
         logger.info("Cuerpo de la solicitud de login: username={}, password={}",
                 loginRequest.getUsername(), loginRequest.getPassword());
 
-        Optional<UsuariosDto> user = null;
+        Optional<UserDto> user = null;
         try {
             // Autenticación del usuario
             authenticationManager.authenticate(
@@ -106,8 +106,9 @@ public class UserController {
     public Map<String, String> changePassword(@RequestBody Map<String, String> request) {
         String username = jwtUtil.extractUsername(request.get("token"));
         String newPassword = request.get("newPassword");
+        Rol rol = new Rol(jwtUtil.extractRoles(request.get("token")));
 
-        ActualizarPSWUsuarioDto actualizarPSWUsuarioDto = new ActualizarPSWUsuarioDto(username, newPassword, null, newPassword);
+        UpdatePswUserDto actualizarPSWUsuarioDto = new UpdatePswUserDto(username, newPassword, rol);
 
         boolean isUpdated = userService.updatePassword(actualizarPSWUsuarioDto);
 

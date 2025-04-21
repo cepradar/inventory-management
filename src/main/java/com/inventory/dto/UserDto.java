@@ -1,19 +1,19 @@
 package com.inventory.dto;
 
-import com.inventory.model.Roles;
-import com.inventory.model.Usuarios;
+import com.inventory.model.Rol;
+import com.inventory.model.User;
 
 import ch.qos.logback.core.subst.Token;
 
-public class UsuariosDto {
+public class UserDto {
 
     private String username;
-    private Roles role;
+    private Rol role;
     private byte[] profilePicture;
     private Token token;
 
     // Constructor
-    public UsuariosDto(Usuarios usuario) {
+    public UserDto(User usuario) {
         this.username = usuario.getUsername();
         this.role = usuario.getRole(); // Asumiendo que el Usuario tiene un Rol
         this.profilePicture = usuario.getProfilePicture();
@@ -28,11 +28,11 @@ public class UsuariosDto {
         this.username = username;
     }
 
-    public Roles getRole() {
+    public Rol getRole() {
         return role;
     }
 
-    public void setRole(Roles role) {
+    public void setRole(Rol role) {
         this.role = role;
     }
 
@@ -51,8 +51,8 @@ public class UsuariosDto {
                 + "'}";
     }
 
-    public static Usuarios toUsuarios(UsuariosDto usuariosDto) {
-        Usuarios usuarios = new Usuarios();
+    public static User toUsuarios(UserDto usuariosDto) {
+        User usuarios = new User();
         usuarios.setUsername(usuariosDto.getUsername());
         usuarios.setProfilePicture(usuariosDto.getProfilePicture());
         usuarios.setRole(usuariosDto.getRole());

@@ -1,12 +1,11 @@
 package com.inventory.model;
 
 import com.fasterxml.jackson.annotation.JsonBackReference;
-import com.inventory.dto.ProductosDto;
 
 import jakarta.persistence.*;
 
 @Entity
-public class Productos {
+public class Product {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -20,11 +19,11 @@ public class Productos {
     @JsonBackReference // Evita la serialización recursiva
     @ManyToOne(fetch = FetchType.EAGER)  // Puedes cambiarlo a LAZY si es necesario
     @JoinColumn(name = "category_id", nullable = false)
-    private CategoriasDeProducto category;
+    private CategoryProduct category;
 
-    public Productos() {}
+    public Product() {}
 
-    public Productos(String name, double price, int quantity, CategoriasDeProducto category) {
+    public Product(String name, double price, int quantity, CategoryProduct category) {
         this.name = name;
         this.price = price;
         this.quantity = quantity;
@@ -63,11 +62,11 @@ public class Productos {
         this.quantity = quantity;
     }
 
-    public CategoriasDeProducto getCategory() {
+    public CategoryProduct getCategory() {
         return category;
     }
 
-    public void setCategory(CategoriasDeProducto category) {
+    public void setCategory(CategoryProduct category) {
         this.category = category;
     }
 

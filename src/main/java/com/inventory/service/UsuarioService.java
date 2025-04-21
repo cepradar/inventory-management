@@ -1,11 +1,11 @@
 package com.inventory.service;
 
-import com.inventory.dto.ActualizarPSWUsuarioDto;
-import com.inventory.dto.UsuariosDto;
-import com.inventory.model.Roles;
-import com.inventory.model.Usuarios;
+import com.inventory.dto.UpdatePswUserDto;
+import com.inventory.dto.UserDto;
+import com.inventory.model.Rol;
+import com.inventory.model.User;
 import com.inventory.repository.RolesRepository;
-import com.inventory.repository.UsuariosRepository;
+import com.inventory.repository.UserRepository;
 
 import java.util.List;
 import java.util.Optional;
@@ -24,7 +24,7 @@ import java.io.IOException;
 @Service
 public class UsuarioService implements UserDetailsService {
     @Autowired
-    private UsuariosRepository userRepository;
+    private UserRepository userRepository;
 
     @Autowired
     private PasswordEncoder passwordEncoder;
@@ -32,57 +32,55 @@ public class UsuarioService implements UserDetailsService {
     @Autowired
     private RolesRepository roleRepository;
 
-//PENDIENTE REGISTERUSER POR ERROR
-
-    public Usuarios registerUser(ActualizarPSWUsuarioDto actualizarUsuariosDto) {
+    public User registerUser(UpdatePswUserDto actualizarUsuariosDto) {
         // Verificamos si el rol existe por nombre (usando el DTO para obtener el
         // nombre)
-        Roles role = roleRepository.findByName(actualizarUsuariosDto.getRole().getName());
+        Rol role = roleRepository.findByName(actualizarUsuariosDto.getRole().getName());
         if (role == null) {
             throw new IllegalArgumentException("El rol especificado no existe");
         }
 
-        Usuarios user = ActualizarPSWUsuarioDto.toUsuarios(actualizarUsuariosDto);
+        User user = UpdatePswUserDto.toUsuarios(actualizarUsuariosDto);
         // Aquí debes cifrar la contraseña antes de guardar el usuario
         user.setPassword(passwordEncoder.encode(actualizarUsuariosDto.getNewPassword())); // Aquí se cifra la contraseña
 
         return userRepository.save(user);
     }
 
-    public Optional<UsuariosDto> findByUsername(String username) {
+    public Optional<UserDto> findByUsername(String username) {
         // Buscamos el usuario por USERNAME
-        Optional<Usuarios> usuarios = userRepository.findByUsername(username);
+        Optional<User> usuarios = userRepository.findByUsername(username);
 
         // Si se encuentra, lo convertimos a UsuarioDto y lo devolvemos
-        return usuarios.map(UsuariosDto::new);
+        return usuarios.map(UserDto::new);
     }
 
-    public List<UsuariosDto> obtenerUsuarios() {
+    public List<UserDto> obtenerUsuarios() {
         // Obtenemos todos los categorias desde la base de datos
-        List<Usuarios> usuarios = userRepository.findAll();
+        List<User> usuarios = userRepository.findAll();
 
         // Convertimos la lista de usuarios a una lista de UsuariosDto
         return usuarios.stream()
-                .map(UsuariosDto::new) // Convierte cada usuario en UsuariosDto
+                .map(UserDto::new) // Convierte cada usuario en UsuariosDto
                 .collect(Collectors.toList());
     }
 
     @Override
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
-        Usuarios user = userRepository.findByUsername(username)
+        User user = userRepository.findByUsername(username)
                 .orElseThrow(() -> new UsernameNotFoundException("Usuario no encontrado con el nombre: " + username));
         return user; // User implementa UserDetails
     }
 
     public Boolean updateProfilePicture(String username, MultipartFile file) throws IOException {
-        Optional<Usuarios> userOptional = userRepository.findByUsername(username);
+        Optional<User> userOptional = userRepository.findByUsername(username);
         if (userOptional.isPresent()) {
-            Usuarios user = userOptional.get();
+            User user = userOptional.get();
             // Lógica para guardar la imagen de perfil, por ejemplo, en BD
             byte[] filePath = file.getBytes();
             user.setProfilePicture(filePath);
             userRepository.save(user);
-            new UsuariosDto(user);
+            new UserDto(user);
             return true;
         }
         throw new IllegalArgumentException("Usuario no encontrado");
@@ -97,17 +95,17 @@ public class UsuarioService implements UserDetailsService {
     }
          */
 
-    public Boolean updatePassword(ActualizarPSWUsuarioDto usuarioDto) {
+    public Boolean updatePassword(UpdatePswUserDto usuarioDto) {
         // Buscar el usuario por username
-        Optional<Usuarios> userOptional = userRepository.findByUsername(usuarioDto.getUsername());
+        Optional<User> userOptional = userRepository.findByUsername(usuarioDto.getUsername());
         if (userOptional.isPresent()) {
-            Usuarios user = userOptional.get();
+            User user = userOptional.get();
             if (isValidPassword(usuarioDto.getNewPassword())) {
                 // Ciframos la nueva contraseña
                 user.setPassword(passwordEncoder.encode(usuarioDto.getNewPassword()));
                 // Guardamos el usuario con la nueva contraseña
                 userRepository.save(user);
-                new UsuariosDto(user);
+                new UserDto(user);
                 return true; // Devolvemos el DTO del usuario actualizado
             }
             throw new IllegalArgumentException("La nueva contraseña no cumple con los requisitos de seguridad");

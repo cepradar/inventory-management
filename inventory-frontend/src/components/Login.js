@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import styles from '../styles/Login.module.css';
 
 function Login() {
   const [username, setUsername] = useState('');
@@ -13,7 +14,7 @@ function Login() {
     setIsLoading(true);
     if (!username || !password) {
       setMessage('Por favor, completa todos los campos.');
-      setIsLoading(false); // Restablecer aquí
+      setIsLoading(false);
       return;
     }
     try {
@@ -28,21 +29,19 @@ function Login() {
       if (response.ok) {
         const data = await response.json();
         setMessage(`Bienvenido, ${username}`);
+        setMessage(''); // Limpiar mensaje anterior antes de la redirección
 
-        // Guardar el token en localStorage
         localStorage.setItem('authToken', data.token);
 
-        // Obtener el rol directamente de la respuesta
         const role = data.role;
 
-        // Redirigir según el rol
         if (role === 'ADMIN') {
           navigate('/admin');
         } else if (role === 'USER') {
           navigate('/user');
         } else {
-          navigate('/unknown-role'); // Página para manejar roles desconocidos
-        }        
+          navigate('/unknown-role');
+        }
       } else {
         const errorData = await response.json();
         setMessage(errorData.message || 'Credenciales incorrectas');
@@ -58,9 +57,9 @@ function Login() {
   };
 
   return (
-    <div className="login-container">
-      <h1>Login</h1>
-      <form onSubmit={handleLogin} className="login-form">
+    <div className={styles['login-container']}>
+      <h1>Iniciar Sesión</h1>
+      <form onSubmit={handleLogin} className={styles['login-form']}>
         <input
           type="text"
           placeholder="Usuario"
@@ -77,7 +76,11 @@ function Login() {
           {isLoading ? 'Cargando...' : 'Iniciar Sesión'}
         </button>
       </form>
-      {message && <p className="login-message">{message}</p>}
+      {message && (
+        <p className={`${styles['login-message']} ${message.startsWith('Bienvenido') ? styles.success : styles.error}`}>
+          {message}
+        </p>
+      )}
     </div>
   );
 }
