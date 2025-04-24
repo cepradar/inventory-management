@@ -28,7 +28,7 @@ public class EventoProductoService {
         return repository.save(evento);
     }
 
-    public List<EventoProducto> obtenerEventosPorProducto(Long productoId) {
+    public List<EventoProducto> obtenerEventosPorProducto(String productoId) {
         return repository.findByProducto_Id(productoId);
     }
 
@@ -64,8 +64,8 @@ public EventoProducto registrarDesdeDTO(EventoProductoDto dto) {
     evento.setProducto(producto);
     evento.setFechaEvento(dto.getFechaEvento() != null ? dto.getFechaEvento() : LocalDateTime.now());
 
-    if (dto.getClienteNit() != null) {
-        Cliente cliente = clienteRepository.findById(dto.getClienteNit())
+    if (dto.getClienteId() != null) {
+        Cliente cliente = clienteRepository.findById(dto.getClienteId())
             .orElseThrow(() -> new RuntimeException("Cliente no encontrado"));
         evento.setCliente(cliente);
     }

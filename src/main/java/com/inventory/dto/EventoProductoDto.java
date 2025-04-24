@@ -5,9 +5,9 @@ import java.time.LocalDateTime;
 public class EventoProductoDto {
 
     private String usuarioUsername;
-    private Long tipoDeEventoId;
-    private Long productoId;
-    private Long clienteNit; // Opcional
+    private String tipoDeEventoId;
+    private String productoId;
+    private String clienteId; // Opcional
     private LocalDateTime fechaEvento;
     private Integer cantidad;
     private String observacion;
@@ -22,28 +22,28 @@ public class EventoProductoDto {
         this.usuarioUsername = usuarioUsername;
     }
 
-    public Long getTipoDeEventoId() {
+    public String getTipoDeEventoId() {
         return tipoDeEventoId;
     }
 
-    public void setTipoDeEventoId(Long tipoDeEventoId) {
+    public void setTipoDeEventoId(String tipoDeEventoId) {
         this.tipoDeEventoId = tipoDeEventoId;
     }
 
-    public Long getProductoId() {
+    public String getProductoId() {
         return productoId;
     }
 
-    public void setProductoId(Long productoId) {
+    public void setProductoId(String productoId) {
         this.productoId = productoId;
     }
 
-    public Long getClienteNit() {
-        return clienteNit;
+    public String getClienteId() {
+        return clienteId;
     }
 
-    public void setClienteNit(Long clienteNit) {
-        this.clienteNit = clienteNit;
+    public void setClienteId(String clienteId) {
+        this.clienteId = clienteId;
     }
 
     public LocalDateTime getFechaEvento() {

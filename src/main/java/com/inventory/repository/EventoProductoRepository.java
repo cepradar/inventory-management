@@ -9,8 +9,8 @@ import org.springframework.stereotype.Repository;
 import com.inventory.model.EventoProducto;
 
 @Repository
-public interface EventoProductoRepository extends JpaRepository<EventoProducto, Long> {
-    List<EventoProducto> findByProducto_Id(Long productoId);
-    List<EventoProducto> findByCliente_Nit(Long nit);
+public interface EventoProductoRepository extends JpaRepository<EventoProducto, String> {
+    List<EventoProducto> findByProducto_Id(String productoId);
+    List<EventoProducto> findByCliente_Id(String id);
     List<EventoProducto> findByFechaEventoBetween(LocalDateTime desde, LocalDateTime hasta);
 }

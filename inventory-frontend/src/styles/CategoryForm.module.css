@@ -1,0 +1,47 @@
+.category-form {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    padding: 20px;
+    background-color: #f9f9f9;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+  }
+  
+  .category-form h3 {
+    margin-top: 0;
+    margin-bottom: 15px;
+  }
+  
+  .category-form input[type="text"] {
+    padding: 10px;
+    border: 1px solid #ccc;
+    border-radius: 3px;
+  }
+  
+  .category-form button[type="submit"] {
+    padding: 10px 15px;
+    background-color: #28a745;
+    color: white;
+    border: none;
+    border-radius: 3px;
+    cursor: pointer;
+  }
+  
+  .category-form button[type="submit"]:hover {
+    background-color: #1e7e34;
+  }
+  
+  .category-form .cancel-button {
+    padding: 8px 12px;
+    background-color: #dc3545;
+    color: white;
+    border: none;
+    border-radius: 3px;
+    cursor: pointer;
+    margin-top: 10px;
+  }
+  
+  .category-form .cancel-button:hover {
+    background-color: #c82333;
+  }

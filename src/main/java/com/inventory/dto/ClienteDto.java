@@ -1,71 +1,42 @@
 package com.inventory.dto;
 
 import com.inventory.model.Cliente;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 
+@Data
+@NoArgsConstructor
 public class ClienteDto {
 
-    private Long nit;
+    private String id;
+    private String nit;
+    private String categoryId;
+    private String tipoDocumentoId;
     private String nombre;
     private String telefono;
     private String direccion;
+    private Boolean activo;
 
-    // Constructor
-    public ClienteDto(Long nit, String nombre, String telefono, String direccion) {
-        this.nit = nit;
-        this.nombre = nombre;
-        this.telefono = telefono;
-        this.direccion = direccion;
+    // Constructor desde entidad Cliente
+    public ClienteDto(Cliente cliente) {
+        this.id = cliente.getId();
+        this.nit = cliente.getNit();
+        this.categoryId = cliente.getCategory().getId();
+        this.tipoDocumentoId = cliente.getTipoId().getId();
+        this.nombre = cliente.getNombre();
+        this.telefono = cliente.getTelefono();
+        this.direccion = cliente.getDireccion();
+        this.activo = cliente.getActivo();
     }
 
-
-    
-    // Getters y Setters
-    public Long getNit() {
-        return nit;
-    }
-
-    public void setNit(Long nit) {
-        this.nit = nit;
-    }
-
-    public String getNombre() {
-        return nombre;
-    }
-
-    public void setNombre(String nombre) {
-        this.nombre = nombre;
-    }
-
-    public String getTelefono() {
-        return telefono;
-    }
-
-    public void setTelefono(String telefono) {
-        this.telefono = telefono;
-    }
-
-    public String getDireccion() {
-        return direccion;
-    }
-
-    public void setDireccion(String direccion) {
-        this.direccion = direccion;
-    }
-
-    @Override
-    public String toString() {
-        return "ClienteDto [nit=" + nit + ", nombre=" + nombre + ", telefono=" + telefono + ", direccion=" + direccion + "]";
-    }
-
-    public static Cliente toCliente(Cliente clienteDto){
+    // Método utilitario para convertir DTO a entidad
+    public static Cliente toCliente(ClienteDto clienteDto) {
         Cliente cliente = new Cliente();
         cliente.setDireccion(clienteDto.getDireccion());
         cliente.setNit(clienteDto.getNit());
         cliente.setNombre(clienteDto.getNombre());
         cliente.setTelefono(clienteDto.getTelefono());
-
+        cliente.setActivo(clienteDto.getActivo());
         return cliente;
     }
-    
-
 }

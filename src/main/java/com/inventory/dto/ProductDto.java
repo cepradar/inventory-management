@@ -7,22 +7,22 @@ import com.inventory.model.Product;
 
 public class ProductDto {
 
-    private Long id;
+    private String id;
     private String name;
     private String description;
     private double price;
     private int quantity;
-    private Long categoryId; // Cambiado para recibir categoryId
+    private String categoryId; // Cambiado para recibir categoryId
 
     // Constructor con @JsonCreator para la deserialización
     @JsonCreator
     public ProductDto(
-            @JsonProperty("id") Long id,
+            @JsonProperty("id") String id,
             @JsonProperty("name") String name,
             @JsonProperty("description") String description,
             @JsonProperty("price") double price,
             @JsonProperty("quantity") int quantity,
-            @JsonProperty("categoryId") Long categoryId) {
+            @JsonProperty("categoryId") String categoryId) {
         this.id = id;
         this.name = name;
         this.description = description;
@@ -45,11 +45,11 @@ public class ProductDto {
     
 
     // Getters y setters
-    public Long getId() {
+    public String getId() {
         return id;
     }
 
-    public void setId(Long id) {
+    public void setId(String id) {
         this.id = id;
     }
 
@@ -85,11 +85,11 @@ public class ProductDto {
         this.quantity = quantity;
     }
 
-    public Long getCategoryId() {
+    public String getCategoryId() {
         return categoryId;
     }
 
-    public void setCategoryId(Long category) {
+    public void setCategoryId(String category) {
         this.categoryId = category;
     }
 

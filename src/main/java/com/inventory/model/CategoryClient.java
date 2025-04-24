@@ -3,21 +3,20 @@ package com.inventory.model;
 import jakarta.persistence.*;
 
 @Entity
-public class CategoryProduct {
-    
+public class CategoryClient {
     @Id
     @Column(nullable = false, unique = true)
     private String id;
 
     private String name;
-    private String description;
+    private Boolean activo;
 
-    public CategoryProduct() {}
+    public CategoryClient() {}
 
-    public CategoryProduct(String name, String description, String id) {
+    public CategoryClient(String id, String name, Boolean activo) {
         this.id = id;
         this.name = name;
-        this.description = description;
+        this.activo = activo;
     }
 
     public String getId() {
@@ -34,13 +33,5 @@ public class CategoryProduct {
 
     public void setName(String name) {
         this.name = name;
-    }
-
-    public String getDescription() {
-        return description;
-    }
-
-    public void setDescription(String description) {
-        this.description = description;
     }
 }

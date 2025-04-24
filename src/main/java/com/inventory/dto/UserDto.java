@@ -4,7 +4,13 @@ import com.inventory.model.Rol;
 import com.inventory.model.User;
 
 import ch.qos.logback.core.subst.Token;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 
+//genera getters and setter
+@Data
+//genera constructor sin argumentos
+@NoArgsConstructor
 public class UserDto {
 
     private String username;
@@ -19,30 +25,6 @@ public class UserDto {
         this.profilePicture = usuario.getProfilePicture();
     }
 
-    // Getters y Setters
-    public String getUsername() {
-        return username;
-    }
-
-    public void setUsername(String username) {
-        this.username = username;
-    }
-
-    public Rol getRole() {
-        return role;
-    }
-
-    public void setRole(Rol role) {
-        this.role = role;
-    }
-
-    public byte[] getProfilePicture() {
-        return profilePicture;
-    }
-
-    public void setProfilePicture(byte[] profilePicture) {
-        this.profilePicture = profilePicture;
-    }
 
     // Método toString (opcional)
     @Override
@@ -59,15 +41,5 @@ public class UserDto {
 
         return usuarios;
     }
-
-    public Token getToken() {
-        return token;
-    }
-
-    public void setToken(Token token) {
-        this.token = token;
-    }
-
-    
 
 }

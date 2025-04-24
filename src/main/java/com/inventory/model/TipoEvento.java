@@ -3,12 +3,12 @@ package com.inventory.model;
 import jakarta.persistence.*;
 
 @Entity
-@Table(name = "tipo_eventos")
+@Table(name = "tipo_evento")
 public class TipoEvento {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    @Column(nullable = false, unique = true)
+    private String id;
 
     @Column(nullable = false, unique = true)
     private String nombre;
@@ -16,15 +16,16 @@ public class TipoEvento {
     // Constructor vacío requerido por JPA
     public TipoEvento() {}
 
-    public TipoEvento(String nombre) {
+    public TipoEvento(String id, String nombre) {
+        this.id = id;
         this.nombre = nombre;
     }
 
-    public Long getId() {
+    public String getId() {
         return id;
     }
 
-    public void setId(Long id) {
+    public void setId(String id) {
         this.id = id;
     }
 

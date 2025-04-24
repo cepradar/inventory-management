@@ -29,10 +29,9 @@ public class ProductoService {
                 throw new RuntimeException("El producto ya existe");
             }
         }
-        
     
         // 🔥 Validar que la categoría existe
-        Long categoryId = productDto.getCategoryId();
+        String categoryId = productDto.getCategoryId();
         CategoryProduct categoria = categoryRepository.findById(categoryId)
             .orElseThrow(() -> new RuntimeException("La categoría con id " + categoryId + " no existe"));
     
@@ -53,7 +52,7 @@ public class ProductoService {
                         .collect(Collectors.toList());
     }
 
-    public Optional<ProductDto> obtenerProductoPorId(Long id) {
+    public Optional<ProductDto> obtenerProductoPorId(String id) {
         // Buscamos el producto por ID
         Optional<Product> producto = productRepository.findById(id);
         
@@ -71,7 +70,7 @@ public class ProductoService {
 
     public void eliminarProducto(ProductDto productDto) {
         // Obtenemos el id del ProductDto
-        Long id = productDto.getId();
+        String id = productDto.getId();
         
         // Eliminamos el Producto por id
         productRepository.deleteById(id);

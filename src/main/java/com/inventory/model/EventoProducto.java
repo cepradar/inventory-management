@@ -17,8 +17,8 @@ import jakarta.persistence.Table;
 public class EventoProducto {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    @Column(nullable = false, unique = true)
+    private String id;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "usuario_username", nullable = false)
@@ -33,7 +33,7 @@ public class EventoProducto {
     private Product producto;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "cliente_nit")
+    @JoinColumn(name = "cliente_id")
     private Cliente cliente;
 
     @Column(nullable = false)
@@ -45,7 +45,7 @@ public class EventoProducto {
     // Constructor vacío requerido por JPA
     public EventoProducto() {}
 
-    public EventoProducto(Long id, User usuario, TipoEvento tipoDeEvento, Product producto,
+    public EventoProducto(String id, User usuario, TipoEvento tipoDeEvento, Product producto,
             LocalDateTime fechaEvento) {
         this.id = id;
         this.usuario = usuario;
@@ -54,11 +54,11 @@ public class EventoProducto {
         this.fechaEvento = fechaEvento;
     }
 
-    public Long getId() {
+    public String getId() {
         return id;
     }
 
-    public void setId(Long id) {
+    public void setId(String id) {
         this.id = id;
     }
 

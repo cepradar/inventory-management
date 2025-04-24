@@ -7,9 +7,10 @@ function AdminPage() {
   const [products, setProducts] = useState([]);
   const [categories, setCategories] = useState([]);
   const [productForm, setProductForm] = useState({ name: '', description: '', price: '', quantity: '', categoryId: '' });
-  const [categoryForm, setCategoryForm] = useState({name:'', description: ''});
+  const [categoryForm, setCategoryForm] = useState({ name: '', description: '' });
   const [formType, setFormType] = useState(null);
   const [editingProductId, setEditingProductId] = useState(null);
+  const [editingCategoryId, setEditingCategoryId] = useState(null);
   const [userName, setUserName] = useState(''); // Inicializa como string vacío
   const [showProfileMenu, setShowProfileMenu] = useState(false);
   const [submenuVisible, setSubmenuVisible] = useState(false);
@@ -79,6 +80,16 @@ function AdminPage() {
       setCategoryForm({ ...categoryForm, name: value });
     } else if (name === 'categoryDescription') {
       setCategoryForm({ ...categoryForm, description: value });
+    } else if (name === 'name') {
+      setProductForm({ ...productForm, name: value });
+    } else if (name === 'description') {
+      setProductForm({ ...productForm, description: value });
+    } else if (name === 'price') {
+      setProductForm({ ...productForm, price: value });
+    } else if (name === 'quantity') {
+      setProductForm({ ...productForm, quantity: value });
+    } else if (name === 'categoryId') {
+      setProductForm({ ...productForm, categoryId: value });
     }
   };
 
@@ -87,7 +98,7 @@ function AdminPage() {
     if (type === 'product') {
       editingProductId ? handleUpdateProduct(e) : handleAddProduct(e);
     } else if (type === 'category') {
-      handleAddCategory(e);
+      editingCategoryId ? handleUpdateCategory(e) : handleAddCategory(e);
     }
   };
 
@@ -150,7 +161,7 @@ function AdminPage() {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${token}`,
         },
-        body: JSON.stringify({ name: categoryForm.name , description: categoryForm.description}),
+        body: JSON.stringify({ name: categoryForm.name, description: categoryForm.description }),
       });
       if (response.ok) {
         fetchCategories();
@@ -175,6 +186,16 @@ function AdminPage() {
     });
     setEditingProductId(productId);
     setFormType('product');
+  };
+
+  const handleEditCategory = (categoryId) => {
+    const categoryToEdit = categories.find(category => category.id === categoryId);
+    setCategoryForm({
+      name: categoryToEdit.name,
+      description: categoryToEdit.description,
+    });
+    setEditingCategoryId(categoryId);
+    setFormType('category');
   };
 
   const handleUpdateProduct = async (e) => {
@@ -209,6 +230,35 @@ function AdminPage() {
     }
   };
 
+  const handleUpdateCategory = async (e) => {
+    e.preventDefault();
+    const token = verifyToken();
+    if (!token) return;
+
+    const categoryData = {
+      name: categoryForm.name,
+      description: categoryForm.description,
+    };
+
+    const response = await fetch(`http://localhost:8080/api/categories/actualizarCategoria/${editingCategoryId}`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`,
+      },
+      body: JSON.stringify(categoryData),
+    });
+
+    if (response.ok) {
+      fetchCategories();
+      setCategoryForm({ name: '', description: '' });
+      setFormType(null);
+      setEditingCategoryId(null);
+    } else {
+      console.error('Error al actualizar categoría:', response.statusText);
+    }
+  };
+
   const handleDeleteProduct = async (productId) => {
     const token = verifyToken();
     if (!token) return;
@@ -232,9 +282,34 @@ function AdminPage() {
     }
   };
 
+  const handleDeleteCategory = async (categoryId) => {
+    const token = verifyToken();
+    if (!token) return;
+
+    const confirmDelete = window.confirm('¿Estás seguro de que deseas eliminar esta categoría?');
+    if (!confirmDelete) return;
+
+    const response = await fetch(`http://localhost:8080/api/categories/eliminarCategoria/${categoryId}`, {
+      method: 'DELETE',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+      },
+    });
+
+    if (response.ok) {
+      fetchCategories();
+    } else if (response.status === 404) {
+      alert('Categoría no encontrada.');
+    } else {
+      console.error('Error al eliminar la categoría:', response.statusText);
+    }
+  };
+
   const handleCancelEdit = () => {
     setProductForm({ name: '', description: '', price: '', quantity: '', categoryId: '' });
     setEditingProductId(null);
+    setCategoryForm({ name: '', description: '' });
+    setEditingCategoryId(null);
     setFormType(null);
   };
 
@@ -262,13 +337,13 @@ function AdminPage() {
             {submenuVisible && (
               <div className={styles['submenu']}>
                 <li>
-                  <button onClick={() => setFormType(formType === 'product' ? null : 'product')}>
+                  <button onClick={() => setFormType(formType === 'product' && !editingProductId ? null : 'product')}>
                     {formType === 'product' ? (editingProductId ? 'Cancelar Edición' : 'Cancelar') : 'Agregar Producto'}
                   </button>
                 </li>
                 <li>
-                  <button onClick={() => setFormType(formType === 'category' ? null : 'category')}>
-                    {formType === 'category' ? 'Cancelar' : 'Crear Categoría'}
+                  <button onClick={() => setFormType(formType === 'category' && !editingCategoryId ? null : 'category')}>
+                    {formType === 'category' ? (editingCategoryId ? 'Cancelar Edición' : 'Crear Categoría') : 'Crear Categoría'}
                   </button>
                 </li>
               </div>
@@ -282,7 +357,7 @@ function AdminPage() {
 
         {formType && (
           <div className={`${styles[formType + '-form']} ${styles.active}`}>
-            <h3>{formType === 'product' ? (editingProductId ? 'Editar Producto' : 'Agregar Producto') : 'Crear Categoría'}</h3>
+            <h3>{formType === 'product' ? (editingProductId ? 'Editar Producto' : 'Agregar Producto') : (editingCategoryId ? 'Editar Categoría' : 'Crear Categoría')}</h3>
             <form onSubmit={(e) => handleFormSubmit(e, formType)}>
               {formType === 'product' ? (
                 <>
@@ -333,29 +408,32 @@ function AdminPage() {
                 </>
               ) : (
                 <>
-                <input
-                  type="text"
-                  name="categoryName"
-                  placeholder="Nombre de la Categoría"
-                  value={categoryForm.name || ''}
-                  onChange={handleInputChange}
-                  autoComplete="off"
-                />
-                <input
-                  type="text"
-                  name="categoryDescription"
-                  placeholder="Descripción de la Categoría"
-                  value={categoryForm.description || ''}
-                  onChange={handleInputChange}
-                  autoComplete="off"
-                />
+                  <input
+                    type="text"
+                    name="categoryName"
+                    placeholder="Nombre de la Categoría"
+                    value={categoryForm.name || ''}
+                    onChange={handleInputChange}
+                    autoComplete="off"
+                  />
+                  <input
+                    type="text"
+                    name="categoryDescription"
+                    placeholder="Descripción de la Categoría"
+                    value={categoryForm.description || ''}
+                    onChange={handleInputChange}
+                    autoComplete="off"
+                  />
                 </>
               )}
               <button type="submit">
-                {formType === 'product' ? (editingProductId ? 'Actualizar Producto' : 'Agregar Producto') : 'Crear Categoría'}
+                {formType === 'product' ? (editingProductId ? 'Actualizar Producto' : 'Agregar Producto') : (editingCategoryId ? 'Actualizar Categoría' : 'Crear Categoría')}
               </button>
             </form>
-            {formType === 'product' && editingProductId && (
+            {(formType === 'product' && editingProductId) && (
+              <button onClick={handleCancelEdit} className={styles['cancel-button']}>Cancelar Edición</button>
+            )}
+            {(formType === 'category' && editingCategoryId) && (
               <button onClick={handleCancelEdit} className={styles['cancel-button']}>Cancelar Edición</button>
             )}
           </div>
@@ -368,7 +446,8 @@ function AdminPage() {
               <thead>
                 <tr>
                   <th>Nombre</th>
-                  <th>Descripción</th> 
+                  <th>Descripción</th>
+                  <th>Acciones</th>
                 </tr>
               </thead>
               <tbody>
@@ -376,6 +455,10 @@ function AdminPage() {
                   <tr key={category.id}>
                     <td>{category.name}</td>
                     <td>{category.description}</td>
+                    <td>
+                      <button className={styles['edit-button']} onClick={() => handleEditCategory(category.id)}>Editar</button>
+                      <button className={styles['delete-button']} onClick={() => handleDeleteCategory(category.id)}>Eliminar</button>
+                    </td>
                   </tr>
                 ))}
               </tbody>

@@ -6,14 +6,14 @@ import com.inventory.model.CategoryProduct;
 
 public class CategoryProductDto {
 
-    private Long id;
+    private String id;
     private String name;
     private String description; // Si usas descripción
 
     // Constructor con @JsonCreator para la deserialización
     @JsonCreator
     public CategoryProductDto(
-            @JsonProperty("id") Long id,
+            @JsonProperty("id") String id,
             @JsonProperty("name") String name,
             @JsonProperty("description") String description) {
         this.id = id;
@@ -57,11 +57,11 @@ public class CategoryProductDto {
         return categoria;
     }
 
-    public Long getId() {
+    public String getId() {
         return id;
     }
 
-    public void setId(Long id) {
+    public void setId(String id) {
         this.id = id;
     }
 }

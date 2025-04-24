@@ -23,7 +23,7 @@ public class EventoProductoController {
     }
 
     @GetMapping("/producto/{id}")
-    public List<EventoProducto> eventosPorProducto(@PathVariable Long id) {
+    public List<EventoProducto> eventosPorProducto(@PathVariable String id) {
         return service.obtenerEventosPorProducto(id);
     }
 

@@ -14,10 +14,10 @@ public class TipoEventoInitializer {
     CommandLineRunner initTipoEventos(TipoEventoRepository eventoRepository) {
         return args -> {
             if (eventoRepository.findByNombre("COMPRA") == null) {
-                eventoRepository.save(new TipoEvento("COMPRA"));
+                eventoRepository.save(new TipoEvento("C","COMPRA"));
             }
             if (eventoRepository.findByNombre("VENTA") == null) {
-                eventoRepository.save(new TipoEvento( "VENTA"));
+                eventoRepository.save(new TipoEvento( "V","VENTA"));
             }
         };
     }

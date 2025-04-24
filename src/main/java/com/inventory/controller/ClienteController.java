@@ -1,9 +1,12 @@
 package com.inventory.controller;
 
+import java.util.Optional;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import com.inventory.dto.ClienteDto;
 import com.inventory.model.Cliente;
 import com.inventory.service.ClienteService;
 
@@ -19,9 +22,9 @@ public class ClienteController {
         return ResponseEntity.ok(clienteService.crearCliente(cliente));
     }
 
-    @GetMapping("/{nit}")
-    public ResponseEntity<Cliente> buscarCliente(@PathVariable Long nit) {
-        return ResponseEntity.ok(clienteService.buscarCliente(nit));
+    @GetMapping("/{id}")
+    public ResponseEntity<Optional<ClienteDto>> buscarCliente(@PathVariable String id) {
+        return ResponseEntity.ok(clienteService.buscarCliente(id));
     }
 
     // Otros endpoints: listar, actualizar, eliminar
