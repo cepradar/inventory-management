@@ -4,7 +4,13 @@ import com.inventory.model.Rol;
 import com.inventory.model.User;
 
 import ch.qos.logback.core.subst.Token;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 
+//genera getters and setter
+@Data
+//genera constructor sin argumentos
+@NoArgsConstructor
 public class UpdatePswUserDto {
     
     private String username;
@@ -29,42 +35,6 @@ public class UpdatePswUserDto {
         this.role = rol;
     }
 
-    public UpdatePswUserDto() {
-    }
-
-    // Getters y Setters
-    public String getUsername() {
-        return username;
-    }
-
-    public Rol getRole() {
-        return role;
-    }
-
-    public void setRole(Rol role) {
-        this.role = role;
-    }
-
-    public byte[] getProfilePicture() {
-        return profilePicture;
-    }
-
-    public void setProfilePicture(byte[] profilePicture) {
-        this.profilePicture = profilePicture;
-    }
-
-    public void setUsername(String username) {
-        this.username = username;
-    }
-
-    public String getNewPassword() {
-        return newPassword;
-    }
-
-    public void setNewPassword(String newPassword) {
-        this.newPassword = newPassword;
-    }
-
     public static User toUsuarios(UpdatePswUserDto usuariosDto) {
         User usuarios = new User();
         usuarios.setUsername(usuariosDto.getUsername());
@@ -75,12 +45,6 @@ public class UpdatePswUserDto {
         return usuarios;
     }
 
-    public Token getToken() {
-        return token;
-    }
-
-    public void setToken(Token token) {
-        this.token = token;
-    }
+    
     
 }

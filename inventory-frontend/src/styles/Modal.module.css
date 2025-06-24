@@ -1,0 +1,122 @@
+/* src/styles/Modal.module.css */
+
+.modalOverlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0, 0, 0, 0.6); /* Fondo semi-transparente oscuro */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 2000; /* Asegura que esté por encima de todo */
+    animation: fadeIn 0.3s ease-out; /* Animación de aparición */
+}
+
+.modalContent {
+    background-color: #ffffff;
+    padding: 30px;
+    border-radius: 10px;
+    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.2);
+    width: 90%;
+    max-width: 450px; /* Ancho máximo para el modal */
+    text-align: center;
+    animation: slideInFromTop 0.3s ease-out; /* Animación de entrada */
+    display: flex;
+    flex-direction: column;
+    gap: 20px; /* Espacio entre los elementos del modal */
+}
+
+.modalTitle {
+    font-size: 1.8em;
+    color: #333;
+    margin-bottom: 10px;
+    font-weight: 700;
+}
+
+.modalMessage {
+    font-size: 1em;
+    color: #666;
+    line-height: 1.6;
+    margin-bottom: 20px;
+}
+
+.modalActions {
+    display: flex;
+    justify-content: center;
+    gap: 15px; /* Espacio entre los botones */
+}
+
+.confirmButton,
+.cancelButton {
+    padding: 12px 25px;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 1em;
+    font-weight: 600;
+    transition: background-color 0.2s ease, transform 0.1s ease, box-shadow 0.2s ease;
+    min-width: 100px;
+}
+
+.confirmButton {
+    background-color: var(--accent-color); /* Usa la variable global */
+    color: white;
+}
+
+.confirmButton:hover {
+    background-color: #2188da;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 10px rgba(52, 152, 219, 0.3);
+}
+
+.cancelButton {
+    background-color: #6c757d;
+    color: white;
+}
+
+.cancelButton:hover {
+    background-color: #5a6268;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 10px rgba(108, 117, 125, 0.3);
+}
+
+/* Animaciones */
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+@keyframes slideInFromTop {
+    from { transform: translateY(-50px); opacity: 0; }
+    to { transform: translateY(0); opacity: 1; }
+}
+
+/* Responsividad para móviles */
+@media (max-width: 480px) {
+    .modalContent {
+        padding: 20px;
+        width: 95%;
+        margin: 15px;
+    }
+
+    .modalTitle {
+        font-size: 1.5em;
+    }
+
+    .modalMessage {
+        font-size: 0.95em;
+    }
+
+    .modalActions {
+        flex-direction: column; /* Apila los botones en pantallas muy pequeñas */
+        gap: 10px;
+    }
+
+    .confirmButton,
+    .cancelButton {
+        width: 100%;
+        min-width: unset;
+    }
+}

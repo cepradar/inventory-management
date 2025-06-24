@@ -1,76 +1,214 @@
+/* src/styles/AdminNavbar.module.css */
+
+/* Variables CSS (asegúrate de que estas también estén en AdminLayout.module.css para consistencia) */
+:root {
+    --primary-color: #2c3e50; /* Azul oscuro/gris para el fondo principal */
+    --accent-color: #3498db;  /* Azul vibrante para botones/interactivos */
+    --text-color: #ecf0f1;    /* Blanco roto para texto claro */
+    --dark-text-color: #34495e; /* Gris oscuro para texto sobre fondos claros */
+    --border-color: rgba(0, 0, 0, 0.1); /* Borde sutil */
+    --shadow-light: rgba(0, 0, 0, 0.08); /* Sombra muy suave */
+    --shadow-medium: rgba(0, 0, 0, 0.15); /* Sombra un poco más visible */
+    --transition-speed: 0.3s; /* Velocidad general de las transiciones */
+    --navbar-height: 70px;
+}
+
 .navbar {
-    background-color: #eee;
-    padding: 15px 20px;
+    background-color: var(--primary-color); /* Fondo más oscuro y elegante */
+    padding: 15px 30px; /* Un poco más de padding lateral */
     display: flex;
     align-items: center;
     justify-content: space-between;
-    border-bottom: 1px solid #ccc;
-  }
-  
-  .navbar h3 {
-    margin: 0;
-  }
-  
-  .navbar nav ul {
+    box-shadow: 0 2px 8px var(--shadow-medium); /* Sombra sutil para un efecto flotante */
+    font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+    /* Las propiedades de posicionamiento (position, width, left, top, z-index)
+       son ahora controladas por AdminLayout.module.css para evitar solapamientos. */
+}
+
+.leftSection {
+    display: flex;
+    align-items: center;
+}
+
+.brand {
+    font-size: 1.8em;
+    font-weight: 600;
+    color: var(--text-color);
+    margin-right: 20px; /* Espacio entre el logo y los menús */
+    white-space: nowrap; /* Evita que el texto se rompa */
+}
+
+/* Opciones de módulo en el navbar (e.g., Inventario) */
+.modulesNav ul {
     list-style: none;
     padding: 0;
-    display: flex;
-  }
-  
-  .navbar nav li {
-    margin-left: 15px;
-  }
-  
-  .navbar nav button {
-    padding: 8px 12px;
+    margin: 0;
+    display: flex; /* Para que los elementos estén en línea */
+}
+
+.modulesNav li {
+    margin-right: 20px; /* Espacio entre módulos */
+    position: relative; /* Necesario para posicionar el dropdown */
+}
+
+.modulesNav li:last-child {
+    margin-right: 0;
+}
+
+.modulesNav button {
+    background: none;
     border: none;
-    background-color: #721212;
+    color: var(--text-color);
+    font-size: 1em;
     cursor: pointer;
-  }
-  
-  .navbar nav button:hover {
-    background-color: #171e81a4;
-  }
-
-
-.dropdown {
-  position: relative;
+    padding: 8px 15px;
+    border-radius: var(--border-radius-sm);
+    transition: background-color var(--transition-speed) ease, color var(--transition-speed) ease;
+    display: flex; /* Para el ícono y el texto */
+    align-items: center;
+    gap: 8px; /* Espacio entre el ícono y el texto */
 }
 
-.dropdown-button {
-  padding: 8px 15px;
-  border: none;
-  background-color: transparent;
-  cursor: pointer;
+.modulesNav button i {
+    font-size: 1.1em;
 }
 
-.dropdown-button:hover {
-  background-color: #eee;
+.modulesNav button:hover,
+.modulesNav button.active {
+    background-color: var(--accent-color);
+    color: var(--sidebar-link-hover-text); /* Blanco puro */
 }
 
+/* Dropdown styling */
 .dropdown-content {
-  position: absolute;
-  top: 100%;
-  left: 0;
-  background-color: #f9f9f9;
-  border: 1px solid #ccc;
-  border-top: none;
-  list-style: none;
-  padding: 0;
-  z-index: 10;
-  min-width: 150px; /* Ajusta el ancho mínimo del dropdown */
+    position: absolute;
+    top: 100%; /* Debajo del botón */
+    left: 0;
+    background-color: white; /* Fondo blanco para el menú desplegable */
+    border: 1px solid var(--border-color); /* Borde sutil */
+    border-radius: 5px; /* Bordes redondeados para el menú */
+    box-shadow: 0 8px 16px var(--shadow-medium); /* Sombra más pronunciada para el dropdown */
+    list-style: none;
+    padding: 10px 0; /* Padding interno para los elementos del menú */
+    z-index: 10;
+    min-width: 180px; /* Ancho mínimo para elementos de menú */
+    opacity: 0; /* Inicialmente oculto */
+    visibility: hidden; /* Inicialmente oculto */
+    transform: translateY(10px); /* Ligeramente desplazado hacia abajo */
+    transition: opacity var(--transition-speed) ease, transform var(--transition-speed) ease, visibility var(--transition-speed) ease;
+}
+
+/* Para mostrar el dropdown al hacer clic (en JS se maneja la clase 'show') */
+.dropdown-content.show {
+    opacity: 1;
+    visibility: visible;
+    transform: translateY(0);
 }
 
 .dropdown-content li button {
-  display: block;
-  width: 100%;
-  padding: 8px 15px;
-  border: none;
-  background-color: #721212;
-  text-align: left;
-  cursor: pointer;
+    display: flex; /* Para el ícono y el texto */
+    align-items: center;
+    gap: 8px; /* Espacio entre el ícono y el texto */
+    width: 100%;
+    padding: 10px 20px; /* Padding para los elementos individuales del menú */
+    border: none;
+    background-color: transparent; /* Fondo transparente por defecto */
+    color: var(--dark-text-color); /* Color de texto oscuro para los ítems */
+    text-align: left;
+    cursor: pointer;
+    font-size: 0.95em;
+    transition: background-color 0.2s ease, color 0.2s ease;
 }
 
 .dropdown-content li button:hover {
-  background-color: #171e81a4;
+    background-color: #f0f0f0; /* Fondo gris claro al pasar el ratón */
+    color: var(--accent-color); /* Color de acento para el texto */
+}
+
+.profileSection {
+    color: var(--text-color);
+    font-size: 0.95em;
+    white-space: nowrap; /* Evita que el texto se rompa */
+}
+
+/* Media Queries para responsividad */
+@media (max-width: 768px) {
+    .navbar {
+        padding: 10px 15px; /* Menos padding para pantallas más pequeñas */
+    }
+
+    .brand {
+        font-size: 1.5em;
+    }
+
+    .modulesNav button {
+        padding: 6px 10px;
+        font-size: 0.9em;
+    }
+
+    .modulesNav button i {
+        font-size: 1em;
+    }
+
+    .profileSection {
+        font-size: 0.85em;
+    }
+
+    .dropdown-content {
+        min-width: 160px;
+    }
+}
+
+@media (max-width: 480px) {
+    .navbar {
+        flex-wrap: wrap; /* Permite que los elementos se envuelvan */
+        justify-content: center; /* Centra los elementos */
+        padding: 10px;
+        height: auto; /* Altura automática en móviles */
+    }
+
+    .brand {
+        width: 100%; /* Marca ocupa todo el ancho */
+        text-align: center;
+        margin-bottom: 10px;
+    }
+
+    .modulesNav {
+        width: 100%; /* La navegación de módulos ocupa todo el ancho */
+        margin-top: 10px;
+    }
+
+    .modulesNav ul {
+        justify-content: center; /* Centra los botones de módulos */
+    }
+
+    .modulesNav li {
+        margin: 0 5px; /* Menos espacio entre los botones */
+    }
+
+    .modulesNav button {
+        padding: 8px;
+        font-size: 0.85em;
+    }
+
+    .modulesNav button i {
+        display: none; /* Oculta íconos en botones principales para ahorrar espacio */
+    }
+
+    .profileSection {
+        width: 100%;
+        text-align: center;
+        margin-top: 10px;
+    }
+
+    .dropdown-content {
+        min-width: unset; /* Sin ancho mínimo fijo */
+        width: 100%; /* Se expande al 100% del contenedor padre (li) */
+        left: 0;
+        right: 0;
+    }
+
+    .dropdown-content li button {
+        padding: 8px 15px;
+    }
 }

@@ -1,0 +1,272 @@
+.categoryManagementContainer {
+  padding: 25px;
+  background-color: #ffffff;
+  border-radius: 8px;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+  margin-top: 20px;
+  max-width: 1000px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.categoryManagementContainer h2 {
+  color: #333;
+  margin-bottom: 25px;
+  text-align: center;
+  font-size: 1.8em;
+  font-weight: 600;
+}
+
+/* Estilos de la tabla (tomados de CategoryList.module.css) */
+.tableContainer {
+  max-height: 400px; /* Altura máxima antes de que aparezca el scroll */
+  overflow-y: auto; /* Habilitar scroll vertical */
+  margin-bottom: 30px; /* Espacio antes del formulario */
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  box-shadow: inset 0 2px 5px rgba(0, 0, 0, 0.05);
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 0;
+  background-color: #fff;
+  min-width: 500px; /* Para asegurar que la tabla no se haga demasiado pequeña */
+}
+
+.table thead tr {
+  background-color: #f2f2f2;
+  color: #555;
+  text-align: left;
+  font-size: 0.95em;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  position: sticky; /* Encabezado pegajoso para el scroll */
+  top: 0;
+  z-index: 1; /* Asegura que el encabezado esté por encima del contenido */
+}
+
+.table th,
+.table td {
+  padding: 14px 18px;
+  border-bottom: 1px solid #ddd;
+  text-align: left;
+  vertical-align: middle;
+}
+
+.table tbody tr:hover {
+  background-color: #f5f5f5;
+  transition: background-color 0.2s ease;
+}
+
+.table td[data-label] {
+  display: table-cell; /* Asegura que las celdas se comporten como celdas */
+  text-align: left;
+}
+
+/* Botones de acción */
+.actionButton {
+  padding: 8px 12px;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  font-size: 0.85em;
+  font-weight: 500;
+  transition: background-color 0.2s ease;
+  margin-right: 8px;
+  white-space: nowrap; /* Evita que el texto del botón se rompa */
+}
+
+.editButton {
+  background-color: #007bff;
+  color: white;
+}
+
+.editButton:hover {
+  background-color: #0056b3;
+}
+
+.deleteButton {
+  background-color: #dc3545;
+  color: white;
+}
+
+.deleteButton:hover {
+  background-color: #c82333;
+}
+
+/* Separador entre lista y formulario */
+.separator {
+  border: 0;
+  height: 1px;
+  background-image: linear-gradient(to right, rgba(0, 0, 0, 0), rgba(0, 0, 0, 0.2), rgba(0, 0, 0, 0));
+  margin: 40px 0;
+}
+
+/* Estilos del formulario (tomados de CategoryForm.module.css y adaptados) */
+.category-form-section {
+  padding: 25px;
+  background-color: #f9f9f9;
+  border-radius: 8px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+}
+
+.category-form-section h2 {
+  font-size: 1.5em;
+  margin-bottom: 20px;
+  color: #444;
+  text-align: center;
+}
+
+.form-group {
+  margin-bottom: 18px;
+}
+
+.form-group label {
+  display: block;
+  margin-bottom: 8px;
+  font-weight: 600;
+  color: #555;
+  font-size: 0.95em;
+}
+
+.form-group input[type="text"],
+.form-group textarea {
+  width: 100%;
+  padding: 12px;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+  font-size: 1em;
+  box-sizing: border-box; /* Incluye padding y border en el ancho total */
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.form-group input[type="text"]:focus,
+.form-group textarea:focus {
+  border-color: #007bff;
+  box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.25);
+  outline: none;
+}
+
+.form-group textarea {
+  resize: vertical;
+  min-height: 80px;
+}
+
+.form-actions {
+  display: flex;
+  justify-content: center;
+  gap: 15px; /* Espacio entre botones */
+  margin-top: 30px;
+}
+
+.submit-button,
+.cancel-button {
+  padding: 12px 25px;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  font-size: 1.05em;
+  font-weight: 600;
+  transition: background-color 0.3s ease, transform 0.1s ease;
+}
+
+.submit-button {
+  background-color: #28a745;
+  color: white;
+}
+
+.submit-button:hover {
+  background-color: #218838;
+  transform: translateY(-1px);
+}
+
+.cancel-button {
+  background-color: #6c757d;
+  color: white;
+}
+
+.cancel-button:hover {
+  background-color: #5a6268;
+  transform: translateY(-1px);
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .categoryManagementContainer {
+    padding: 15px;
+    margin: 15px;
+  }
+
+  .table th,
+  .table td {
+    padding: 10px 12px;
+  }
+
+  .actionButton {
+    padding: 6px 10px;
+    margin-right: 5px;
+  }
+
+  .form-group label {
+    font-size: 0.9em;
+  }
+
+  .form-group input[type="text"],
+  .form-group textarea {
+    padding: 10px;
+  }
+
+  .submit-button,
+  .cancel-button {
+    padding: 10px 20px;
+    font-size: 0.95em;
+  }
+}
+
+@media (max-width: 600px) {
+  .table thead {
+    display: none; /* Hide table headers on small screens */
+  }
+
+  .table, .table tbody, .table tr, .table td {
+    display: block;
+    width: 100%;
+  }
+
+  .table tr {
+    margin-bottom: 15px;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+  }
+
+  .table td {
+    text-align: right;
+    padding-left: 50%;
+    position: relative;
+    border: none; /* Remove individual cell borders */
+  }
+
+  .table td::before {
+    content: attr(data-label);
+    position: absolute;
+    left: 10px;
+    width: calc(50% - 20px);
+    padding-right: 10px;
+    white-space: nowrap;
+    text-align: left;
+    font-weight: bold;
+    color: #333;
+  }
+
+  .table td:last-child {
+    border-bottom: 0;
+  }
+
+  .form-actions {
+    flex-direction: column;
+    gap: 10px;
+  }
+}

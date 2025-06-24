@@ -1,58 +1,141 @@
-.category-list {
-    padding: 20px;
-    background-color: #f9f9f9;
-    border: 1px solid #ddd;
-    border-radius: 5px;
-  }
-  
-  .category-list h3 {
-    margin-top: 0;
-    margin-bottom: 15px;
-  }
-  
-  .category-list table {
+/* src/styles/CategoryList.module.css */
+
+.categoryListContainer {
+    background-color: #ffffff;
+    padding: 25px;
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+    margin-bottom: 20px;
+}
+
+.categoryListContainer h2 {
+    font-size: 1.8em;
+    color: #333;
+    margin-bottom: 20px;
+    border-bottom: 2px solid var(--accent-color);
+    padding-bottom: 10px;
+}
+
+.tableContainer {
+    overflow-x: auto; /* Permite desplazamiento horizontal en pantallas pequeñas */
+    -webkit-overflow-scrolling: touch; /* Mejora el scroll en iOS */
+}
+
+.table {
     width: 100%;
     border-collapse: collapse;
-  }
-  
-  .category-list th,
-  .category-list td {
-    padding: 10px;
-    border: 1px solid #ccc;
+    margin-top: 10px;
+    font-size: 0.9em;
+    min-width: 500px; /* Ancho mínimo para la tabla de categorías */
+}
+
+.table thead th {
+    background-color: #e9ecef;
+    color: #495057;
+    padding: 12px 15px;
     text-align: left;
-  }
-  
-  .category-list th {
-    background-color: #f0f0f0;
-  }
-  
-  .category-list tr:nth-child(even) {
-    background-color: #f5f5f5;
-  }
-  
-  .category-list .edit-button,
-  .category-list .delete-button {
+    border-bottom: 2px solid #dee2e6;
+    font-weight: 600;
+}
+
+.table tbody td {
+    padding: 12px 15px;
+    border-bottom: 1px solid #e9ecef;
+    color: #666;
+    vertical-align: middle;
+}
+
+.table tbody tr:nth-child(even) {
+    background-color: #f8f9fa;
+}
+
+.table tbody tr:hover {
+    background-color: #e2e6ea;
+}
+
+.actionButton {
     padding: 8px 12px;
-    margin-right: 5px;
+    margin-right: 8px;
     border: none;
-    border-radius: 3px;
+    border-radius: 5px;
     cursor: pointer;
-  }
-  
-  .category-list .edit-button {
-    background-color: #007bff;
+    font-size: 0.85em;
+    transition: background-color 0.2s ease, transform 0.1s ease;
+}
+
+.editButton {
+    background-color: var(--accent-color);
     color: white;
-  }
-  
-  .category-list .edit-button:hover {
-    background-color: #0056b3;
-  }
-  
-  .category-list .delete-button {
+}
+
+.editButton:hover {
+    background-color: #2188da;
+    transform: translateY(-1px);
+}
+
+.deleteButton {
     background-color: #dc3545;
     color: white;
-  }
-  
-  .category-list .delete-button:hover {
+}
+
+.deleteButton:hover {
     background-color: #c82333;
-  }
+    transform: translateY(-1px);
+}
+
+/* Responsividad para móviles */
+@media (max-width: 768px) {
+    .table thead {
+        display: none;
+    }
+
+    .table, .table tbody, .table tr, .table td {
+        display: block;
+        width: 100%;
+    }
+
+    .table tr {
+        margin-bottom: 15px;
+        border: 1px solid #dee2e6;
+        border-radius: 8px;
+        box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+        padding: 10px;
+    }
+
+    .table td {
+        text-align: right;
+        padding-left: 50%;
+        position: relative;
+        border: none;
+        padding-top: 5px;
+        padding-bottom: 5px;
+    }
+
+    .table td::before {
+        content: attr(data-label);
+        position: absolute;
+        left: 10px;
+        width: calc(50% - 20px);
+        padding-right: 10px;
+        white-space: nowrap;
+        text-align: left;
+        font-weight: bold;
+        color: #555;
+    }
+
+    .actionButton {
+        width: calc(50% - 10px);
+        margin-right: 5px;
+        margin-top: 10px;
+    }
+}
+
+@media (max-width: 480px) {
+    .categoryListContainer {
+        padding: 15px;
+    }
+
+    .categoryListContainer h2 {
+        font-size: 1.5em;
+    }
+}

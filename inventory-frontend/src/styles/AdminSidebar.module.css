@@ -1,25 +1,198 @@
+/* src/styles/AdminSidebar.module.css */
+/* Variables CSS (Mantener consistencia con la Navbar si las tienes en otro archivo) */
+:root {
+    --sidebar-bg-color: #2c3e50;
+    --sidebar-text-color: #ecf0f1;
+    --sidebar-link-hover-bg: #3498db;
+    --sidebar-link-hover-text: white;
+    --sidebar-active-link-bg: #3498db;
+    --sidebar-active-link-text: white;
+    --border-radius-sm: 5px;
+    --shadow-light: rgba(0, 0, 0, 0.08);
+    --shadow-medium: rgba(0, 0, 0, 0.15);
+    --transition-speed: 0.3s; /* Velocidad de la transición */
+    --sidebar-width-collapsed: 70px; /* Ancho cuando está colapsada (solo íconos) */
+    --sidebar-width-expanded: 250px; /* Ancho cuando se expande */
+}
+
+.sidebar {
+    background-color: var(--sidebar-bg-color);
+    color: var(--sidebar-text-color);
+    padding: 25px 0;
+    width: var(--sidebar-width-collapsed); /* Ancho inicial colapsado */
+    box-shadow: 2px 0 8px var(--shadow-medium);
+    font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+    display: flex;
+    flex-direction: column;
+    align-items: center; /* Centra los items horizontalmente en modo colapsado */
+    transition: width var(--transition-speed) ease;
+    position: fixed; /* Fijo a la izquierda */
+    height: 100%; /* Ocupa toda la altura */
+    top: 0;
+    left: 0;
+    z-index: 1000;
+    overflow-x: hidden; /* Oculta el desbordamiento horizontal */
+}
+
+/* Cuando la sidebar está expandida */
+.sidebar.expanded {
+    width: var(--sidebar-width-expanded);
+    align-items: flex-start; /* Alinea los items a la izquierda cuando expandido */
+    padding: 25px 15px; /* Ajusta el padding para que el texto tenga espacio */
+}
+
 .sidebar h2 {
-    margin-bottom: 15px;
-  }
-  
-  .sidebar ul {
+    font-size: 1.6em;
+    margin-bottom: 30px;
+    display: flex;
+    align-items: center;
+    color: white;
+    white-space: nowrap; /* Evita que el texto se rompa */
+    transition: opacity var(--transition-speed) ease, margin-left var(--transition-speed) ease;
+    width: 100%; /* Asegura que el h2 ocupe todo el ancho disponible para alinear el texto */
+    justify-content: center; /* Centra el ícono en modo colapsado */
+}
+
+/* En modo expandido, alinear a la izquierda */
+.sidebar.expanded h2 {
+    justify-content: flex-start;
+    padding-left: 10px; /* Un poco de padding para el título expandido */
+}
+
+/* Estilos para el botón de hamburguesa dentro del h2 */
+.sidebar .sidebarHamburger {
+    background: none;
+    border: none;
+    color: white;
+    font-size: 1.4em;
+    cursor: pointer;
+    padding: 0; /* Eliminar padding predeterminado del botón */
+    display: flex; /* Para centrar el ícono si es necesario */
+    align-items: center;
+    justify-content: center;
+    width: 30px; /* Asegura un ancho fijo para el ícono */
+    height: 30px;
+    margin-right: 10px; /* Espacio entre el ícono y el texto "Módulos" */
+    transition: color 0.2s ease;
+}
+
+.sidebar .sidebarHamburger:hover {
+    color: var(--sidebar-link-hover-text); /* Cambia de color al pasar el ratón */
+}
+
+/* Ocultar el texto del título cuando la sidebar está colapsada */
+.sidebar:not(.expanded) .sidebarTitleText {
+    opacity: 0;
+    pointer-events: none; /* Deshabilita interacciones de ratón */
+}
+.sidebar.expanded .sidebarTitleText {
+    opacity: 1;
+}
+
+
+.sidebar ul {
     list-style: none;
     padding: 0;
-  }
-  
-  .sidebar li {
+    margin: 0;
+    width: 100%; /* Asegura que la lista ocupe todo el ancho */
+}
+
+.sidebar li {
     margin-bottom: 10px;
-  }
-  
-  .sidebar button {
     width: 100%;
-    padding: 10px;
+}
+
+.sidebar button {
+    background-color: transparent;
+    color: var(--sidebar-text-color);
     border: none;
-    background-color: #171e81a4;
-    cursor: pointer;
+    padding: 12px 15px;
+    width: 100%;
     text-align: left;
-  }
-  
-  .sidebar button:hover {
-    background-color: #721212;
-  }
+    cursor: pointer;
+    font-size: 1em;
+    display: flex;
+    align-items: center;
+    border-radius: var(--border-radius-sm);
+    transition: background-color var(--transition-speed) ease, color var(--transition-speed) ease;
+}
+
+.sidebar button:hover {
+    background-color: var(--sidebar-link-hover-bg);
+    color: var(--sidebar-link-hover-text);
+}
+
+.sidebar button.active {
+    background-color: var(--sidebar-active-link-bg);
+    color: var(--sidebar-active-link-text);
+    font-weight: bold;
+}
+
+.sidebar button i {
+    margin-right: 15px; /* Espacio entre ícono y texto del botón */
+    font-size: 1.1em;
+    min-width: 20px; /* Asegura un ancho mínimo para los íconos */
+    text-align: center;
+    transition: margin-right var(--transition-speed) ease;
+}
+
+/* Ocultar el texto del botón cuando la sidebar está colapsada */
+.sidebar:not(.expanded) .sidebarText {
+    display: none; /* Oculta el texto del botón */
+}
+
+/* Ajustes para tabletas */
+@media (max-width: 768px) {
+    :root {
+        --sidebar-width-collapsed: 60px; /* Más estrecha para tabletas */
+        --sidebar-width-expanded: 200px;
+    }
+
+    .sidebar {
+        padding: 20px 0;
+    }
+
+    .sidebar h2 {
+        font-size: 1.5em;
+        margin-bottom: 25px;
+    }
+
+    .sidebar .sidebarHamburger {
+        font-size: 1.3em;
+        width: 35px;
+        height: 35px;
+    }
+
+    .sidebar button {
+        padding: 10px 0;
+        font-size: 0.95em;
+    }
+
+    .sidebar button i {
+        font-size: 1.2em;
+        min-width: 35px;
+    }
+}
+
+/* Ajustes para pantallas pequeñas (móviles) */
+@media (max-width: 480px) {
+    :root {
+        --sidebar-width-collapsed: 50px; /* Aún más estrecha para móviles */
+        --sidebar-width-expanded: 180px;
+    }
+
+    .sidebar {
+        padding: 15px 0;
+    }
+
+    .sidebar h2 {
+        font-size: 1.4em;
+        margin-bottom: 15px;
+    }
+
+    .sidebar .sidebarHamburger {
+        font-size: 1em;
+        width: 25px;
+        height: 25px;
+    }
+}

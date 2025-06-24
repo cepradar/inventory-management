@@ -1,6 +1,7 @@
 package com.inventory.model;
 
 import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
 import jakarta.persistence.*;
@@ -39,7 +40,6 @@ public class User implements UserDetails {
 
     }
 
-    
     @Override
     public String getPassword() {
         return password;
@@ -82,12 +82,33 @@ public class User implements UserDetails {
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
-        return Collections.singletonList(() -> "ROLE_" + role); // Asumiendo que los roles son almacenados
-                                                                          // como "ADMIN", "USER", etc.
+        // Asegúrate de que el rol no sea nulo antes de acceder a su nombre
+        if (this.role != null && this.role.getName() != null) {
+            return Collections.singletonList(new SimpleGrantedAuthority("ROLE_" + this.role.getName()));
+        }
+        // Si el usuario no tiene rol o el nombre del rol es nulo, devuelve una lista vacía de autoridades.
+        // Considera si un usuario debería siempre tener un rol para tu aplicación.
+        return Collections.emptyList();
     }
 
+    @Override
+    public boolean isAccountNonExpired() {
+        return true; // Implementa tu lógica de expiración de cuenta si es necesario
+    }
 
-    
+    @Override
+    public boolean isAccountNonLocked() {
+        return true; // Implementa tu lógica de bloqueo de cuenta si es necesario
+    }
 
+    @Override
+    public boolean isCredentialsNonExpired() {
+        return true; // Implementa tu lógica de expiración de credenciales si es necesario
+    }
+
+    @Override
+    public boolean isEnabled() {
+        return true; // Implementa tu lógica de habilitación de usuario si es necesario
+    }
     
 }

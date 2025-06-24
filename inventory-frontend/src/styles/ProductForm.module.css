@@ -1,49 +1,146 @@
-.product-form {
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-    padding: 20px;
-    background-color: #f9f9f9;
-    border: 1px solid #ddd;
-    border-radius: 5px;
-  }
-  
-  .product-form h3 {
-    margin-top: 0;
-    margin-bottom: 15px;
-  }
-  
-  .product-form input[type="text"],
-  .product-form input[type="number"],
-  .product-form select {
-    padding: 10px;
+/* src/styles/ProductForm.module.css */
+
+.form-container { /* Renombrado de .product-form a .form-container para posible reuso */
+    background-color: #ffffff;
+    padding: 30px;
+    border-radius: 10px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+    max-width: 600px; /* Ancho máximo para el formulario */
+    margin: 30px auto; /* Centrar el formulario */
+    font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+}
+
+.form-container h2 {
+    font-size: 2em;
+    color: #333;
+    margin-bottom: 25px;
+    text-align: center;
+    border-bottom: 2px solid var(--accent-color);
+    padding-bottom: 10px;
+}
+
+.form-group {
+    margin-bottom: 20px;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 8px;
+    font-weight: 600;
+    color: #555;
+    font-size: 0.95em;
+}
+
+.form-group input[type="text"],
+.form-group input[type="number"],
+.form-group textarea,
+.form-group select {
+    width: 100%;
+    padding: 12px;
     border: 1px solid #ccc;
-    border-radius: 3px;
-  }
-  
-  .product-form button[type="submit"] {
-    padding: 10px 15px;
-    background-color: #007bff;
-    color: white;
+    border-radius: 6px;
+    font-size: 1em;
+    color: #333;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+    box-sizing: border-box; /* Incluye padding y borde en el ancho */
+}
+
+.form-group input[type="text"]:focus,
+.form-group input[type="number"]:focus,
+.form-group textarea:focus,
+.form-group select:focus {
+    border-color: var(--accent-color);
+    box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.2); /* Sombra de enfoque */
+    outline: none;
+}
+
+.form-group textarea {
+    resize: vertical; /* Permite redimensionar verticalmente */
+    min-height: 80px;
+}
+
+.form-group input[type="number"][readonly] {
+    background-color: #e9ecef; /* Color para campos de solo lectura */
+    cursor: not-allowed;
+}
+
+.form-actions {
+    display: flex;
+    justify-content: flex-end; /* Alinea los botones a la derecha */
+    gap: 15px; /* Espacio entre botones */
+    margin-top: 30px;
+}
+
+.submit-button,
+.cancel-button {
+    padding: 12px 25px;
     border: none;
-    border-radius: 3px;
+    border-radius: 6px;
     cursor: pointer;
-  }
-  
-  .product-form button[type="submit"]:hover {
-    background-color: #0056b3;
-  }
-  
-  .product-form .cancel-button {
-    padding: 8px 12px;
-    background-color: #dc3545;
+    font-size: 1.05em;
+    font-weight: 600;
+    transition: background-color 0.2s ease, transform 0.1s ease, box-shadow 0.2s ease;
+}
+
+.submit-button {
+    background-color: var(--accent-color);
     color: white;
-    border: none;
-    border-radius: 3px;
-    cursor: pointer;
-    margin-top: 10px;
-  }
-  
-  .product-form .cancel-button:hover {
-    background-color: #c82333;
-  }
+}
+
+.submit-button:hover {
+    background-color: #2188da;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 10px rgba(52, 152, 219, 0.3);
+}
+
+.cancel-button {
+    background-color: #6c757d; /* Gris para cancelar */
+    color: white;
+}
+
+.cancel-button:hover {
+    background-color: #5a6268;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 10px rgba(108, 117, 125, 0.3);
+}
+
+/* Responsividad */
+@media (max-width: 768px) {
+    .form-container {
+        padding: 20px;
+        margin: 20px auto;
+        max-width: 90%; /* Más ancho en móviles */
+    }
+
+    .form-container h2 {
+        font-size: 1.7em;
+        margin-bottom: 20px;
+    }
+
+    .form-actions {
+        flex-direction: column; /* Apilar botones en móviles */
+        gap: 10px;
+        align-items: stretch; /* Estirar botones */
+    }
+
+    .submit-button,
+    .cancel-button {
+        width: 100%;
+        padding: 10px;
+        font-size: 1em;
+    }
+}
+
+@media (max-width: 480px) {
+    .form-container {
+        padding: 15px;
+        margin: 15px auto;
+    }
+    .form-group label {
+        font-size: 0.9em;
+    }
+    .form-group input, .form-group textarea, .form-group select {
+        padding: 10px;
+        font-size: 0.9em;
+    }
+}
