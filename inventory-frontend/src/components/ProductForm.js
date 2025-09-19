@@ -4,7 +4,6 @@ import styles from '../styles/ProductForm.module.css';
 
 function ProductForm({ productForm, categories, handleInputChange, handleFormSubmit, editingProductId, handleCancelEdit }) {
   return (
-    // Asegúrate de que esta clase coincida con tu CSS: .product-form
     <div className={styles['product-form']}>
       <h2>{editingProductId ? 'Editar Producto' : 'Agregar Producto'}</h2>
       <form onSubmit={(e) => handleFormSubmit(e, 'product')}>
@@ -45,7 +44,7 @@ function ProductForm({ productForm, categories, handleInputChange, handleFormSub
             onChange={handleInputChange}
             required
             min="0"
-            step="0.01" // Permite valores decimales
+            step="0.01"
             autoComplete="off"
           />
         </div>

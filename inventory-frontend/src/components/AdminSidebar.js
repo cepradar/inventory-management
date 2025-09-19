@@ -2,10 +2,10 @@
 import React from 'react';
 import styles from '../styles/AdminSidebar.module.css';
 
-// *** MODIFICADO: Acepta sidebarRef como prop ***
-function AdminSidebar({ onModuleChange, activeModule, isExpanded, toggleSidebar, sidebarRef }) {
+function AdminSidebar({ onModuleChange, activeModule, isExpanded, toggleSidebar, sidebarRef, userRole }) {
+  const isAdmin = userRole === 'ADMIN';
+
   return (
-    // *** MODIFICADO: Asigna la ref al div principal del sidebar ***
     <div className={`${styles.sidebar} ${isExpanded ? styles.expanded : ''}`} ref={sidebarRef}>
       <h2 className={isExpanded ? styles.expanded : ''}>
         <button onClick={toggleSidebar} className={styles.sidebarHamburger}>
@@ -23,24 +23,28 @@ function AdminSidebar({ onModuleChange, activeModule, isExpanded, toggleSidebar,
             <span className={styles.sidebarText}>Inventario</span>
           </button>
         </li>
-        <li>
-          <button
-            onClick={() => onModuleChange('users')}
-            className={activeModule === 'users' ? styles.active : ''}
-          >
-            <i className="fas fa-users"></i>
-            <span className={styles.sidebarText}>Usuarios</span>
-          </button>
-        </li>
-        <li>
-          <button
-            onClick={() => onModuleChange('settings')}
-            className={activeModule === 'settings' ? styles.active : ''}
-          >
-            <i className="fas fa-cog"></i>
-            <span className={styles.sidebarText}>Configuración</span>
-          </button>
-        </li>
+        {isAdmin && ( // Only show "Users" module if admin
+          <li>
+            <button
+              onClick={() => onModuleChange('users')}
+              className={activeModule === 'users' ? styles.active : ''}
+            >
+              <i className="fas fa-users"></i>
+              <span className={styles.sidebarText}>Usuarios</span>
+            </button>
+          </li>
+        )}
+        {isAdmin && ( // Only show "Settings" module if admin
+          <li>
+            <button
+              onClick={() => onModuleChange('settings')}
+              className={activeModule === 'settings' ? styles.active : ''}
+            >
+              <i className="fas fa-cog"></i>
+              <span className={styles.sidebarText}>Configuración</span>
+            </button>
+          </li>
+        )}
         <li>
           <button
             onClick={() => onModuleChange('logout')}

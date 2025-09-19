@@ -1,7 +1,6 @@
-// src/components/Dashboard.js (ESTE ES TU NUEVO PANEL PRINCIPAL INTEGRADO)
+// src/components/Dashboard.js
 import React, { useState, useEffect, useRef } from 'react';
-// Reutilizamos los estilos de AdminLayout porque Dashboard ahora cumple ese rol
-import styles from '../styles/AdminLayout.module.css';
+import styles from '../styles/AdminLayout.module.css'; // Reutilizamos los estilos de AdminLayout
 import AdminSidebar from './AdminSidebar';
 import AdminNavbar from './AdminNavbar';
 import ProductList from './ProductList';
@@ -13,8 +12,8 @@ import axios from '../utils/axiosConfig';
 
 function Dashboard() { // Ahora Dashboard funciona como el antiguo AdminLayout
   const [activeModule, setActiveModule] = useState('inventory');
-  const [activeInventoryView, setActiveInventoryView] = useState('products'); // Default view
-  const [showForm, setShowForm] = useState(null); // 'add-product', 'edit-product', etc.
+  const [activeInventoryView, setActiveInventoryView] = useState('products');
+  const [showForm, setShowForm] = useState(null);
 
   const [productForm, setProductForm] = useState({ name: '', description: '', price: '', quantity: '', categoryId: '' });
   const [categoryForm, setCategoryForm] = useState({ name: '', description: '' });
@@ -30,247 +29,284 @@ function Dashboard() { // Ahora Dashboard funciona como el antiguo AdminLayout
   const [modalMessage, setModalMessage] = useState('');
   const [modalAction, setModalAction] = useState(() => {});
 
-  const navigate = useNavigate();
   const sidebarRef = useRef(null);
+  const navigate = useNavigate();
+  const [userRole, setUserRole] = useState(null); // Estado para almacenar el rol del usuario
 
-  // Lógica de VERIFICACIÓN DE TOKEN y CARGA INICIAL
   useEffect(() => {
-    const token = localStorage.getItem('authToken'); // Asegúrate de usar 'authToken'
-    const userRole = localStorage.getItem('userRole'); // Asegúrate de guardar el rol
-
-    if (!token || userRole !== 'ADMIN') { // Redirige si no hay token o no es ADMIN
-      alert('No estás autorizado o tu sesión ha expirado. Redirigiendo al login...');
-      localStorage.clear(); // Limpia cualquier token inválido
+    const role = localStorage.getItem('userRole');
+    if (role) {
+      setUserRole(role);
+    } else {
+      // Si no hay rol, redirigir al login (aunque ProtectedRoute ya lo haría)
       navigate('/login');
-      return;
     }
-    // Cargar datos iniciales según la vista activa
-    if (activeInventoryView === 'products') {
-      fetchProducts();
-    } else if (activeInventoryView === 'categories') {
-      fetchCategories();
-    }
-  }, [navigate, activeInventoryView]); // Dependencias para re-ejecutar cuando cambian
+    fetchProducts();
+    fetchCategories();
+  }, [navigate]); // Añadir navigate a las dependencias para evitar warnings
 
-  // Lógica para cerrar el sidebar al hacer clic fuera
   useEffect(() => {
-    const handleClickOutside = (event) => {
-      if (isSidebarExpanded && sidebarRef.current && !sidebarRef.current.contains(event.target)) {
+    function handleClickOutside(event) {
+      if (sidebarRef.current && !sidebarRef.current.contains(event.target)) {
         setIsSidebarExpanded(false);
       }
-    };
+    }
+
     document.addEventListener('mousedown', handleClickOutside);
     return () => {
       document.removeEventListener('mousedown', handleClickOutside);
     };
-  }, [isSidebarExpanded]);
+  }, [sidebarRef]);
+
+  const toggleSidebar = () => {
+    setIsSidebarExpanded(!isSidebarExpanded);
+  };
 
   const fetchProducts = async () => {
     try {
-      const response = await axios.get('http://localhost:8080/api/products/listar');
-      setProducts(response.data);
-      // También asegúrate de cargar las categorías para el ProductForm
-      if (categories.length === 0) { // Cargar solo si no están ya cargadas
-        await fetchCategories();
+      const token = localStorage.getItem('authToken');
+      if (!token) {
+        navigate('/login');
+        return;
       }
+      const response = await axios.get('http://localhost:8080/api/products/listar', {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      setProducts(response.data);
     } catch (error) {
-      handleAuthError(error, 'ver productos');
+      console.error('Error al cargar productos:', error);
+      if (error.response && error.response.status === 403) {
+        alert('No tienes permiso para ver productos. Redirigiendo al login.');
+        localStorage.clear();
+        navigate('/login');
+      }
     }
   };
 
   const fetchCategories = async () => {
     try {
-      const response = await axios.get('http://localhost:8080/api/categories/listarCategoria');
+      const token = localStorage.getItem('authToken');
+      if (!token) {
+        navigate('/login');
+        return;
+      }
+      const response = await axios.get('http://localhost:8080/api/categories/listarCategoria', {
+        headers: { Authorization: `Bearer ${token}` },
+      });
       setCategories(response.data);
     } catch (error) {
-      handleAuthError(error, 'ver categorías');
+      console.error('Error al cargar categorías:', error);
+      if (error.response && error.response.status === 403) {
+        alert('No tienes permiso para ver categorías. Redirigiendo al login.');
+        localStorage.clear();
+        navigate('/login');
+      }
     }
   };
 
-  const handleAuthError = (error, action) => {
-    console.error(`Error al ${action}:`, error);
-    if (error.response?.status === 403 || error.response?.status === 401) {
-      alert(`No tienes permiso para ${action} o tu sesión ha expirado. Redirigiendo al login.`);
-      localStorage.clear();
-      navigate('/login');
-    } else {
-      alert(`Ocurrió un error inesperado al ${action}.`);
+  const handleModuleChange = (module) => {
+    setActiveModule(module);
+    setShowForm(null); // Reset form visibility when changing modules
+    setEditingProductId(null); // Clear any editing state
+    setEditingCategoryId(null);
+    if (module === 'logout') {
+      setShowModal(true);
+      setModalMessage('¿Estás seguro de que quieres cerrar sesión?');
+      setModalAction(() => () => {
+        localStorage.clear(); // Clear all stored data
+        navigate('/login');
+        setShowModal(false);
+      });
+    } else if (module === 'inventory') {
+      setActiveInventoryView('products'); // Default to products list when entering inventory
+      fetchProducts();
+      fetchCategories();
+    }
+  };
+
+  const handleInventoryOptionClick = (type, action) => {
+    if (type === 'products') {
+      if (action === 'list') {
+        setActiveInventoryView('products');
+        setShowForm(null);
+        setEditingProductId(null);
+        fetchProducts();
+      } else if (action === 'add') {
+        setActiveInventoryView('products'); // Keep view on products list for context
+        setShowForm('product');
+        setEditingProductId(null);
+        setProductForm({ name: '', description: '', price: '', quantity: '', categoryId: '' });
+      }
+    } else if (type === 'categories') {
+      if (action === 'list') {
+        setActiveInventoryView('categories');
+        setShowForm(null);
+        setEditingCategoryId(null);
+        fetchCategories();
+      } else if (action === 'add') {
+        setActiveInventoryView('categories'); // Keep view on categories list for context
+        setShowForm('category');
+        setEditingCategoryId(null);
+        setCategoryForm({ name: '', description: '' });
+      }
+    }
+  };
+
+  const handleInputChange = (e) => {
+    const { name, value } = e.target;
+    if (showForm === 'product') {
+      setProductForm({ ...productForm, [name]: value });
+    } else if (showForm === 'category') {
+      setCategoryForm({ ...categoryForm, [name]: value });
     }
   };
 
   const handleAddEditSubmit = async (e, type) => {
     e.preventDefault();
+    const token = localStorage.getItem('authToken');
+    if (!token) {
+      navigate('/login');
+      return;
+    }
+
     try {
       if (type === 'product') {
-        if (editingProductId) {
-          await axios.put(`http://localhost:8080/api/products/actualizar/${editingProductId}`, productForm);
-          alert('Producto actualizado con éxito');
-        } else {
-          await axios.post('http://localhost:8080/api/products/agregar/', productForm);
-          alert('Producto agregado con éxito');
-        }
+        const method = editingProductId ? 'put' : 'post';
+        const url = editingProductId
+          ? `http://localhost:8080/api/products/${editingProductId}`
+          : 'http://localhost:8080/api/products';
+
+        await axios[method](url, productForm, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        alert(`Producto ${editingProductId ? 'actualizado' : 'agregado'} exitosamente.`);
         setProductForm({ name: '', description: '', price: '', quantity: '', categoryId: '' });
         setEditingProductId(null);
-        fetchProducts(); // Refresh product list
+        setShowForm(null); // Hide form after submission
+        fetchProducts();
       } else if (type === 'category') {
-        if (editingCategoryId) {
-          await axios.put(`http://localhost:8080/api/categories/actualizarCategoria/${editingCategoryId}`, categoryForm); // Asumo esta URL para actualizar
-          alert('Categoría actualizada con éxito');
-        } else {
-          await axios.post('http://localhost:8080/api/categories/crearCategoria', categoryForm);
-          alert('Categoría agregada con éxito');
-        }
+        const method = editingCategoryId ? 'put' : 'post';
+        const url = editingCategoryId
+          ? `http://localhost:8080/api/categories/${editingCategoryId}`
+          : 'http://localhost:8080/api/categories';
+
+        await axios[method](url, categoryForm, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        alert(`Categoría ${editingCategoryId ? 'actualizada' : 'agregada'} exitosamente.`);
         setCategoryForm({ name: '', description: '' });
         setEditingCategoryId(null);
-        fetchCategories(); // Refresh category list
+        setShowForm(null); // Hide form after submission
+        fetchCategories();
       }
-      setShowForm(null); // Close form after submission
     } catch (error) {
       console.error(`Error al ${editingProductId || editingCategoryId ? 'actualizar' : 'agregar'} ${type}:`, error);
-      alert(`Error al ${editingProductId || editingCategoryId ? 'actualizar' : 'agregar'} ${type}. Verifica los datos e intenta de nuevo.`);
-      handleAuthError(error, `${editingProductId || editingCategoryId ? 'actualizar' : 'agregar'} ${type}`);
+      alert(`Error al ${editingProductId || editingCategoryId ? 'actualizar' : 'agregar'} ${type}.`);
     }
   };
 
-  const handleEditProduct = async (productId) => {
-    try {
-      const response = await axios.get(`http://localhost:8080/api/products/${productId}`);
-      setProductForm(response.data);
-      setEditingProductId(productId);
-      setShowForm('edit-product');
-    } catch (error) {
-      console.error('Error al cargar producto para edición:', error);
-      alert('Error al cargar el producto para edición.');
-      handleAuthError(error, 'editar productos');
+  const handleEditProduct = (id) => {
+    const productToEdit = products.find((product) => product.id === id);
+    if (productToEdit) {
+      setProductForm(productToEdit);
+      setEditingProductId(id);
+      setShowForm('product');
+      setActiveInventoryView('products'); // Ensure product list is visible when editing
     }
   };
 
-  const handleEditCategory = async (categoryId) => {
-    try {
-      const response = await axios.get(`http://localhost:8080/api/categories/${categoryId}`); // Asumo esta URL para obtener categoría
-      setCategoryForm(response.data);
-      setEditingCategoryId(categoryId);
-      // Aquí no necesitas cambiar showForm a 'add-category' si CategoryManagement ya maneja esto internamente
-    } catch (error) {
-      console.error('Error al cargar categoría para edición:', error);
-      alert('Error al cargar la categoría para edición.');
-      handleAuthError(error, 'editar categorías');
-    }
-  };
-
-  const handleDeleteProduct = (productId) => {
+  const handleDeleteProduct = (id) => {
+    setShowModal(true);
     setModalMessage('¿Estás seguro de que quieres eliminar este producto?');
     setModalAction(() => async () => {
       try {
-        await axios.delete(`http://localhost:8080/api/products/${productId}`);
-        alert('Producto eliminado con éxito');
+        const token = localStorage.getItem('authToken');
+        if (!token) {
+          navigate('/login');
+          return;
+        }
+        await axios.delete(`http://localhost:8080/api/products/${id}`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        alert('Producto eliminado exitosamente.');
         fetchProducts();
       } catch (error) {
         console.error('Error al eliminar producto:', error);
-        alert('Error al eliminar el producto.');
-        handleAuthError(error, 'eliminar productos');
+        alert('Error al eliminar producto.');
       } finally {
         setShowModal(false);
       }
     });
-    setShowModal(true);
   };
 
-  const handleDeleteCategory = (categoryId) => {
-    setModalMessage('¿Estás seguro de que quieres eliminar esta categoría? Esto también afectará a los productos asociados.');
-    setModalAction(() => async () => {
-      try {
-        await axios.delete(`http://localhost:8080/api/categories/${categoryId}`); // Asumo esta URL para eliminar
-        alert('Categoría eliminada con éxito');
-        fetchCategories();
-        fetchProducts(); // Refrescar productos por si estaban asociados
-      } catch (error) {
-        console.error('Error al eliminar categoría:', error);
-        alert('Error al eliminar la categoría. Asegúrate de que no tenga productos asociados.');
-        handleAuthError(error, 'eliminar categorías');
-      } finally {
-        setShowModal(false);
-      }
-    });
-    setShowModal(true);
-  };
-
-  const handleInputChange = (e) => {
-    const { name, value } = e.target;
-    // Determinar qué formulario se está editando para actualizar el estado correcto
-    if (showForm?.includes('product') || editingProductId) {
-      setProductForm(prev => ({ ...prev, [name]: value }));
-    } else if (activeInventoryView === 'categories' || editingCategoryId) { // Si estamos en la vista de categorías o editando una categoría
-      setCategoryForm(prev => ({ ...prev, [name]: value }));
+  const handleEditCategory = (id) => {
+    const categoryToEdit = categories.find((category) => category.id === id);
+    if (categoryToEdit) {
+      setCategoryForm(categoryToEdit);
+      setEditingCategoryId(id);
+      setShowForm('category');
+      setActiveInventoryView('categories'); // Ensure category list is visible when editing
     }
   };
 
+  const handleDeleteCategory = (id) => {
+    setShowModal(true);
+    setModalMessage('¿Estás seguro de que quieres eliminar esta categoría?');
+    setModalAction(() => async () => {
+      try {
+        const token = localStorage.getItem('authToken');
+        if (!token) {
+          navigate('/login');
+          return;
+        }
+        await axios.delete(`http://localhost:8080/api/categories/${id}`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        alert('Categoría eliminada exitosamente.');
+        fetchCategories();
+      } catch (error) {
+        console.error('Error al eliminar categoría:', error);
+        alert('Error al eliminar categoría.');
+      } finally {
+        setShowModal(false);
+      }
+    });
+  };
+
   const handleCancelEdit = () => {
-    setShowForm(null);
     setEditingProductId(null);
     setEditingCategoryId(null);
+    setShowForm(null);
     setProductForm({ name: '', description: '', price: '', quantity: '', categoryId: '' });
     setCategoryForm({ name: '', description: '' });
   };
 
-  const handleModuleChange = (module) => {
-    setActiveModule(module);
-    setActiveInventoryView(null); // Reset sub-view when module changes
-    setShowForm(null); // Close any open forms
-    setEditingProductId(null); // Clear editing state
-    setEditingCategoryId(null);
-    if (module === 'logout') {
-      localStorage.clear();
-      navigate('/login');
-    } else if (module === 'inventory') {
-      setActiveInventoryView('products'); // Default to products when entering inventory
-    }
-    // Si añades otros módulos, puedes añadir lógica aquí
-  };
-
-  const handleInventoryOptionClick = (type, action) => {
-    if (type === 'products') {
-      setActiveInventoryView('products');
-      if (action === 'add') {
-        setShowForm('add-product');
-        setEditingProductId(null); // Asegurarse de que no estamos en modo edición
-        setProductForm({ name: '', description: '', price: '', quantity: '', categoryId: '' }); // Limpiar formulario
-      } else {
-        setShowForm(null);
-      }
-      fetchProducts(); // Siempre refrescar la lista de productos
-    } else if (type === 'categories') {
-      setActiveInventoryView('categories');
-      setShowForm(null); // CategoryManagement maneja su propio formulario internamente
-      setEditingCategoryId(null); // Reset editing state for category form
-      setCategoryForm({ name: '', description: '' }); // Clear form
-      fetchCategories(); // Ensure categories are fetched
-    }
-  };
-
-  const toggleSidebar = () => setIsSidebarExpanded(prev => !prev);
-
   const renderContent = () => {
     if (activeModule === 'inventory') {
       if (activeInventoryView === 'products') {
-        return showForm?.includes('product') ? (
-          <ProductForm
-            productForm={productForm}
-            categories={categories} // Pasar categorías para el dropdown
-            handleInputChange={handleInputChange}
-            handleFormSubmit={handleAddEditSubmit}
-            editingProductId={editingProductId}
-            handleCancelEdit={handleCancelEdit}
-          />
-        ) : (
-          <ProductList
-            products={products}
-            categories={categories}
-            onEdit={handleEditProduct}
-            onDelete={handleDeleteProduct}
-          />
-        );
+        if (showForm === 'product') {
+          return (
+            <ProductForm
+              productForm={productForm}
+              categories={categories}
+              handleInputChange={handleInputChange}
+              handleFormSubmit={handleAddEditSubmit}
+              editingProductId={editingProductId}
+              handleCancelEdit={handleCancelEdit}
+            />
+          );
+        } else {
+          return (
+            <ProductList
+              products={products}
+              categories={categories}
+              onEdit={handleEditProduct}
+              onDelete={handleDeleteProduct}
+            />
+          );
+        }
       } else if (activeInventoryView === 'categories') {
+        // Now CategoryManagement combines list and form
         return (
           <CategoryManagement
             categories={categories}
@@ -284,9 +320,26 @@ function Dashboard() { // Ahora Dashboard funciona como el antiguo AdminLayout
           />
         );
       }
+    } else if (activeModule === 'users') {
+      return (
+        <div style={{ textAlign: 'center', marginTop: '50px', fontSize: '1.2em', color: '#666' }}>
+          <h2>Gestión de Usuarios</h2>
+          <p>Funcionalidad de gestión de usuarios en desarrollo.</p>
+          {userRole === 'ADMIN' && <p>Como administrador, aquí podrías ver y editar usuarios.</p>}
+          {userRole === 'USER' && <p>Como usuario normal, solo verías tu perfil.</p>}
+        </div>
+      );
+    } else if (activeModule === 'settings') {
+      return (
+        <div style={{ textAlign: 'center', marginTop: '50px', fontSize: '1.2em', color: '#666' }}>
+          <h2>Configuración de la Aplicación</h2>
+          <p>Funcionalidad de configuración en desarrollo.</p>
+          {userRole === 'ADMIN' && <p>Como administrador, aquí podrías ajustar la configuración global.</p>}
+        </div>
+      );
     }
-    // Puedes añadir contenido para otros módulos aquí (ej. 'users', 'settings')
-    // Por defecto, muestra un mensaje de bienvenida
+
+    // Mensaje de bienvenida por defecto
     return (
       <div style={{ textAlign: 'center', marginTop: '50px', fontSize: '1.2em', color: '#666' }}>
         <h2>Bienvenido al Panel de Administración</h2>
@@ -303,11 +356,13 @@ function Dashboard() { // Ahora Dashboard funciona como el antiguo AdminLayout
         isExpanded={isSidebarExpanded}
         toggleSidebar={toggleSidebar}
         activeModule={activeModule}
+        userRole={userRole}
       />
       <div className={`${styles.mainContent}`}>
         <AdminNavbar
           activeModule={activeModule}
           onSubmenuOptionClick={handleInventoryOptionClick}
+          userRole={userRole}
         />
         <div className={styles.canvas}>
           {renderContent()}

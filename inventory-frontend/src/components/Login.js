@@ -38,19 +38,21 @@ function Login() {
         setMessage(`Bienvenido, ${username}`);
         setLoginStatus('success');
 
-        localStorage.setItem('authToken', data.token); // Usar 'authToken' consistentemente
-        localStorage.setItem('userRole', data.role); // ¡IMPORTANTE: Guarda el rol!
-        localStorage.setItem('userName', username); // Guarda el nombre de usuario
+        localStorage.setItem('authToken', data.token);
+        localStorage.setItem('userRole', data.role); // ¡IMPORTANTE: Guarda el rol también!
+        localStorage.setItem('userName', username); // Guarda el nombre de usuario para mostrarlo en el navbar
 
         const role = data.role;
 
         if (role === 'ADMIN') {
-          navigate('/dashboard'); // Redirige al Dashboard
+          navigate('/admin');
         } else if (role === 'USER') {
-          navigate('/user'); // Si tienes una ruta para usuarios regulares
+          navigate('/user');
         } else {
-          // Si el rol no es ni ADMIN ni USER, puedes redirigir a una página genérica o de error
-          navigate('/unauthorized');
+          // Fallback for unknown roles or roles not explicitly handled
+          navigate('/login'); // Redirect to login or a generic page
+          alert('Rol de usuario desconocido. Por favor, contacta al administrador.');
+          localStorage.clear(); // Clear potentially bad session data
         }
       } else {
         const errorData = await response.json();
@@ -75,24 +77,25 @@ function Login() {
     <div className={styles['login-container']}>
       <h1>Iniciar Sesión</h1>
       <form onSubmit={handleLogin} className={styles['login-form']}>
+        {/* AGREGA id y name a los campos de login para accesibilidad y autofill */}
         <input
           type="text"
-          id="username"
-          name="username"
+          id="username" // Agregado id
+          name="username" // Agregado name
           placeholder="Usuario"
           value={username}
           onChange={(e) => setUsername(e.target.value)}
-          autoComplete="username"
+          autoComplete="username" // Sugerencia para autocompletado
           required
         />
         <input
           type="password"
-          id="password"
-          name="password"
+          id="password" // Agregado id
+          name="password" // Agregado name
           placeholder="Contraseña"
           value={password}
           onChange={(e) => setPassword(e.target.value)}
-          autoComplete="current-password"
+          autoComplete="current-password" // Sugerencia para autocompletado
           required
         />
         <button type="submit" disabled={isLoading}>
