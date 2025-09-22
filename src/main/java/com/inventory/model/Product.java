@@ -8,7 +8,6 @@ import jakarta.persistence.*;
 public class Product {
 
     @Id
-    @JoinColumn(name = "category_id", nullable = false)
     private String id;
 
     private String name;

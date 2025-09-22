@@ -1,11 +1,9 @@
-// src/components/Dashboard.js
 import React, { useState, useEffect, useRef } from 'react';
 import AdminSidebar from './Sidebar';
 import AdminNavbar from './Navbar';
 import CrudManager from './CrudManager';
 import Modal from './Modal';
 import { useNavigate } from 'react-router-dom';
-import axios from './utils/axiosConfig';
 
 function Dashboard() {
   const [activeModule, setActiveModule] = useState('inventory');
@@ -21,11 +19,8 @@ function Dashboard() {
 
   useEffect(() => {
     const role = localStorage.getItem('userRole');
-    if (role) {
-      setUserRole(role);
-    } else {
-      navigate('/login');
-    }
+    if (role) setUserRole(role);
+    else navigate('/login');
   }, [navigate]);
 
   useEffect(() => {
@@ -34,16 +29,11 @@ function Dashboard() {
         setIsSidebarExpanded(false);
       }
     }
-
     document.addEventListener('mousedown', handleClickOutside);
-    return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
-    };
-  }, [sidebarRef, isSidebarExpanded]);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [isSidebarExpanded]);
 
-  const toggleSidebar = () => {
-    setIsSidebarExpanded(!isSidebarExpanded);
-  };
+  const toggleSidebar = () => setIsSidebarExpanded(!isSidebarExpanded);
 
   const handleModuleChange = (module) => {
     setActiveModule(module);
@@ -60,51 +50,24 @@ function Dashboard() {
     }
   };
 
-  const handleInventoryOptionClick = (type) => {
-    if (type === 'products') {
-      setActiveInventoryView('products');
-    } else if (type === 'categories') {
-      setActiveInventoryView('categories');
-    }
-  };
+  const handleInventoryOptionClick = (type) => setActiveInventoryView(type === 'products' ? 'products' : 'categories');
 
   const renderContent = () => {
     switch (activeModule) {
       case 'inventory':
-        return (
-          <CrudManager
-            resourceType={activeInventoryView}
-            userRole={userRole}
-          />
-        );
+        return <CrudManager resourceType={activeInventoryView} userRole={userRole} />;
       case 'users':
-        if (userRole === 'ADMIN') {
-          return (
-            <div className="text-center mt-12 text-lg text-gray-600">
-              <h2 className="text-2xl font-semibold mb-2">Gestión de Usuarios</h2>
-              <p>Funcionalidad en desarrollo. Como administrador, aquí podrías ver y editar usuarios.</p>
-            </div>
-          );
-        }
         return (
           <div className="text-center mt-12 text-lg text-gray-600">
-            <h2 className="text-2xl font-semibold mb-2">Mi Perfil</h2>
-            <p>Solo puedes ver tu propio perfil.</p>
+            <h2 className="text-2xl font-semibold mb-2">{userRole === 'ADMIN' ? 'Gestión de Usuarios' : 'Mi Perfil'}</h2>
+            <p>{userRole === 'ADMIN' ? 'Funcionalidad en desarrollo. Aquí podrías ver y editar usuarios.' : 'Solo puedes ver tu propio perfil.'}</p>
           </div>
         );
       case 'settings':
-        if (userRole === 'ADMIN') {
-          return (
-            <div className="text-center mt-12 text-lg text-gray-600">
-              <h2 className="text-2xl font-semibold mb-2">Configuración de la Aplicación</h2>
-              <p>Funcionalidad en desarrollo. Aquí podrías ajustar la configuración global.</p>
-            </div>
-          );
-        }
         return (
-          <div className="text-center mt-12 text-lg text-red-500">
-            <h2 className="text-2xl font-semibold mb-2">Acceso Denegado</h2>
-            <p>No tienes permisos para ver esta sección.</p>
+          <div className={`text-center mt-12 text-lg ${userRole === 'ADMIN' ? 'text-gray-600' : 'text-red-500'}`}>
+            <h2 className="text-2xl font-semibold mb-2">{userRole === 'ADMIN' ? 'Configuración de la Aplicación' : 'Acceso Denegado'}</h2>
+            <p>{userRole === 'ADMIN' ? 'Funcionalidad en desarrollo. Ajustes globales.' : 'No tienes permisos para ver esta sección.'}</p>
           </div>
         );
       default:
@@ -127,7 +90,7 @@ function Dashboard() {
         activeModule={activeModule}
         userRole={userRole}
       />
-      <div className={`flex-1 flex flex-col transition-all duration-300`}>
+      <div className="flex-1 flex flex-col transition-all duration-300">
         <AdminNavbar
           activeModule={activeModule}
           onSubmenuOptionClick={handleInventoryOptionClick}
@@ -139,11 +102,7 @@ function Dashboard() {
       </div>
 
       {showModal && (
-        <Modal
-          message={modalMessage}
-          onConfirm={modalAction}
-          onCancel={() => setShowModal(false)}
-        />
+        <Modal message={modalMessage} onConfirm={modalAction} onCancel={() => setShowModal(false)} />
       )}
     </div>
   );

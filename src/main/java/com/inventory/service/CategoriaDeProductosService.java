@@ -74,4 +74,8 @@ public class CategoriaDeProductosService {
         }
     }
 
+    public Optional<CategoryProduct> obtenerCategoriaPorId(String id) {
+        return categoryRepository.findById(id);
+    }
+
 }
