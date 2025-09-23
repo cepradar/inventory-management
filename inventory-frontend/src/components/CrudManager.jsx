@@ -141,17 +141,15 @@ export default function CrudManager({ resourceType, userRole }) {
 
   const AgregarEditarProductos = async (e, type) => {
   e.preventDefault();
-  console.log('[CrudManager] Token actual:', localStorage.getItem('authToken'));
 
   const payload = {
-  id: formData.id || Date.now().toString(),  // 👈 usa lo que escribió el usuario o genera uno si está vacío
-  name: formData.name,
-  description: formData.description,
-  price: parseFloat(formData.price),
-  quantity: parseInt(formData.quantity),
-  categoryId: formData.categoryId
-};
-
+    id: editingId ? editingId : (formData.id || Date.now().toString()), // 👈 mismo id si edita
+    name: formData.name,
+    description: formData.description,
+    price: parseFloat(formData.price),
+    quantity: parseInt(formData.quantity),
+    categoryId: formData.categoryId
+  };
 
   try {
     const method = editingId ? 'put' : 'post';
@@ -159,9 +157,8 @@ export default function CrudManager({ resourceType, userRole }) {
       ? `${apiEndpoints[type].base}/actualizar/${editingId}`
       : `${apiEndpoints[type].base}/agregar`;
 
-    console.log('[CrudManager] FormData enviado:', payload);
+    console.log('[CrudManager] Payload enviado:', payload);
     await api[method](url, payload);
-    console.log('[CrudManager] Response:', payload);
 
     alert(`${type} ${editingId ? 'actualizado' : 'agregado'} exitosamente.`);
     setFormData({});
@@ -173,6 +170,7 @@ export default function CrudManager({ resourceType, userRole }) {
     alert(`Error al ${editingId ? 'actualizar' : 'agregar'} ${type}.`);
   }
 };
+
 
 
   const handleEdit = (id) => {

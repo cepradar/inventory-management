@@ -2,6 +2,7 @@ package com.inventory.controller;
 
 import com.inventory.dto.CategoryProductDto;
 import com.inventory.dto.ProductDto;
+import com.inventory.model.CategoryProduct;
 import com.inventory.model.Product;
 import com.inventory.service.CategoriaDeProductosService;
 import com.inventory.service.ProductoService;
@@ -74,12 +75,13 @@ public class ProductController {
         // Actualizar los campos del producto
         Product producto = ProductDto.toProducto(productosDto);
 
-        // Manejar la categoría
-        if (productosDto.getName() != null) {
-            CategoryProductDto categoria = categoryService.obtenerCategoriaPorNombre(productosDto.getName())
-                    .orElseThrow(() -> new RuntimeException("Categoría no encontrada"));
-            producto.setCategory(CategoryProductDto.toCategoria(categoria));
-        }
+        // Manejar la categoría si viene en el DTO
+if (productosDto.getCategoryId() != null) {
+    CategoryProduct categoria = categoryService.obtenerCategoriaPorId(productosDto.getCategoryId())
+            .orElseThrow(() -> new RuntimeException("Categoría no encontrada"));
+    producto.setCategory(categoria); // 👈 ya es la entidad, se asigna directo
+}
+
 
         Product productoActualizado = productService.actualizarProducto(productosDto);
 
