@@ -90,17 +90,15 @@ if (productosDto.getCategoryId() != null) {
         return ResponseEntity.ok(productoDto);
     }
 
-    @DeleteMapping("/eliminar/{id}")
-    public ResponseEntity<Void> eliminarProducto(@PathVariable Long id, ProductDto productosDto) {
-        // Verificar si el producto existe
-        Optional<ProductDto> productoExistente = productService.obtenerProductoPorId(productosDto.getId());
-        if (productoExistente.isEmpty()) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).build(); // Producto no encontrado
-        }
-
-        // Eliminar el producto
-        productService.eliminarProducto(productosDto);
-        return ResponseEntity.status(HttpStatus.NO_CONTENT).build();
+    @DeleteMapping("/eliminar")
+public ResponseEntity<Void> eliminarProducto(@RequestBody ProductDto productoDto) {
+    try {
+        productService.eliminarProducto(productoDto);
+        return ResponseEntity.noContent().build(); // 204 No Content
+    } catch (RuntimeException e) {
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).build(); // 404 Not Found
     }
+}
+
 
 }

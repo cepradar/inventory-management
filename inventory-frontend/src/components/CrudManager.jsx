@@ -10,16 +10,16 @@ const ResourceForm = ({ resourceType, formData, categories, handleInputChange, h
       <h3 className="text-xl font-bold mb-4">{editingId ? `Editar ${resourceType}` : `Añadir ${resourceType}`}</h3>
       {resourceType === 'products' ? (
         <>
-         <input
-      type="text"
-      name="id"
-      placeholder="ID del Producto"
-      value={formData.id || ''}
-      onChange={handleInputChange}
-      className="w-full p-2 mb-2 border rounded"
-      required
-      readOnly={!!editingId}   // 👈 solo se puede editar en creación
-    />
+          <input
+            type="text"
+            name="id"
+            placeholder="ID del Producto"
+            value={formData.id || ''}
+            onChange={handleInputChange}
+            className="w-full p-2 mb-2 border rounded"
+            required
+            readOnly={!!editingId}   // 👈 solo se puede editar en creación
+          />
           <input type="text" name="name" placeholder="Nombre del Producto" value={formData.name || ''} onChange={handleInputChange} className="w-full p-2 mb-2 border rounded" required />
           <input type="text" name="description" placeholder="Descripción del Producto" value={formData.description || ''} onChange={handleInputChange} className="w-full p-2 mb-2 border rounded" required />
           <input type="number" name="price" placeholder="Precio" value={formData.price || ''} onChange={handleInputChange} className="w-full p-2 mb-2 border rounded" required />
@@ -97,16 +97,16 @@ export default function CrudManager({ resourceType, userRole }) {
   const [editingId, setEditingId] = useState(null);
   const [showModal, setShowModal] = useState(false);
   const [modalMessage, setModalMessage] = useState('');
-  const [modalAction, setModalAction] = useState(() => {});
+  const [modalAction, setModalAction] = useState(() => { });
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
   const apiEndpoints = {
-    products: { list: '/api/products/listar', base: '/api/products' },
+    products: { list: '/api/products/listar', base: '/api/products', eliminar: '/api/products/eliminar' },
     categories: { list: '/api/categories/listarCategoria', base: '/api/categories' },
   };
 
-  const fetchData = async () => {
+  const cargarProductos = async () => {
     setLoading(true);
     try {
       const response = await api.get(apiEndpoints[resourceType].list);
@@ -123,7 +123,39 @@ export default function CrudManager({ resourceType, userRole }) {
     }
   };
 
-  const fetchCategories = async () => {
+   const agregarEditarProductos = async (e, type) => {
+    e.preventDefault();
+
+    const payload = {
+      id: editingId ? editingId : (formData.id || Date.now().toString()), // 👈 mismo id si edita
+      name: formData.name,
+      description: formData.description,
+      price: parseFloat(formData.price),
+      quantity: parseInt(formData.quantity),
+      categoryId: formData.categoryId
+    };
+
+    try {
+      const method = editingId ? 'put' : 'post';
+      const url = editingId
+        ? `${apiEndpoints[type].base}/actualizar/${editingId}`
+        : `${apiEndpoints[type].base}/agregar`;
+
+      console.log('[CrudManager] Payload enviado:', payload);
+      await api[method](url, payload);
+
+      alert(`${type} ${editingId ? 'actualizado' : 'agregado'} exitosamente.`);
+      setFormData({});
+      setEditingId(null);
+      setShowForm(false);
+      cargarProductos();
+    } catch (error) {
+      console.error(`Error al ${editingId ? 'actualizar' : 'agregar'} ${type}:`, error);
+      alert(`Error al ${editingId ? 'actualizar' : 'agregar'} ${type}.`);
+    }
+  };
+
+  const cargarCategorias = async () => {
     try {
       const response = await api.get(apiEndpoints.categories.list);
       setCategories(response.data);
@@ -133,46 +165,11 @@ export default function CrudManager({ resourceType, userRole }) {
   };
 
   useEffect(() => {
-    fetchData();
-    if (resourceType === 'products') fetchCategories();
+    cargarProductos();
+    if (resourceType === 'products') cargarCategorias();
   }, [resourceType]);
 
   const handleInputChange = (e) => setFormData({ ...formData, [e.target.name]: e.target.value });
-
-  const AgregarEditarProductos = async (e, type) => {
-  e.preventDefault();
-
-  const payload = {
-    id: editingId ? editingId : (formData.id || Date.now().toString()), // 👈 mismo id si edita
-    name: formData.name,
-    description: formData.description,
-    price: parseFloat(formData.price),
-    quantity: parseInt(formData.quantity),
-    categoryId: formData.categoryId
-  };
-
-  try {
-    const method = editingId ? 'put' : 'post';
-    const url = editingId
-      ? `${apiEndpoints[type].base}/actualizar/${editingId}`
-      : `${apiEndpoints[type].base}/agregar`;
-
-    console.log('[CrudManager] Payload enviado:', payload);
-    await api[method](url, payload);
-
-    alert(`${type} ${editingId ? 'actualizado' : 'agregado'} exitosamente.`);
-    setFormData({});
-    setEditingId(null);
-    setShowForm(false);
-    fetchData();
-  } catch (error) {
-    console.error(`Error al ${editingId ? 'actualizar' : 'agregar'} ${type}:`, error);
-    alert(`Error al ${editingId ? 'actualizar' : 'agregar'} ${type}.`);
-  }
-};
-
-
-
   const handleEdit = (id) => {
     const itemToEdit = data.find(item => item.id === id);
     if (itemToEdit) {
@@ -187,9 +184,12 @@ export default function CrudManager({ resourceType, userRole }) {
     setModalMessage(`¿Estás seguro de que quieres eliminar este ${resourceType}?`);
     setModalAction(() => async () => {
       try {
-        await api.delete(`${apiEndpoints[resourceType].base}/${id}`);
+        await api.delete(apiEndpoints[resourceType].eliminar, {
+          data: { id }
+        });
+
         alert(`${resourceType} eliminado exitosamente.`);
-        fetchData();
+        cargarProductos();
       } catch (error) {
         console.error(`Error al eliminar ${resourceType}:`, error);
         alert(`Error al eliminar ${resourceType}.`);
@@ -206,17 +206,17 @@ export default function CrudManager({ resourceType, userRole }) {
   };
 
   const handleAdd = () => {
-  setEditingId(null);
-  setFormData({
-    id: Date.now().toString(),  // 👈 generamos ID por defecto
-    name: '',
-    description: '',
-    price: '',
-    quantity: '',
-    categoryId: ''
-  });
-  setShowForm(true);
-};
+    setEditingId(null);
+    setFormData({
+      id: Date.now().toString(),  // 👈 generamos ID por defecto
+      name: '',
+      description: '',
+      price: '',
+      quantity: '',
+      categoryId: ''
+    });
+    setShowForm(true);
+  };
 
   if (loading) return <div className="p-8 text-center">Cargando {resourceType}...</div>;
 
@@ -228,7 +228,7 @@ export default function CrudManager({ resourceType, userRole }) {
           formData={formData}
           categories={categories}
           handleInputChange={handleInputChange}
-          handleFormSubmit={AgregarEditarProductos}
+          handleFormSubmit={agregarEditarProductos}
           editingId={editingId}
           handleCancelEdit={handleCancelEdit}
         />
