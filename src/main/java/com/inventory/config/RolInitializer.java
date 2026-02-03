@@ -14,13 +14,20 @@ public class RolInitializer {
     CommandLineRunner initRoles(RolesRepository roleRepository) {
         return args -> {
             if (roleRepository.findByName("ADMIN") == null) {
-                roleRepository.save(new Rol( "ADMIN"));
+                Rol adminRole = new Rol("ADMIN", "#4f46e5");
+                roleRepository.save(adminRole);
             }
             if (roleRepository.findByName("CLIENTE") == null) {
-                roleRepository.save(new Rol( "CLIENTE"));
+                Rol clienteRole = new Rol("CLIENTE", "#2563eb");
+                roleRepository.save(clienteRole);
             }
             if (roleRepository.findByName("TECNICO") == null) {
-                roleRepository.save(new Rol( "TECNICO"));
+                Rol tecnicoRole = new Rol("TECNICO", "#16a34a");
+                roleRepository.save(tecnicoRole);
+            }
+            if (roleRepository.findByName("USER") == null) {
+                Rol userRole = new Rol("USER", "#2563eb");
+                roleRepository.save(userRole);
             }
         };
     }

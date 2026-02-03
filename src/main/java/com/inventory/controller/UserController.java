@@ -12,9 +12,10 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.AuthenticationException;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
-
+import jakarta.servlet.http.HttpServletRequest;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
@@ -68,7 +69,7 @@ public class UserController {
         }
 
         // Obtener el rol del usuario autenticado
-        String role = user.get().getRole().getName(); // Obtener el rol del usuario desde la base de datos
+        String role = user.get().getRole(); // UserDto.getRole() ya devuelve un String
 
         // Generar token JWT para el usuario autenticado
         String token = jwtUtil.generateToken(loginRequest.getUsername(), role);
@@ -120,14 +121,34 @@ public class UserController {
 
     @PostMapping("/update-profile-picture")
     public Map<String, String> updateProfilePicture(@RequestParam("file") MultipartFile file,
-            @RequestHeader("Authorization") String token) throws Exception {
-        String username = jwtUtil.extractUsername(token.substring(7)); // Elimina "Bearer "
+            HttpServletRequest request) throws Exception {
+        // Extraer el token del header Authorization
+        String authHeader = request.getHeader("Authorization");
+        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+            throw new Exception("Token no encontrado o formato inválido");
+        }
+        
+        String token = authHeader.substring(7); // Elimina "Bearer "
+        String username = jwtUtil.extractUsername(token);
         boolean isUpdated = userService.updateProfilePicture(username, file);
 
         Map<String, String> response = new HashMap<>();
         response.put("message",
                 isUpdated ? "Foto de perfil actualizada correctamente" : "Error al actualizar la foto de perfil");
         return response;
+    }
+
+    @GetMapping("/profile-picture/{username}")
+    public ResponseEntity<byte[]> getProfilePicture(@PathVariable String username) {
+        var picture = userService.getProfilePicture(username);
+        
+        if (picture.isPresent() && picture.get().length > 0) {
+            return ResponseEntity.ok()
+                    .header("Content-Type", "image/png")
+                    .body(picture.get());
+        }
+        
+        return ResponseEntity.notFound().build();
     }
 
     @PostMapping("/logout")

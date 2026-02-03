@@ -8,35 +8,40 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 public class ClienteDto {
 
-    private String id;
+    private String documento;  // ID del cliente (documento)
     private String nit;
     private String categoryId;
+    private String categoryName;
     private String tipoDocumentoId;
+    private String tipoDocumentoName;
     private String nombre;
     private String telefono;
     private String direccion;
     private Boolean activo;
+    
+    // Campos adicionales del frontend
+    private String apellido;
+    private String email;
+    private String ciudad;
 
     // Constructor desde entidad Cliente
     public ClienteDto(Cliente cliente) {
-        this.id = cliente.getId();
+        this.documento = cliente.getId();
         this.nit = cliente.getNit();
-        this.categoryId = cliente.getCategory().getId();
-        this.tipoDocumentoId = cliente.getTipoId().getId();
+        
+        if (cliente.getCategory() != null) {
+            this.categoryId = cliente.getCategory().getId();
+            this.categoryName = cliente.getCategory().getName();
+        }
+        
+        if (cliente.getTipoDocumento() != null) {
+            this.tipoDocumentoId = cliente.getTipoDocumento().getId();
+            this.tipoDocumentoName = cliente.getTipoDocumento().getName();
+        }
+        
         this.nombre = cliente.getNombre();
         this.telefono = cliente.getTelefono();
         this.direccion = cliente.getDireccion();
         this.activo = cliente.getActivo();
-    }
-
-    // Método utilitario para convertir DTO a entidad
-    public static Cliente toCliente(ClienteDto clienteDto) {
-        Cliente cliente = new Cliente();
-        cliente.setDireccion(clienteDto.getDireccion());
-        cliente.setNit(clienteDto.getNit());
-        cliente.setNombre(clienteDto.getNombre());
-        cliente.setTelefono(clienteDto.getTelefono());
-        cliente.setActivo(clienteDto.getActivo());
-        return cliente;
     }
 }

@@ -2,10 +2,52 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from './utils/axiosConfig';
 
-function ProfileMenu() {
+function ProfileMenu({ userName }) {
   const navigate = useNavigate();
   const [isOpen, setIsOpen] = useState(false);
+  const [profilePicture, setProfilePicture] = useState(null);
+  const [loading, setLoading] = useState(true);
   const menuRef = useRef(null);
+
+  // Cargar la foto de perfil al montar el componente
+  useEffect(() => {
+    const loadProfilePicture = async () => {
+      try {
+        const username = localStorage.getItem('userName');
+        if (!username) {
+          setLoading(false);
+          return;
+        }
+        
+        const response = await axios.get(`/auth/profile-picture/${username}`, {
+          responseType: 'arraybuffer',
+          timeout: 5000 // 5 segundos máximo para foto
+        });
+        
+        if (response.data && response.data.byteLength > 0) {
+          const blob = new Blob([response.data], { type: 'image/jpeg' });
+          const imageUrl = URL.createObjectURL(blob);
+          setProfilePicture(imageUrl);
+        }
+      } catch (error) {
+        // Silenciosamente usar placeholder si no hay foto
+        if (error.code !== 'ECONNABORTED') {
+          console.log('Sin foto de perfil configurada');
+        }
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadProfilePicture();
+    
+    // Cleanup: liberar URL cuando el componente se desmonte
+    return () => {
+      if (profilePicture && profilePicture.startsWith('blob:')) {
+        URL.revokeObjectURL(profilePicture);
+      }
+    };
+  }, []);
 
   // Cierra el menú si se hace clic fuera de él
   useEffect(() => {
@@ -65,19 +107,27 @@ function ProfileMenu() {
     formData.append('file', file);
 
     try {
-      const response = await axios.post('/auth/update-profile-picture', formData, {
-        headers: {
-          'Content-Type': 'multipart/form-data',
-        },
-      });
+      // El interceptor de axios añadirá automáticamente el token
+      const response = await axios.post('/auth/update-profile-picture', formData);
       alert(response.data.message);
+      // Recargar la foto sin recargar la página
+      const username = localStorage.getItem('userName');
+      const picResponse = await axios.get(`/auth/profile-picture/${username}`, {
+        responseType: 'arraybuffer'
+      });
+      if (picResponse.data && picResponse.data.byteLength > 0) {
+        const blob = new Blob([picResponse.data], { type: 'image/jpeg' });
+        const imageUrl = URL.createObjectURL(blob);
+        setProfilePicture(imageUrl);
+      }
     } catch (error) {
       console.error('Error al actualizar la foto de perfil:', error);
       alert('Error al actualizar la foto de perfil.');
     }
   };
 
-  const profilePicture = 'https://i.ibb.co/L5T9W5W/default-avatar.jpg';
+  // Avatar placeholder como data URL (SVG)
+  const defaultProfilePicture = 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="%23999"><circle cx="12" cy="8" r="4"/><path d="M12 14c-6 0-8 3-8 3v3h16v-3s-2-3-8-3z"/></svg>';
 
   return (
     <div className="relative inline-block text-left" ref={menuRef}>
@@ -88,7 +138,7 @@ function ProfileMenu() {
           onClick={() => setIsOpen(!isOpen)}
         >
           <img
-            src={profilePicture}
+            src={loading ? defaultProfilePicture : (profilePicture || defaultProfilePicture)}
             alt="Profile"
             className="h-full w-full object-cover rounded-full"
           />
@@ -97,6 +147,10 @@ function ProfileMenu() {
 
       {isOpen && (
         <div className="origin-top-right absolute right-0 mt-2 w-56 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 divide-y divide-gray-100 focus:outline-none z-50 animate-fade-in-down" role="menu" aria-orientation="vertical" aria-labelledby="options-menu">
+          {/* Nuevo div para el texto de bienvenida */}
+          <div className="p-4 text-sm font-medium text-gray-900 border-b border-gray-200" role="none">
+            Bienvenido, {userName || 'Administrador'}
+          </div>
           <div className="py-1" role="none">
             <button
               onClick={handlePasswordChange}

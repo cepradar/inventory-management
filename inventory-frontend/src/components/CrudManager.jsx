@@ -2,12 +2,14 @@ import React, { useState, useEffect } from 'react';
 import api from './utils/axiosConfig'; // Axios con interceptor JWT
 import Modal from './Modal';
 import { useNavigate } from 'react-router-dom';
+import { PencilIcon, TrashIcon } from '@heroicons/react/24/outline';
+import DataTable from './DataTable';
 
 // Formulario dinámico
 const ResourceForm = ({ resourceType, formData, categories, handleInputChange, handleFormSubmit, editingId, handleCancelEdit }) => {
   return (
     <form onSubmit={(e) => handleFormSubmit(e, resourceType)} className="p-4 border rounded shadow-sm">
-      <h3 className="text-xl font-bold mb-4">{editingId ? `Editar ${resourceType}` : `Añadir ${resourceType}`}</h3>
+      <h3 className="text-xl font-bold mb-4">{editingId ? `Editar ${resourceType}` : `Crear ${resourceType}`}</h3>
       {resourceType === 'products' ? (
         <>
           <input
@@ -41,50 +43,91 @@ const ResourceForm = ({ resourceType, formData, categories, handleInputChange, h
   );
 };
 
-// Lista dinámica
 const ResourceList = ({ resourceType, data, categories, userRole, onEdit, onDelete, onAdd }) => {
   const isAdmin = userRole === 'ADMIN';
   const getCategoryName = (categoryId) => categories.find(cat => cat.id === categoryId)?.name || 'N/A';
 
   return (
     <div className="p-4">
-      <div className="flex justify-between items-center mb-4">
-        <h3 className="text-xl font-bold">Listado de {resourceType === 'products' ? 'Productos' : 'Categorías'}</h3>
-        {isAdmin && <button onClick={onAdd} className="bg-green-500 text-white p-2 rounded">Añadir {resourceType === 'products' ? 'Producto' : 'Categoría'}</button>}
+      <div className="flex justify-between items-center mb-4 flex-wrap gap-2">
+        <h3 className="text-lg md:text-xl font-bold">Listado de {resourceType === 'products' ? 'Productos' : 'Categorías'}</h3>
+        {isAdmin && <button onClick={onAdd} className="bg-green-500 text-white p-2 rounded text-sm md:text-base">Crear {resourceType === 'products' ? 'Producto' : 'Categoría'}</button>}
       </div>
-      <table className="min-w-full bg-white border-collapse">
-        <thead>
-          <tr className="bg-gray-200">
-            <th className="p-2 border">ID</th>
-            <th className="p-2 border">Nombre</th>
-            {resourceType === 'products' && <>
-              <th className="p-2 border">Descripción</th>
-              <th className="p-2 border">Precio</th>
-              <th className="p-2 border">Cantidad</th>
-              <th className="p-2 border">Categoría</th>
-            </>}
-            {isAdmin && <th className="p-2 border">Acciones</th>}
-          </tr>
-        </thead>
-        <tbody>
-          {data.map(item => (
-            <tr key={item.id} className="hover:bg-gray-100">
-              <td className="p-2 border">{item.id}</td>
-              <td className="p-2 border">{item.name}</td>
-              {resourceType === 'products' && <>
-                <td className="p-2 border">{item.description}</td>
-                <td className="p-2 border">{item.price}</td>
-                <td className="p-2 border">{item.quantity}</td>
-                <td className="p-2 border">{getCategoryName(item.categoryId)}</td>
-              </>}
-              {isAdmin && <td className="p-2 border text-center">
-                <button onClick={() => onEdit(item.id)} className="bg-yellow-500 text-white p-1 rounded mr-2">Editar</button>
-                <button onClick={() => onDelete(item.id)} className="bg-red-500 text-white p-1 rounded">Eliminar</button>
-              </td>}
-            </tr>
-          ))}
-        </tbody>
-      </table>
+      
+      <DataTable
+        title={resourceType === 'products' ? 'Productos' : 'Categorías'}
+        data={data}
+        columns={
+          resourceType === 'products'
+            ? [
+                { key: 'id', label: 'ID', sortable: true, filterable: true },
+                { key: 'name', label: 'Nombre', sortable: true, filterable: true },
+                { key: 'description', label: 'Descripción', sortable: true, filterable: true },
+                { key: 'price', label: 'Precio', sortable: true, filterable: false },
+                { key: 'quantity', label: 'Cantidad', sortable: true, filterable: false },
+                {
+                  key: 'categoryId',
+                  label: 'Categoría',
+                  sortable: true,
+                  filterable: true,
+                  render: (item) => getCategoryName(item.categoryId)
+                },
+                ...(isAdmin ? [{
+                  key: 'acciones',
+                  label: 'Acciones',
+                  sortable: false,
+                  filterable: false,
+                  render: (item) => (
+                    <div className="flex justify-center items-center gap-2 flex-nowrap">
+                      <button 
+                        onClick={() => onEdit(item.id)} 
+                        className="inline-flex items-center justify-center bg-yellow-500 hover:bg-yellow-600 text-white p-2 rounded transition-colors flex-shrink-0"
+                        title="Editar"
+                      >
+                        <PencilIcon className="w-4 h-4" />
+                      </button>
+                      <button 
+                        onClick={() => onDelete(item.id)} 
+                        className="inline-flex items-center justify-center bg-red-500 hover:bg-red-600 text-white p-2 rounded transition-colors flex-shrink-0"
+                        title="Eliminar"
+                      >
+                        <TrashIcon className="w-4 h-4" />
+                      </button>
+                    </div>
+                  )
+                }] : [])
+              ]
+            : [
+                { key: 'id', label: 'ID', sortable: true, filterable: true },
+                { key: 'name', label: 'Nombre', sortable: true, filterable: true },
+                { key: 'description', label: 'Descripción', sortable: true, filterable: true },
+                ...(isAdmin ? [{
+                  key: 'acciones',
+                  label: 'Acciones',
+                  sortable: false,
+                  filterable: false,
+                  render: (item) => (
+                    <div className="flex justify-center items-center gap-2 flex-nowrap">
+                      <button 
+                        onClick={() => onEdit(item.id)} 
+                        className="inline-flex items-center justify-center bg-yellow-500 hover:bg-yellow-600 text-white p-2 rounded transition-colors flex-shrink-0"
+                        title="Editar"
+                      >
+                        <PencilIcon className="w-4 h-4" />
+                      </button>
+                      <button 
+                        onClick={() => onDelete(item.id)} 
+                        className="inline-flex items-center justify-center bg-red-500 hover:bg-red-600 text-white p-2 rounded transition-colors flex-shrink-0"
+                        title="Eliminar"
+                      >
+                        <TrashIcon className="w-4 h-4" />
+                      </button>
+                    </div>
+                  )
+                }] : [])
+              ]
+        }
+      />
     </div>
   );
 };
@@ -123,7 +166,7 @@ export default function CrudManager({ resourceType, userRole }) {
     }
   };
 
-   const agregarEditarProductos = async (e, type) => {
+  const agregarEditarProductos = async (e, type) => {
     e.preventDefault();
 
     const payload = {

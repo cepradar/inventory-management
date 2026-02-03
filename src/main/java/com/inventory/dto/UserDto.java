@@ -1,6 +1,5 @@
 package com.inventory.dto;
 
-import com.inventory.model.Rol;
 import com.inventory.model.User;
 
 import ch.qos.logback.core.subst.Token;
@@ -13,16 +12,28 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 public class UserDto {
 
+    private String id;
     private String username;
-    private Rol role;
+    private String email;
+    private String telefono;
+    private String firstName;
+    private String lastName;
+    private String role;
+    private String roleColor;
     private byte[] profilePicture;
     private Token token;
 
     // Constructor
     public UserDto(User usuario) {
+        this.id = usuario.getUsername(); // Usar username como id
         this.username = usuario.getUsername();
-        this.role = usuario.getRole(); // Asumiendo que el Usuario tiene un Rol
+        this.role = usuario.getRole() != null ? usuario.getRole().getName() : "USER";
+        this.roleColor = usuario.getRole() != null && usuario.getRole().getColor() != null ? usuario.getRole().getColor() : "#2563eb";
         this.profilePicture = usuario.getProfilePicture();
+        this.firstName = usuario.getFirstName();
+        this.lastName = usuario.getLastName();
+        this.email = usuario.getEmail();
+        this.telefono = usuario.getTelefono();
     }
 
 
@@ -37,7 +48,10 @@ public class UserDto {
         User usuarios = new User();
         usuarios.setUsername(usuariosDto.getUsername());
         usuarios.setProfilePicture(usuariosDto.getProfilePicture());
-        usuarios.setRole(usuariosDto.getRole());
+        usuarios.setFirstName(usuariosDto.getFirstName());
+        usuarios.setLastName(usuariosDto.getLastName());
+        usuarios.setEmail(usuariosDto.getEmail());
+        usuarios.setTelefono(usuariosDto.getTelefono());
 
         return usuarios;
     }

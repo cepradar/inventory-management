@@ -47,13 +47,36 @@ public class SecurityConfig {
     public SecurityFilterChain securityFilterChain(HttpSecurity http, JwtFilter jwtFilter, UsuarioService usuarioService) throws Exception { // AHORA JwtFilter es un parámetro aquí
         http
             .csrf(csrf -> csrf.disable())
-            .cors(cors -> cors.disable())
+            .cors(cors -> cors.configurationSource(request -> {
+                var corsConfig = new org.springframework.web.cors.CorsConfiguration();
+                corsConfig.setAllowedOrigins(java.util.List.of("http://localhost:5173"));
+                corsConfig.setAllowedMethods(java.util.List.of("GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"));
+                corsConfig.setAllowedHeaders(java.util.List.of("*"));
+                corsConfig.setAllowCredentials(true);
+                corsConfig.setMaxAge(3600L);
+                return corsConfig;
+            }))
             .authorizeHttpRequests(auth -> auth
     .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
     .requestMatchers("/auth/register", "/auth/login", "/api/public/**").permitAll()
+    .requestMatchers("/api/company/info", "/api/company/*/logo", "/api/company/*/logo2").permitAll()
+    .requestMatchers("/auth/update-profile-picture", "/auth/update-password", "/auth/logout").authenticated()
 
-    // Requiere el rol ADMIN (nota que no se pone ROLE_ aquí, Spring lo agrega)
+    // Requiere el rol ADMIN para configuración crítica
+    .requestMatchers(HttpMethod.GET, "/api/categories/listarCategoria").authenticated()
+    .requestMatchers(HttpMethod.GET, "/api/products/listar").authenticated() // Permitir lectura de productos para órdenes
+    .requestMatchers(HttpMethod.GET, "/api/servicios/listar").authenticated() // Permitir lectura de servicios para órdenes
     .requestMatchers("/api/products/**", "/api/categories/**", "/products/**").hasRole("ADMIN")
+    .requestMatchers("/api/auditoria/**").hasRole("ADMIN")
+    .requestMatchers("/api/ventas/**").hasRole("ADMIN")
+    
+    // Permite usuarios autenticados para gestión de clientes y servicios
+    .requestMatchers("/api/clientes/**").authenticated()
+    .requestMatchers("/api/cliente-electrodomesticos/**").authenticated()
+    .requestMatchers("/api/servicios-reparacion/**").authenticated()
+    .requestMatchers("/api/marcas-electrodomestico/**").authenticated()
+    .requestMatchers("/api/categorias-electrodomestico/**").authenticated()
+    .requestMatchers("/api/users/technicians").authenticated() // Para asignar técnicos en órdenes
 
     .anyRequest().authenticated()
             )

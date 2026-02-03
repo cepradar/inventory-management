@@ -68,11 +68,11 @@ public class Cliente {
         this.category = category;
     }
 
-    public DocumentoTipo getTipoId() {
+    public DocumentoTipo getTipoDocumento() {
         return tipoDocumento;
     }
 
-    public void setTipoId(DocumentoTipo tipoDocumento) {
+    public void setTipoDocumento(DocumentoTipo tipoDocumento) {
         this.tipoDocumento = tipoDocumento;
     }
 

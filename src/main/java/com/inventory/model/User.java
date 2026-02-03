@@ -6,7 +6,6 @@ import org.springframework.security.core.userdetails.UserDetails;
 
 import jakarta.persistence.*;
 
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 
@@ -20,11 +19,23 @@ public class User implements UserDetails {
     @Column(nullable = false)
     private String password;
 
+    @Column(nullable = true)
+    private String email;
+
+    @Column(nullable = true)
+    private String telefono;
+
+    @Column(nullable = true)
+    private String firstName;
+
+    @Column(nullable = true)
+    private String lastName;
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "roles_name", nullable = false)
     private Rol role;
 
-    @Lob
+    @Basic(fetch = FetchType.LAZY)
     @Column(nullable = true) // El campo es opcional
     private byte[] profilePicture;
 
@@ -32,12 +43,17 @@ public class User implements UserDetails {
     public User() {
     }
 
+    public User(String username, String password, Rol role) {
+        this.username = username;
+        this.password = password;
+        this.role = role;
+    }
+
     public User(String username, String password, Rol role, byte[] profilePicture) {
         this.username = username;
         this.password = password;
         this.role = role;
         this.profilePicture = profilePicture;
-
     }
 
     @Override
@@ -66,6 +82,22 @@ public class User implements UserDetails {
         this.role = role;
     }
 
+    public String getEmail() {
+        return email;
+    }
+
+    public void setEmail(String email) {
+        this.email = email;
+    }
+
+    public String getTelefono() {
+        return telefono;
+    }
+
+    public void setTelefono(String telefono) {
+        this.telefono = telefono;
+    }
+
     public byte[] getProfilePicture() {
         return profilePicture;
     }
@@ -74,10 +106,25 @@ public class User implements UserDetails {
         this.profilePicture = profilePicture;
     }
 
+    public String getFirstName() {
+        return firstName;
+    }
+
+    public void setFirstName(String firstName) {
+        this.firstName = firstName;
+    }
+
+    public String getLastName() {
+        return lastName;
+    }
+
+    public void setLastName(String lastName) {
+        this.lastName = lastName;
+    }
+
     @Override
     public String toString() {
-        return "Usuarios [username=" + username + ", role=" + role + ", profilePicture="
-                + Arrays.toString(profilePicture) + "]";
+        return "Usuarios [username=" + username + ", role=" + role + "]";
     }
 
     @Override
@@ -110,5 +157,4 @@ public class User implements UserDetails {
     public boolean isEnabled() {
         return true; // Implementa tu lógica de habilitación de usuario si es necesario
     }
-    
 }

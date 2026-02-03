@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from '../utils/axiosConfig'; // Asegúrate de que la ruta sea correcta
 
@@ -8,7 +8,42 @@ function Login() {
   const [message, setMessage] = useState('');
   const [loginStatus, setLoginStatus] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [companyName, setCompanyName] = useState('');
+  const [companyLogo2Url, setCompanyLogo2Url] = useState('');
   const navigate = useNavigate();
+
+  useEffect(() => {
+    let isMounted = true;
+    let objectUrl = null;
+
+    const fetchCompanyInfo = async () => {
+      try {
+        const response = await axios.get('/api/company/info');
+        if (!isMounted) return;
+        setCompanyName(response.data?.razonSocial || '');
+
+        if (response.data?.id) {
+          const logoResponse = await axios.get(`/api/company/${response.data.id}/logo2`, {
+            responseType: 'blob',
+          });
+          if (!isMounted) return;
+          objectUrl = URL.createObjectURL(logoResponse.data);
+          setCompanyLogo2Url(objectUrl);
+        }
+      } catch (error) {
+        console.warn('No se pudo cargar la información de la empresa:', error);
+      }
+    };
+
+    fetchCompanyInfo();
+
+    return () => {
+      isMounted = false;
+      if (objectUrl) {
+        URL.revokeObjectURL(objectUrl);
+      }
+    };
+  }, []);
 
   const handleLogin = async (e) => {
     e.preventDefault();
@@ -51,15 +86,13 @@ function Login() {
       <div className="flex flex-col lg:flex-row w-full max-w-5xl rounded-2xl overflow-hidden shadow-2xl">
         {/* Left Section (Image/Branding) */}
         <div 
-          className="hidden lg:flex w-1/2 bg-cover bg-center" 
-          style={{ backgroundImage: "url('/vite.svg')" }}
+          className="hidden lg:block w-1/2 bg-white bg-no-repeat bg-center" 
+          style={{ 
+            backgroundImage: companyLogo2Url ? `url('${companyLogo2Url}')` : "url('/vite.svg')",
+            backgroundSize: 'contain',
+            backgroundPosition: 'center'
+          }}
         >
-          <div className="w-full h-full bg-gray-900 bg-opacity-70 flex items-center justify-center">
-            <div className="text-center p-8">
-              <h2 className="text-4xl font-bold text-white mb-4">Empower Your Business</h2>
-              <p className="text-lg text-gray-300">Access your corporate dashboard to manage projects and teams efficiently.</p>
-            </div>
-          </div>
         </div>
 
         {/* Right Section (Login Form) */}
@@ -121,7 +154,7 @@ function Login() {
               )}
             </button>
             <div className="mt-8 text-center text-gray-500 text-sm">
-              <p>&copy; 2025 Tu Empresa. Todos los derechos reservados.</p>
+              <p>&copy; 2022 {companyName || 'Tu Empresa'}. Todos los derechos reservados.</p>
             </div>
           </form>
         </div>

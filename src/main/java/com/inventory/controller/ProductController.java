@@ -1,6 +1,5 @@
 package com.inventory.controller;
 
-import com.inventory.dto.CategoryProductDto;
 import com.inventory.dto.ProductDto;
 import com.inventory.model.CategoryProduct;
 import com.inventory.model.Product;
@@ -36,7 +35,7 @@ public class ProductController {
             // CategoriasDeProducto createdCategory = CategoriasDeProductoDto.toCategoria(category);
             // return new ResponseEntity<>(createdCategory, HttpStatus.CREATED);
         } catch (RuntimeException e) {
-            return new ResponseEntity<>(null, HttpStatus.BAD_REQUEST); // En caso de error, como categoría duplicada
+            return new ResponseEntity<>(null, HttpStatus.BAD_REQUEST); // En caso de error, como producto duplicado
         }
     }
 

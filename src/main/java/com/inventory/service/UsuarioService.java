@@ -33,8 +33,7 @@ public class UsuarioService implements UserDetailsService {
     private RolesRepository roleRepository;
 
     public User registerUser(UpdatePswUserDto actualizarUsuariosDto) {
-        // Verificamos si el rol existe por nombre (usando el DTO para obtener el
-        // nombre)
+        // Verificamos si el rol existe por nombre (usando el DTO para obtener el nombre)
         Rol role = roleRepository.findByName(actualizarUsuariosDto.getRole().getName());
         if (role == null) {
             throw new IllegalArgumentException("El rol especificado no existe");
@@ -67,33 +66,26 @@ public class UsuarioService implements UserDetailsService {
 
     @Override
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
-        User user = userRepository.findByUsername(username)
+        User user = userRepository.findByUsernameWithoutPicture(username)
                 .orElseThrow(() -> new UsernameNotFoundException("Usuario no encontrado con el nombre: " + username));
         return user; // User implementa UserDetails
     }
 
     public Boolean updateProfilePicture(String username, MultipartFile file) throws IOException {
-        Optional<User> userOptional = userRepository.findByUsername(username);
-        if (userOptional.isPresent()) {
-            User user = userOptional.get();
-            // Lógica para guardar la imagen de perfil, por ejemplo, en BD
-            byte[] filePath = file.getBytes();
-            user.setProfilePicture(filePath);
-            userRepository.save(user);
-            new UserDto(user);
-            return true;
+        // Verificar que el usuario existe
+        if (!userRepository.findByUsernameWithoutPicture(username).isPresent()) {
+            throw new IllegalArgumentException("Usuario no encontrado");
         }
-        throw new IllegalArgumentException("Usuario no encontrado");
+        
+        // Guardar la foto SOLO en la BD sin cargar el usuario completo
+        byte[] fileBytes = file.getBytes();
+        userRepository.updateProfilePictureByUsername(fileBytes, username);
+        return true;
     }
 
-    //este metodo se usaba en updateProfilePicture pero decidi reemplazarlo por el uso de file.getBytes() en dicha funcion,
-    //no se usa en otra parte del codigo.
-/*
-    private byte[] saveProfilePicture(MultipartFile file) throws IOException {
-        // Convertimos el archivo MultipartFile a un arreglo de bytes (byte[])
-        return file.getBytes();
+    public Optional<byte[]> getProfilePicture(String username) {
+        return userRepository.findProfilePictureByUsername(username);
     }
-         */
 
     public Boolean updatePassword(UpdatePswUserDto usuarioDto) {
         // Buscar el usuario por username
@@ -116,5 +108,78 @@ public class UsuarioService implements UserDetailsService {
     private boolean isValidPassword(String password) {
         // Lógica para validar la contraseña
         return password != null && password.length() >= 8; // Ejemplo de validación
+    }
+
+    public User createUser(UserDto userDto) {
+        // Verificar que el usuario no exista
+        if (userRepository.findByUsername(userDto.getUsername()).isPresent()) {
+            throw new IllegalArgumentException("El usuario ya existe");
+        }
+
+        User user = new User();
+        user.setUsername(userDto.getUsername());
+        if (userDto.getRole() != null) {
+            Rol role = roleRepository.findByName(userDto.getRole());
+            user.setRole(role);
+        }
+        user.setProfilePicture(userDto.getProfilePicture());
+        
+        return userRepository.save(user);
+    }
+
+    public Optional<User> getUserById(String username) {
+        return userRepository.findByUsername(username);
+    }
+
+    public User updateUser(String username, UserDto userDto) {
+        Optional<User> userOptional = userRepository.findByUsername(username);
+        if (userOptional.isPresent()) {
+            User user = userOptional.get();
+            if (userDto.getRole() != null) {
+                Rol role = roleRepository.findByName(userDto.getRole());
+                user.setRole(role);
+            }
+            if (userDto.getProfilePicture() != null) {
+                user.setProfilePicture(userDto.getProfilePicture());
+            }
+            if (userDto.getFirstName() != null) {
+                user.setFirstName(userDto.getFirstName());
+            }
+            if (userDto.getLastName() != null) {
+                user.setLastName(userDto.getLastName());
+            }
+            if (userDto.getEmail() != null) {
+                user.setEmail(userDto.getEmail());
+            }
+            if (userDto.getTelefono() != null) {
+                user.setTelefono(userDto.getTelefono());
+            }
+            return userRepository.save(user);
+        }
+        throw new IllegalArgumentException("Usuario no encontrado");
+    }
+
+    public Boolean deleteUser(String username) {
+        Optional<User> userOptional = userRepository.findByUsername(username);
+        if (userOptional.isPresent()) {
+            userRepository.delete(userOptional.get());
+            return true;
+        }
+        throw new IllegalArgumentException("Usuario no encontrado");
+    }
+
+    public List<UserDto> obtenerTecnicos() {
+        // Obtenemos todos los usuarios y filtramos por rol TECNICO
+        List<User> usuarios = userRepository.findAll();
+
+        // Convertimos la lista de usuarios a una lista de UsuariosDto y filtramos por rol TECNICO
+        return usuarios.stream()
+                .filter(user -> user.getRole() != null && "TECNICO".equalsIgnoreCase(user.getRole().getName()))
+                .map(UserDto::new)
+                .collect(Collectors.toList());
+    }
+
+    public User saveUser(User user) {
+        return userRepository.save(user);
     }
 }
