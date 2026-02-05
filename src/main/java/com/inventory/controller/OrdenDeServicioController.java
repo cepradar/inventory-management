@@ -1,7 +1,7 @@
 package com.inventory.controller;
 
-import com.inventory.dto.ServicioReparacionDto;
-import com.inventory.service.ServicioReparacionService;
+import com.inventory.dto.OrdenDeServicioDto;
+import com.inventory.service.OrdenDeServicioService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -15,19 +15,19 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/servicios-reparacion")
-public class ServicioReparacionController {
+public class OrdenDeServicioController {
 
-    private static final Logger log = LoggerFactory.getLogger(ServicioReparacionController.class);
+    private static final Logger log = LoggerFactory.getLogger(OrdenDeServicioController.class);
 
     @Autowired
-    private ServicioReparacionService service;
+    private OrdenDeServicioService service;
 
     @PostMapping("/registrar")
     @PreAuthorize("isAuthenticated()")
-    public ResponseEntity<?> registrar(@RequestBody ServicioReparacionDto dto, Authentication auth) {
+    public ResponseEntity<?> registrar(@RequestBody OrdenDeServicioDto dto, Authentication auth) {
         try {
             log.info("Recibiendo solicitud de registro de servicio: {}", dto);
-            ServicioReparacionDto created = service.registrarServicio(dto, auth.getName());
+            OrdenDeServicioDto created = service.registrarServicio(dto, auth.getName());
             log.info("Servicio registrado exitosamente con ID: {}", created.getId());
             return ResponseEntity.ok(created);
         } catch (Exception e) {
@@ -38,9 +38,9 @@ public class ServicioReparacionController {
 
     @PutMapping("/{id}")
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<?> actualizar(@PathVariable String id, @RequestBody ServicioReparacionDto dto) {
+    public ResponseEntity<?> actualizar(@PathVariable String id, @RequestBody OrdenDeServicioDto dto) {
         try {
-            ServicioReparacionDto updated = service.actualizarServicio(id, dto);
+            OrdenDeServicioDto updated = service.actualizarServicio(id, dto);
             return ResponseEntity.ok(updated);
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Error: " + e.getMessage());
@@ -51,7 +51,7 @@ public class ServicioReparacionController {
     @PreAuthorize("isAuthenticated()")
     public ResponseEntity<?> obtener(@PathVariable String id) {
         try {
-            ServicioReparacionDto dto = service.obtenerServicioPorId(id);
+            OrdenDeServicioDto dto = service.obtenerServicioPorId(id);
             return ResponseEntity.ok(dto);
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Error: " + e.getMessage());
@@ -62,7 +62,7 @@ public class ServicioReparacionController {
     @PreAuthorize("isAuthenticated()")
     public ResponseEntity<?> porCliente(@PathVariable String clienteId) {
         try {
-            List<ServicioReparacionDto> list = service.obtenerServiciosPorCliente(clienteId);
+            List<OrdenDeServicioDto> list = service.obtenerServiciosPorCliente(clienteId);
             return ResponseEntity.ok(list);
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Error: " + e.getMessage());
@@ -73,7 +73,7 @@ public class ServicioReparacionController {
     @PreAuthorize("isAuthenticated()")
     public ResponseEntity<?> listar() {
         try {
-            List<ServicioReparacionDto> list = service.obtenerTodosServicios();
+            List<OrdenDeServicioDto> list = service.obtenerTodosServicios();
             return ResponseEntity.ok(list);
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Error: " + e.getMessage());
@@ -84,7 +84,7 @@ public class ServicioReparacionController {
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<?> cambiarEstado(@PathVariable String id, @PathVariable String estado) {
         try {
-            ServicioReparacionDto updated = service.cambiarEstado(id, estado);
+            OrdenDeServicioDto updated = service.cambiarEstado(id, estado);
             return ResponseEntity.ok(updated);
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Error: " + e.getMessage());

@@ -22,4 +22,7 @@ public interface UserRepository extends JpaRepository<User, String> {
     
     @Query("SELECT u.profilePicture FROM User u WHERE u.username = ?1")
     Optional<byte[]> findProfilePictureByUsername(String username);
+    
+    @Query("SELECT u FROM User u WHERE UPPER(u.username) = UPPER(?1)")
+    Optional<User> findByUsernameIgnoreCase(String username);
 }

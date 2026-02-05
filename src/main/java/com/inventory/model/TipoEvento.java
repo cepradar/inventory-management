@@ -13,12 +13,17 @@ public class TipoEvento {
     @Column(nullable = false, unique = true)
     private String nombre;
 
+    @ManyToOne(optional = false, fetch = FetchType.EAGER)
+    @JoinColumn(name = "categoria_id", nullable = false)
+    private CategoriaTipoEvento categoria;
+
     // Constructor vacío requerido por JPA
     public TipoEvento() {}
 
-    public TipoEvento(String id, String nombre) {
+    public TipoEvento(String id, String nombre, CategoriaTipoEvento categoria) {
         this.id = id;
         this.nombre = nombre;
+        this.categoria = categoria;
     }
 
     public String getId() {
@@ -35,5 +40,13 @@ public class TipoEvento {
 
     public void setNombre(String nombre) {
         this.nombre = nombre;
+    }
+
+    public CategoriaTipoEvento getCategoria() {
+        return categoria;
+    }
+
+    public void setCategoria(CategoriaTipoEvento categoria) {
+        this.categoria = categoria;
     }
 }

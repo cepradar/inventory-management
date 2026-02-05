@@ -23,6 +23,8 @@ function Dashboard() {
   const [userRole, setUserRole] = useState(null);
   const [companyInfo, setCompanyInfo] = useState(null);
   const [companyLogoUrl, setCompanyLogoUrl] = useState(null);
+  const [hasActiveForm, setHasActiveForm] = useState(false); // 🔔 Estado para saber si hay formulario activo
+  const [pendingModuleChange, setPendingModuleChange] = useState(null); // 🔔 Cambio pendiente
 
   const sidebarRef = useRef(null);
   const navRef = useRef(null);
@@ -100,6 +102,26 @@ function Dashboard() {
   const toggleSidebar = () => setIsSidebarExpanded(!isSidebarExpanded);
 
   const handleModuleChange = (module) => {
+    // 🔔 Si hay formulario activo, mostrar confirmación
+    if (hasActiveForm && module !== activeModule) {
+      setPendingModuleChange(module);
+      setShowModal(true);
+      setModalMessage('Tienes cambios sin guardar. ¿Estás seguro de que quieres salir?');
+      setModalAction(() => () => {
+        // Confirmar cambio de módulo
+        executeModuleChange(module);
+        setHasActiveForm(false);
+        setPendingModuleChange(null);
+        setShowModal(false);
+      });
+      return;
+    }
+
+    // Si no hay formulario activo, cambiar directamente
+    executeModuleChange(module);
+  };
+
+  const executeModuleChange = (module) => {
     setActiveModule(module);
     if (module === 'logout') {
       setShowModal(true);
@@ -117,11 +139,37 @@ function Dashboard() {
   const handleInventoryOptionClick = (type) => setActiveInventoryView(type === 'products' ? 'products' : 'categories');
 
   const handleProductsClick = () => {
+    // 🔔 Si hay formulario activo y estamos en otra vista, confirmar
+    if (hasActiveForm && activeInventoryView !== 'products') {
+      setShowModal(true);
+      setModalMessage('Tienes cambios sin guardar. ¿Estás seguro de que quieres cambiar de vista?');
+      setModalAction(() => () => {
+        setActiveModule('inventory');
+        setActiveInventoryView('products');
+        setHasActiveForm(false);
+        setShowModal(false);
+      });
+      return;
+    }
+    
     setActiveModule('inventory');
     setActiveInventoryView('products');
   };
 
   const handleCategoriesClick = () => {
+    // 🔔 Si hay formulario activo y estamos en otra vista, confirmar
+    if (hasActiveForm && activeInventoryView !== 'categories') {
+      setShowModal(true);
+      setModalMessage('Tienes cambios sin guardar. ¿Estás seguro de que quieres cambiar de vista?');
+      setModalAction(() => () => {
+        setActiveModule('inventory');
+        setActiveInventoryView('categories');
+        setHasActiveForm(false);
+        setShowModal(false);
+      });
+      return;
+    }
+    
     setActiveModule('inventory');
     setActiveInventoryView('categories');
   };
@@ -161,7 +209,13 @@ function Dashboard() {
           </div>
         );
       case 'inventory':
-        return <CrudManager resourceType={activeInventoryView} userRole={userRole} />;
+        return (
+          <CrudManager 
+            resourceType={activeInventoryView} 
+            userRole={userRole} 
+            onFormStateChange={setHasActiveForm}
+          />
+        );
       case 'users':
         return <UserManager forceShowForm={showUserForm} />;
       case 'audit':
@@ -229,10 +283,22 @@ function Dashboard() {
           transition: 'margin-left 0.3s ease',
         }}
       >
-        <div className="p-4 md:p-8 flex-1">
+        <div className="p-2 md:p-8 flex-1">
           {renderContent()}
         </div>
       </main>
+
+      {/* Modal de confirmación */}
+      {showModal && (
+        <Modal
+          message={modalMessage}
+          onConfirm={modalAction}
+          onCancel={() => {
+            setShowModal(false);
+            setPendingModuleChange(null);
+          }}
+        />
+      )}
     </div>
   );
 }

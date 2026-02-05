@@ -1,14 +1,12 @@
 package com.inventory.service;
 
 import com.inventory.dto.VentaDto;
-import com.inventory.model.MovimientoProducto;
 import com.inventory.model.Product;
 import com.inventory.model.User;
 import com.inventory.model.Venta;
 import com.inventory.repository.VentaRepository;
 import com.inventory.repository.ProductRepository;
 import com.inventory.repository.UserRepository;
-import com.inventory.repository.MovimientoProductoRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -33,7 +31,7 @@ public class VentasService {
     private UserRepository userRepository;
 
     @Autowired
-    private MovimientoProductoRepository movimientoRepository;
+    private AuditoriaService auditoriaService;
 
     /**
      * Registra una nueva venta y crea automáticamente un movimiento SALIDA
@@ -60,16 +58,15 @@ public class VentasService {
         producto.setQuantity(producto.getQuantity() - cantidad);
         productRepository.save(producto);
 
-        // Crear movimiento SALIDA automáticamente
-        MovimientoProducto movimiento = new MovimientoProducto(
-                producto,
+        // Crear evento de auditoría SALIDA por venta
+        auditoriaService.registrarMovimiento(
+                productId,
                 cantidad,
                 "SALIDA",
                 "Venta a cliente: " + nombreComprador,
-                usuario,
+                usuarioUsername,
                 "VENTA-" + ventaGuardada.getId()
         );
-        movimientoRepository.save(movimiento);
 
         return convertirADto(ventaGuardada);
     }

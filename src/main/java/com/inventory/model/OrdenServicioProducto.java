@@ -5,13 +5,13 @@ import java.math.BigDecimal;
 
 @Entity
 @Table(name = "orden_servicio_producto")
-@IdClass(ServicioReparacionProductoId.class)
-public class ServicioReparacionProducto {
+@IdClass(OrdenServicioProductoId.class)
+public class OrdenServicioProducto {
     
     @Id
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "orden_de_servicio_id", nullable = false)
-    private ServicioReparacion servicioReparacion;
+    private OrdenDeServicio servicioReparacion;
     
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "product_id", nullable = false)
@@ -31,10 +31,10 @@ public class ServicioReparacionProducto {
     private BigDecimal subtotal = BigDecimal.ZERO;
     
     // Constructores
-    public ServicioReparacionProducto() {
+    public OrdenServicioProducto() {
     }
     
-    public ServicioReparacionProducto(ServicioReparacion servicioReparacion, Product producto, 
+    public OrdenServicioProducto(OrdenDeServicio servicioReparacion, Product producto, 
                                      Integer cantidad, BigDecimal precioUnitario) {
         this.servicioReparacion = servicioReparacion;
         this.producto = producto;
@@ -44,11 +44,11 @@ public class ServicioReparacionProducto {
     }
     
     // Getters y Setters
-    public ServicioReparacion getServicioReparacion() {
+    public OrdenDeServicio getServicioReparacion() {
         return servicioReparacion;
     }
     
-    public void setServicioReparacion(ServicioReparacion servicioReparacion) {
+    public void setServicioReparacion(OrdenDeServicio servicioReparacion) {
         this.servicioReparacion = servicioReparacion;
     }
     

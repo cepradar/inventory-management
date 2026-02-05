@@ -1,18 +1,18 @@
 package com.inventory.service;
 
-import com.inventory.dto.ServicioReparacionDto;
-import com.inventory.dto.ServicioReparacionProductoDto;
+import com.inventory.dto.OrdenDeServicioDto;
+import com.inventory.dto.OrdenServicioProductoDto;
 import com.inventory.model.Cliente;
 import com.inventory.model.ClienteElectrodomestico;
 import com.inventory.model.Product;
-import com.inventory.model.ServicioReparacion;
-import com.inventory.model.ServicioReparacionProducto;
+import com.inventory.model.OrdenDeServicio;
+import com.inventory.model.OrdenServicioProducto;
 import com.inventory.model.User;
 import com.inventory.repository.ClienteElectrodomesticoRepository;
 import com.inventory.repository.ClienteRepository;
 import com.inventory.repository.ProductRepository;
-import com.inventory.repository.ServicioReparacionRepository;
-import com.inventory.repository.ServicioReparacionProductoRepository;
+import com.inventory.repository.OrdenDeServicioRepository;
+import com.inventory.repository.OrdenServicioProductoRepository;
 import com.inventory.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -27,10 +27,10 @@ import java.util.stream.Collectors;
 
 @Service
 @Transactional
-public class ServicioReparacionService {
+public class OrdenDeServicioService {
 
     @Autowired
-    private ServicioReparacionRepository servicioRepository;
+    private OrdenDeServicioRepository servicioRepository;
 
     @Autowired
     private ClienteRepository clienteRepository;
@@ -44,7 +44,7 @@ public class ServicioReparacionService {
     @Autowired
     private ProductRepository productRepository;
 
-    public ServicioReparacionDto registrarServicio(ServicioReparacionDto dto, String usernameLogeado) {
+    public OrdenDeServicioDto registrarServicio(OrdenDeServicioDto dto, String usernameLogeado) {
         User usuario = userRepository.findById(usernameLogeado)
                 .orElseThrow(() -> new RuntimeException("Usuario no encontrado: " + usernameLogeado));
 
@@ -58,7 +58,7 @@ public class ServicioReparacionService {
             throw new RuntimeException("El electrodoméstico no pertenece al cliente indicado");
         }
 
-        ServicioReparacion servicio = new ServicioReparacion();
+        OrdenDeServicio servicio = new OrdenDeServicio();
         servicio.setId(generarConsecutivo());
         servicio.setCliente(cliente);
         servicio.setClienteElectrodomestico(ce);
@@ -84,11 +84,11 @@ public class ServicioReparacionService {
         // Procesar productos si se proporcionan
         if (dto.getProductos() != null && !dto.getProductos().isEmpty()) {
             int regProd = 1;
-            for (ServicioReparacionProductoDto productoDto : dto.getProductos()) {
+            for (OrdenServicioProductoDto productoDto : dto.getProductos()) {
                 Product producto = productRepository.findById(productoDto.getProductId())
                         .orElseThrow(() -> new RuntimeException("Producto no encontrado: " + productoDto.getProductId()));
                 
-                ServicioReparacionProducto srp = new ServicioReparacionProducto();
+                OrdenServicioProducto srp = new OrdenServicioProducto();
                 srp.setProducto(producto);
                 srp.setCantidad(productoDto.getCantidad() != null ? productoDto.getCantidad() : 1);
                 srp.setPrecioUnitario(productoDto.getPrecioUnitario() != null ? productoDto.getPrecioUnitario() : BigDecimal.valueOf(producto.getPrice()));
@@ -99,12 +99,12 @@ public class ServicioReparacionService {
             }
         }
 
-        ServicioReparacion guardado = servicioRepository.save(servicio);
+        OrdenDeServicio guardado = servicioRepository.save(servicio);
         return convertirADto(guardado);
     }
 
-    public ServicioReparacionDto actualizarServicio(String id, ServicioReparacionDto dto) {
-        ServicioReparacion servicio = servicioRepository.findById(id)
+    public OrdenDeServicioDto actualizarServicio(String id, OrdenDeServicioDto dto) {
+        OrdenDeServicio servicio = servicioRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Servicio de reparación no encontrado: " + id));
 
         servicio.setTipoServicio(dto.getTipoServicio());
@@ -120,37 +120,37 @@ public class ServicioReparacionService {
         servicio.setVencimientoGarantia(dto.getVencimientoGarantia());
         servicio.setObservaciones(dto.getObservaciones());
 
-        ServicioReparacion actualizado = servicioRepository.save(servicio);
+        OrdenDeServicio actualizado = servicioRepository.save(servicio);
         return convertirADto(actualizado);
     }
 
-    public ServicioReparacionDto obtenerServicioPorId(String id) {
-        ServicioReparacion servicio = servicioRepository.findById(id)
+    public OrdenDeServicioDto obtenerServicioPorId(String id) {
+        OrdenDeServicio servicio = servicioRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Servicio de reparación no encontrado: " + id));
         return convertirADto(servicio);
     }
 
-    public List<ServicioReparacionDto> obtenerServiciosPorCliente(String clienteId) {
+    public List<OrdenDeServicioDto> obtenerServiciosPorCliente(String clienteId) {
         return servicioRepository.findByClienteId(clienteId).stream()
                 .map(this::convertirADto)
                 .collect(Collectors.toList());
     }
 
-    public List<ServicioReparacionDto> obtenerServiciosPorClienteElectrodomestico(Long clienteElectroId) {
+    public List<OrdenDeServicioDto> obtenerServiciosPorClienteElectrodomestico(Long clienteElectroId) {
         return servicioRepository.findByClienteElectrodomesticoId(clienteElectroId).stream()
                 .map(this::convertirADto)
                 .collect(Collectors.toList());
     }
 
-    public List<ServicioReparacionDto> obtenerTodosServicios() {
+    public List<OrdenDeServicioDto> obtenerTodosServicios() {
         return servicioRepository.findAll().stream()
                 .map(this::convertirADto)
                 .sorted((a, b) -> b.getFechaIngreso().compareTo(a.getFechaIngreso()))
                 .collect(Collectors.toList());
     }
 
-    public ServicioReparacionDto cambiarEstado(String id, String nuevoEstado) {
-        ServicioReparacion servicio = servicioRepository.findById(id)
+    public OrdenDeServicioDto cambiarEstado(String id, String nuevoEstado) {
+        OrdenDeServicio servicio = servicioRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Servicio de reparación no encontrado: " + id));
 
         servicio.setEstado(nuevoEstado);
@@ -163,30 +163,30 @@ public class ServicioReparacionService {
             servicio.setFechaSalida(LocalDateTime.now());
         }
 
-        ServicioReparacion actualizado = servicioRepository.save(servicio);
+        OrdenDeServicio actualizado = servicioRepository.save(servicio);
         return convertirADto(actualizado);
     }
 
     public void eliminarServicio(String id) {
-        ServicioReparacion servicio = servicioRepository.findById(id)
+        OrdenDeServicio servicio = servicioRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Servicio de reparación no encontrado: " + id));
         servicioRepository.delete(servicio);
     }
 
-    public List<ServicioReparacionDto> obtenerServiciosPendientes() {
+    public List<OrdenDeServicioDto> obtenerServiciosPendientes() {
         return servicioRepository.findServiciosPendientes().stream()
                 .map(this::convertirADto)
                 .collect(Collectors.toList());
     }
 
-    public List<ServicioReparacionDto> obtenerGarantiasPorVencer(LocalDate desde, LocalDate hasta) {
+    public List<OrdenDeServicioDto> obtenerGarantiasPorVencer(LocalDate desde, LocalDate hasta) {
         return servicioRepository.findGarantiasPorVencer(desde, hasta).stream()
                 .map(this::convertirADto)
                 .collect(Collectors.toList());
     }
 
-    private ServicioReparacionDto convertirADto(ServicioReparacion servicio) {
-        ServicioReparacionDto dto = new ServicioReparacionDto();
+    private OrdenDeServicioDto convertirADto(OrdenDeServicio servicio) {
+        OrdenDeServicioDto dto = new OrdenDeServicioDto();
         dto.setId(servicio.getId());
         dto.setClienteId(servicio.getCliente() != null ? servicio.getCliente().getId() : null);
         dto.setClienteNombre(servicio.getCliente() != null ? servicio.getCliente().getNombre() : null);
@@ -215,7 +215,7 @@ public class ServicioReparacionService {
         dto.setObservaciones(servicio.getObservaciones());
         
         // Convertir productos
-        List<ServicioReparacionProductoDto> productosDto = servicio.getProductos().stream()
+        List<OrdenServicioProductoDto> productosDto = servicio.getProductos().stream()
                 .map(srp -> {
                     String claveCompuesta = generarClaveCompuesta(
                         servicio.getId(),
@@ -223,7 +223,7 @@ public class ServicioReparacionService {
                         servicio.getCliente().getId(),
                         srp.getRegProd()
                     );
-                    return new ServicioReparacionProductoDto(
+                    return new OrdenServicioProductoDto(
                         servicio.getId(),
                         srp.getProducto().getId(),
                         srp.getProducto().getName(),

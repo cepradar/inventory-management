@@ -4,24 +4,25 @@ import jakarta.persistence.*;
 import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "movimiento_producto")
-public class MovimientoProducto {
+@Table(name = "auditoria")
+public class Auditoria {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
     @ManyToOne
-    @JoinColumn(name = "product_id", nullable = false)
+    @JoinColumn(name = "tipo_evento_id", nullable = false)
+    private TipoEvento tipoEvento;
+
+    @ManyToOne
+    @JoinColumn(name = "product_id", nullable = true)
     private Product product;
 
     @Column(nullable = false)
     private Integer cantidad;
 
-    @Column(nullable = false)
-    private String tipo; // "INGRESO" o "SALIDA"
-
-    @Column(nullable = false)
+    @Column(nullable = false, columnDefinition = "TEXT")
     private String descripcion;
 
     @ManyToOne
@@ -31,17 +32,18 @@ public class MovimientoProducto {
     @Column(nullable = false)
     private LocalDateTime fecha;
 
-    @Column
-    private String referencia; // Número de compra, número de venta, etc.
+    @Column(columnDefinition = "TEXT")
+    private String referencia;
 
     // Constructores
-    public MovimientoProducto() {
+    public Auditoria() {
     }
 
-    public MovimientoProducto(Product product, Integer cantidad, String tipo, String descripcion, User usuario, String referencia) {
+    public Auditoria(TipoEvento tipoEvento, Product product, Integer cantidad, String descripcion, 
+                     User usuario, String referencia) {
+        this.tipoEvento = tipoEvento;
         this.product = product;
         this.cantidad = cantidad;
-        this.tipo = tipo;
         this.descripcion = descripcion;
         this.usuario = usuario;
         this.referencia = referencia;
@@ -55,6 +57,14 @@ public class MovimientoProducto {
 
     public void setId(Long id) {
         this.id = id;
+    }
+
+    public TipoEvento getTipoEvento() {
+        return tipoEvento;
+    }
+
+    public void setTipoEvento(TipoEvento tipoEvento) {
+        this.tipoEvento = tipoEvento;
     }
 
     public Product getProduct() {
@@ -71,14 +81,6 @@ public class MovimientoProducto {
 
     public void setCantidad(Integer cantidad) {
         this.cantidad = cantidad;
-    }
-
-    public String getTipo() {
-        return tipo;
-    }
-
-    public void setTipo(String tipo) {
-        this.tipo = tipo;
     }
 
     public String getDescripcion() {
@@ -115,11 +117,11 @@ public class MovimientoProducto {
 
     @Override
     public String toString() {
-        return "MovimientoProducto{" +
+        return "Auditoria{" +
                 "id=" + id +
+                ", tipoEvento=" + tipoEvento +
                 ", product=" + product +
                 ", cantidad=" + cantidad +
-                ", tipo='" + tipo + '\'' +
                 ", descripcion='" + descripcion + '\'' +
                 ", usuario=" + usuario +
                 ", fecha=" + fecha +

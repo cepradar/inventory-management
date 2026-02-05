@@ -61,11 +61,11 @@ function Login() {
     try {
       const response = await axios.post('/auth/login', { username, password });
       
-      const { token, role } = response.data;
+      const { token, role, username: serverUsername } = response.data;
       
       localStorage.setItem('authToken', token);
       localStorage.setItem('userRole', role);
-      localStorage.setItem('userName', username);
+      localStorage.setItem('username', serverUsername || username.toUpperCase());
       
       setMessage(`Bienvenido, ${username}`);
       setLoginStatus('success');

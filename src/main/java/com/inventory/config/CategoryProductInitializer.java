@@ -16,15 +16,14 @@ public class CategoryProductInitializer {
         return args -> {
             if (!categoryProductRepository.findById("N").isPresent()) {
                 System.out.println("se creo producto nuevo");
-                categoryProductRepository.save(new CategoryProduct("NUEVOS","REPUESTOS NUEVOS","N"));
+                categoryProductRepository.save(new CategoryProduct("N","REPUESTOS NUEVOS","NUEVOS"));
             }
             if (!categoryProductRepository.findById("U").isPresent()) {
-                categoryProductRepository.save(new CategoryProduct("USADOS","REPUESTOS USADOS","U"));
+                categoryProductRepository.save(new CategoryProduct("U","REPUESTOS USADOS","USADOS"));
             }
-           /*  
-            if (categoryClientRepository.findByName("TECNICO") == null) {
-                categoryClientRepository.save(new Rol( "TECNICO"));
-            }*/
+            if (!categoryProductRepository.findById("S").isPresent()) {
+                categoryProductRepository.save(new CategoryProduct("S","SERVICIOS","SERVICIOS"));
+            }
         };
     }
 }

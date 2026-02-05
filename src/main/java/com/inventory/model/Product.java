@@ -19,7 +19,9 @@ public class Product {
     @ManyToOne(fetch = FetchType.EAGER)  // Puedes cambiarlo a LAZY si es necesario
     @JoinColumn(name = "category_id", nullable = false)
     private CategoryProduct category;
-
+    @ManyToOne(fetch = FetchType.EAGER)
+    @JoinColumn(name = "categoria_electrodomestico_id", nullable = true)
+    private CategoriaElectrodomestico categoriaElectrodomestico;
     public Product() {}
 
     public Product(String name, double price, int quantity, CategoryProduct category) {
@@ -67,6 +69,14 @@ public class Product {
 
     public void setCategory(CategoryProduct category) {
         this.category = category;
+    }
+
+    public CategoriaElectrodomestico getCategoriaElectrodomestico() {
+        return categoriaElectrodomestico;
+    }
+
+    public void setCategoriaElectrodomestico(CategoriaElectrodomestico categoriaElectrodomestico) {
+        this.categoriaElectrodomestico = categoriaElectrodomestico;
     }
 
     public String getDescription() {

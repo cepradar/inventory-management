@@ -5,15 +5,15 @@ export default function MenuButtons({ activeModule, onProductsClick, onCategorie
   // Mostrar botones según el módulo activo
   if (activeModule === 'inventory') {
     return (
-      <nav className="flex items-center flex-nowrap w-full overflow-hidden gap-2">
+      <nav className="flex items-center flex-nowrap gap-2 overflow-x-auto">
         <button
-          className="px-4 py-2 rounded-md bg-gray-100 hover:bg-gray-200 whitespace-nowrap font-medium transition-colors"
+          className="px-3 md:px-4 py-1.5 md:py-2 rounded-md bg-gray-100 hover:bg-gray-200 whitespace-nowrap font-medium transition-colors text-sm md:text-base"
           onClick={onProductsClick}
         >
           Productos
         </button>
         <button
-          className="px-4 py-2 rounded-md bg-gray-100 hover:bg-gray-200 whitespace-nowrap font-medium transition-colors"
+          className="px-3 md:px-4 py-1.5 md:py-2 rounded-md bg-gray-100 hover:bg-gray-200 whitespace-nowrap font-medium transition-colors text-sm md:text-base"
           onClick={onCategoriesClick}
         >
           Categorías
@@ -24,15 +24,15 @@ export default function MenuButtons({ activeModule, onProductsClick, onCategorie
 
   if (activeModule === 'users') {
     return (
-      <nav className="flex items-center flex-nowrap w-full overflow-hidden gap-2">
+      <nav className="flex items-center flex-nowrap gap-2 overflow-x-auto">
         <button
-          className="px-4 py-2 rounded-md bg-gray-100 hover:bg-gray-200 whitespace-nowrap font-medium transition-colors"
+          className="px-3 md:px-4 py-1.5 md:py-2 rounded-md bg-gray-100 hover:bg-gray-200 whitespace-nowrap font-medium transition-colors text-sm md:text-base"
           onClick={onEditUserClick}
         >
           Listar Usuarios
         </button>
         <button
-          className="px-4 py-2 rounded-md bg-gray-100 hover:bg-gray-200 whitespace-nowrap font-medium transition-colors"
+          className="px-3 md:px-4 py-1.5 md:py-2 rounded-md bg-gray-100 hover:bg-gray-200 whitespace-nowrap font-medium transition-colors text-sm md:text-base"
           onClick={onCreateUserClick}
         >
           Crear Usuario

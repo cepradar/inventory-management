@@ -9,7 +9,7 @@ import java.util.List;
 
 @Entity
 @Table(name = "orden_de_servicio")
-public class ServicioReparacion {
+public class OrdenDeServicio {
     
     @Id
     @Column(length = 6, nullable = false, unique = true)
@@ -24,7 +24,7 @@ public class ServicioReparacion {
     private ClienteElectrodomestico clienteElectrodomestico;
     
     @OneToMany(mappedBy = "servicioReparacion", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
-    private List<ServicioReparacionProducto> productos = new ArrayList<>();
+    private List<OrdenServicioProducto> productos = new ArrayList<>();
     
     @Column(nullable = false)
     private String tipoServicio; // REPARACION, MANTENIMIENTO, DIAGNOSTICO
@@ -77,7 +77,7 @@ public class ServicioReparacion {
     private String observaciones;
     
     // Constructores
-    public ServicioReparacion() {
+    public OrdenDeServicio() {
         this.fechaIngreso = LocalDateTime.now();
         this.estado = "RECIBIDO";
         this.garantiaServicio = 30;
@@ -86,7 +86,7 @@ public class ServicioReparacion {
         this.totalCosto = BigDecimal.ZERO;
     }
     
-    public ServicioReparacion(Cliente cliente, ClienteElectrodomestico clienteElectrodomestico, 
+    public OrdenDeServicio(Cliente cliente, ClienteElectrodomestico clienteElectrodomestico, 
                               String tipoServicio, String descripcionProblema, User usuario) {
         this();
         this.cliente = cliente;
@@ -256,27 +256,27 @@ public class ServicioReparacion {
         this.observaciones = observaciones;
     }
 
-    public List<ServicioReparacionProducto> getProductos() {
+    public List<OrdenServicioProducto> getProductos() {
         return productos;
     }
 
-    public void setProductos(List<ServicioReparacionProducto> productos) {
+    public void setProductos(List<OrdenServicioProducto> productos) {
         this.productos = productos;
     }
 
-    public void agregarProducto(ServicioReparacionProducto producto) {
+    public void agregarProducto(OrdenServicioProducto producto) {
         productos.add(producto);
         producto.setServicioReparacion(this);
     }
 
-    public void removerProducto(ServicioReparacionProducto producto) {
+    public void removerProducto(OrdenServicioProducto producto) {
         productos.remove(producto);
         producto.setServicioReparacion(null);
     }
     
     @Override
     public String toString() {
-        return "ServicioReparacion{" +
+        return "OrdenDeServicio{" +
                 "id=" + id +
                 ", tipoServicio='" + tipoServicio + '\'' +
                 ", estado='" + estado + '\'' +

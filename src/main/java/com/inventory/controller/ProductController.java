@@ -63,10 +63,10 @@ public class ProductController {
 
     @PutMapping("/actualizar/{id}")
     public ResponseEntity<ProductDto> actualizarProducto(
-            @PathVariable Long id,
+            @PathVariable String id,
             @RequestBody ProductDto productosDto) {
         // Verificar si el producto existe
-        Optional<ProductDto> productoExistente = productService.obtenerProductoPorId(productosDto.getId());
+        Optional<ProductDto> productoExistente = productService.obtenerProductoPorId(id);
         if (productoExistente.isEmpty()) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null); // Producto no encontrado
         }
@@ -75,12 +75,11 @@ public class ProductController {
         Product producto = ProductDto.toProducto(productosDto);
 
         // Manejar la categoría si viene en el DTO
-if (productosDto.getCategoryId() != null) {
-    CategoryProduct categoria = categoryService.obtenerCategoriaPorId(productosDto.getCategoryId())
-            .orElseThrow(() -> new RuntimeException("Categoría no encontrada"));
-    producto.setCategory(categoria); // 👈 ya es la entidad, se asigna directo
-}
-
+        if (productosDto.getCategoryId() != null) {
+            CategoryProduct categoria = categoryService.obtenerCategoriaPorId(productosDto.getCategoryId())
+                    .orElseThrow(() -> new RuntimeException("Categoría no encontrada"));
+            producto.setCategory(categoria); // 👈 ya es la entidad, se asigna directo
+        }
 
         Product productoActualizado = productService.actualizarProducto(productosDto);
 

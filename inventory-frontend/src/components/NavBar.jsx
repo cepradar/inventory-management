@@ -23,12 +23,14 @@ export default function AdminNavbar({ activeModule, onProductsClick, onCategorie
   };
 
   return (
-    <header className="flex items-center justify-between bg-gray-200 px-4 py-2">
+    <header className="flex flex-col md:flex-row items-center justify-between bg-gray-200 px-2 md:px-4 py-2 gap-2">
       {/* Título */}
-      <div className="text-lg font-bold">{getModuleTitle()}</div>
+      <div className="text-sm md:text-lg font-bold w-full md:w-auto text-center md:text-left">
+        {getModuleTitle()}
+      </div>
 
       {/* Menú dinámico de botones */}
-      <div className="flex-1 flex justify-center">
+      <div className="flex-1 flex justify-center w-full md:w-auto overflow-x-auto">
         <MenuButtons 
           activeModule={activeModule}
           onProductsClick={onProductsClick}
@@ -39,7 +41,9 @@ export default function AdminNavbar({ activeModule, onProductsClick, onCategorie
       </div>
 
       {/* Menú de usuario */}
-      <ProfileMenu />
+      <div className="w-full md:w-auto flex justify-center md:justify-end">
+        <ProfileMenu />
+      </div>
     </header>
   );
 }

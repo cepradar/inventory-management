@@ -67,7 +67,8 @@ public class SecurityConfig {
     .requestMatchers(HttpMethod.GET, "/api/products/listar").authenticated() // Permitir lectura de productos para órdenes
     .requestMatchers(HttpMethod.GET, "/api/servicios/listar").authenticated() // Permitir lectura de servicios para órdenes
     .requestMatchers("/api/products/**", "/api/categories/**", "/products/**").hasRole("ADMIN")
-    .requestMatchers("/api/auditoria/**").hasRole("ADMIN")
+    .requestMatchers(HttpMethod.POST, "/api/auditoria/registrar").authenticated() // Permitir registro de eventos a usuarios autenticados
+    .requestMatchers("/api/auditoria/**").hasRole("ADMIN") // Consultas de auditoría solo para ADMIN
     .requestMatchers("/api/ventas/**").hasRole("ADMIN")
     
     // Permite usuarios autenticados para gestión de clientes y servicios
