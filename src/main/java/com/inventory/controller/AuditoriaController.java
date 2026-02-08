@@ -98,13 +98,29 @@ public class AuditoriaController {
     @PreAuthorize("isAuthenticated()")
     public ResponseEntity<AuditoriaDto> registrarMovimiento(
             @RequestParam String productId,
-            @RequestParam Integer cantidad,
+            @RequestParam(required = false) Integer cantidad,
+            @RequestParam(required = false) Integer cantidadInicial,
+            @RequestParam(required = false) Integer cantidadFinal,
+            @RequestParam(required = false) java.math.BigDecimal precioInicial,
+            @RequestParam(required = false) java.math.BigDecimal precioFinal,
             @RequestParam String tipo,
             @RequestParam String descripcion,
             @RequestParam String usuarioUsername,
             @RequestParam(required = false) String referencia) {
+        Integer cantidadInicialFinal = cantidadInicial != null ? cantidadInicial : cantidad;
+        Integer cantidadFinalFinal = cantidadFinal != null ? cantidadFinal : cantidadInicialFinal;
+
         AuditoriaDto movimiento = auditoriaService.registrarMovimiento(
-                productId, cantidad, tipo, descripcion, usuarioUsername, referencia);
+                productId,
+                cantidadInicialFinal,
+                cantidadFinalFinal,
+                precioInicial,
+                precioFinal,
+                tipo,
+                descripcion,
+                usuarioUsername,
+                referencia
+        );
         return ResponseEntity.ok(movimiento);
     }
 }

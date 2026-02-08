@@ -12,6 +12,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 @RestController
@@ -25,7 +26,7 @@ public class ProductController {
     private CategoriaDeProductosService categoryService;
 
     @PostMapping("/agregar")
-    public ResponseEntity<ProductDto> agregarProducto(@RequestBody ProductDto productDto) {
+    public ResponseEntity<?> agregarProducto(@RequestBody ProductDto productDto) {
         try {
             // Convertimos el DTO a la entidad correspondiente para la creación
             Product productoCreado = productService.agregarProducto(productDto);
@@ -35,7 +36,8 @@ public class ProductController {
             // CategoriasDeProducto createdCategory = CategoriasDeProductoDto.toCategoria(category);
             // return new ResponseEntity<>(createdCategory, HttpStatus.CREATED);
         } catch (RuntimeException e) {
-            return new ResponseEntity<>(null, HttpStatus.BAD_REQUEST); // En caso de error, como producto duplicado
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(Map.of("message", e.getMessage()));
         }
     }
 
@@ -71,6 +73,8 @@ public class ProductController {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null); // Producto no encontrado
         }
 
+        productosDto.setId(id);
+
         // Actualizar los campos del producto
         Product producto = ProductDto.toProducto(productosDto);
 
@@ -89,14 +93,24 @@ public class ProductController {
     }
 
     @DeleteMapping("/eliminar")
-public ResponseEntity<Void> eliminarProducto(@RequestBody ProductDto productoDto) {
-    try {
-        productService.eliminarProducto(productoDto);
-        return ResponseEntity.noContent().build(); // 204 No Content
-    } catch (RuntimeException e) {
-        return ResponseEntity.status(HttpStatus.NOT_FOUND).build(); // 404 Not Found
+    public ResponseEntity<Void> eliminarProducto(@RequestBody ProductDto productoDto) {
+        try {
+            productService.eliminarProducto(productoDto);
+            return ResponseEntity.noContent().build(); // 204 No Content
+        } catch (RuntimeException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).build(); // 404 Not Found
+        }
     }
-}
+
+    @DeleteMapping("/eliminar/{id}")
+    public ResponseEntity<Void> eliminarProductoPorId(@PathVariable String id) {
+        try {
+            productService.eliminarProductoPorId(id);
+            return ResponseEntity.noContent().build();
+        } catch (RuntimeException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
+        }
+    }
 
 
 }

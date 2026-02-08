@@ -25,6 +25,9 @@ api.interceptors.request.use(
 api.interceptors.response.use(
     (response) => response,
     (error) => {
+        if (error.config && error.config.silent) {
+            return Promise.reject(error);
+        }
         console.error('[Axios] Error completo:', error);
         if (error.response) {
             console.error('[Axios] Status:', error.response.status);

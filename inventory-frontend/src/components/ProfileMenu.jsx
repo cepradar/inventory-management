@@ -5,28 +5,64 @@ import axios from './utils/axiosConfig';
 function ProfileMenu({ userName }) {
   const navigate = useNavigate();
   const [isOpen, setIsOpen] = useState(false);
-  const [profilePicture, setProfilePicture] = useState(null);
-  const [loading, setLoading] = useState(true);
+  const [profilePicture, setProfilePicture] = useState(() => {
+    const username = localStorage.getItem('username');
+    if (!username) {
+      return null;
+    }
+    const cacheKey = `profilePicture:${username}`;
+    return localStorage.getItem(cacheKey);
+  });
+  const [loading, setLoading] = useState(() => {
+    const username = localStorage.getItem('username');
+    if (!username) {
+      return false;
+    }
+    const cacheKey = `profilePicture:${username}`;
+    return !localStorage.getItem(cacheKey);
+  });
   const menuRef = useRef(null);
+  const lastUsernameRef = useRef(null);
 
   // Cargar la foto de perfil al montar el componente
   useEffect(() => {
     const loadProfilePicture = async () => {
       try {
-        const username = localStorage.getItem('userName');
+        const username = localStorage.getItem('username');
         if (!username) {
+          setLoading(false);
+          return;
+        }
+
+        if (lastUsernameRef.current !== username) {
+          lastUsernameRef.current = username;
+          setProfilePicture(null);
+          setLoading(true);
+        }
+
+        const cacheKey = `profilePicture:${username}`;
+        const cachedImage = localStorage.getItem(cacheKey);
+        if (cachedImage) {
+          setProfilePicture(cachedImage);
           setLoading(false);
           return;
         }
         
         const response = await axios.get(`/auth/profile-picture/${username}`, {
           responseType: 'arraybuffer',
-          timeout: 5000 // 5 segundos máximo para foto
+          timeout: 8000,
+          silent: true
         });
         
         if (response.data && response.data.byteLength > 0) {
-          const blob = new Blob([response.data], { type: 'image/jpeg' });
-          const imageUrl = URL.createObjectURL(blob);
+          const base64 = btoa(
+            new Uint8Array(response.data).reduce(
+              (data, byte) => data + String.fromCharCode(byte),
+              ''
+            )
+          );
+          const imageUrl = `data:image/jpeg;base64,${base64}`;
+          localStorage.setItem(cacheKey, imageUrl);
           setProfilePicture(imageUrl);
         }
       } catch (error) {
@@ -42,12 +78,8 @@ function ProfileMenu({ userName }) {
     loadProfilePicture();
     
     // Cleanup: liberar URL cuando el componente se desmonte
-    return () => {
-      if (profilePicture && profilePicture.startsWith('blob:')) {
-        URL.revokeObjectURL(profilePicture);
-      }
-    };
-  }, []);
+    return () => {};
+  }, [userName]);
 
   // Cierra el menú si se hace clic fuera de él
   useEffect(() => {
@@ -111,14 +143,25 @@ function ProfileMenu({ userName }) {
       const response = await axios.post('/auth/update-profile-picture', formData);
       alert(response.data.message);
       // Recargar la foto sin recargar la página
-      const username = localStorage.getItem('userName');
-      const picResponse = await axios.get(`/auth/profile-picture/${username}`, {
-        responseType: 'arraybuffer'
-      });
-      if (picResponse.data && picResponse.data.byteLength > 0) {
-        const blob = new Blob([picResponse.data], { type: 'image/jpeg' });
-        const imageUrl = URL.createObjectURL(blob);
-        setProfilePicture(imageUrl);
+      const username = localStorage.getItem('username');
+      if (username) {
+        const cacheKey = `profilePicture:${username}`;
+        const picResponse = await axios.get(`/auth/profile-picture/${username}`, {
+          responseType: 'arraybuffer',
+          timeout: 8000,
+          silent: true
+        });
+        if (picResponse.data && picResponse.data.byteLength > 0) {
+          const base64 = btoa(
+            new Uint8Array(picResponse.data).reduce(
+              (data, byte) => data + String.fromCharCode(byte),
+              ''
+            )
+          );
+          const imageUrl = `data:image/jpeg;base64,${base64}`;
+          localStorage.setItem(cacheKey, imageUrl);
+          setProfilePicture(imageUrl);
+        }
       }
     } catch (error) {
       console.error('Error al actualizar la foto de perfil:', error);

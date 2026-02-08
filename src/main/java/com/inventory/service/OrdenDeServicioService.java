@@ -223,10 +223,13 @@ public class OrdenDeServicioService {
                         servicio.getCliente().getId(),
                         srp.getRegProd()
                     );
+                    Product producto = srp.getProducto();
+                    String productId = producto != null ? producto.getId() : null;
+                    String productName = producto != null ? producto.getName() : "[Producto eliminado]";
                     return new OrdenServicioProductoDto(
                         servicio.getId(),
-                        srp.getProducto().getId(),
-                        srp.getProducto().getName(),
+                        productId,
+                        productName,
                         srp.getCantidad(),
                         srp.getRegProd(),
                         srp.getPrecioUnitario(),

@@ -4,7 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { PencilIcon, TrashIcon } from '@heroicons/react/24/outline';
 import DataTable from './DataTable';
 
-const UserForm = ({ formData, handleInputChange, handleFormSubmit, editingId, handleCancelEdit, roles }) => {
+const UserForm = ({ formData, handleInputChange, handleFormSubmit, editingId, handleCancelEdit, roles, handleDelete }) => {
   return (
     <form onSubmit={handleFormSubmit} className="p-4 border rounded shadow-sm">
       <h3 className="text-xl font-bold mb-4">{editingId ? 'Editar Usuario' : 'Crear Usuario'}</h3>
@@ -87,6 +87,11 @@ const UserForm = ({ formData, handleInputChange, handleFormSubmit, editingId, ha
       <button type="submit" className="bg-blue-500 text-white p-2 rounded mr-2">
         {editingId ? 'Actualizar' : 'Crear'}
       </button>
+      {editingId && (
+        <button type="button" onClick={() => handleDelete(editingId)} className="bg-red-500 text-white p-2 rounded mr-2">
+          Eliminar
+        </button>
+      )}
       <button type="button" onClick={handleCancelEdit} className="bg-gray-500 text-white p-2 rounded">
         Cancelar
       </button>
@@ -109,8 +114,6 @@ const UserList = ({ data, onEdit, onDelete, onAdd }) => {
         data={data}
         columns={[
           { key: 'id', label: 'ID', sortable: true, filterable: true },
-          { key: 'email', label: 'Email', sortable: true, filterable: true },
-          { key: 'telefono', label: 'Teléfono', sortable: true, filterable: true },
           {
             key: 'fullName',
             label: 'Nombre Completo',
@@ -118,6 +121,8 @@ const UserList = ({ data, onEdit, onDelete, onAdd }) => {
             filterable: true,
             render: (user) => `${user.firstName || ''} ${user.lastName || ''}`.trim()
           },
+          { key: 'telefono', label: 'Teléfono', sortable: true, filterable: true },
+          { key: 'email', label: 'Email', sortable: true, filterable: true },
           {
             key: 'role',
             label: 'Rol',
@@ -134,24 +139,20 @@ const UserList = ({ data, onEdit, onDelete, onAdd }) => {
           },
           {
             key: 'acciones',
-            label: 'Acciones',
+            label: '',
             sortable: false,
             filterable: false,
+            width: 44,
+            headerClassName: 'px-1',
+            cellClassName: 'px-1',
             render: (user) => (
-              <div className="flex justify-center items-center gap-2 flex-nowrap">
+              <div className="flex justify-center items-center gap-1 flex-nowrap">
                 <button 
                   onClick={() => onEdit(user.username)} 
-                  className="inline-flex items-center justify-center bg-yellow-500 hover:bg-yellow-600 text-white p-2 rounded transition-colors flex-shrink-0"
+                  className="inline-flex items-center justify-center bg-yellow-500 hover:bg-yellow-600 text-white p-1 rounded transition-colors flex-shrink-0"
                   title="Editar"
                 >
-                  <PencilIcon className="w-4 h-4" />
-                </button>
-                <button 
-                  onClick={() => onDelete(user.username)} 
-                  className="inline-flex items-center justify-center bg-red-500 hover:bg-red-600 text-white p-2 rounded transition-colors flex-shrink-0"
-                  title="Eliminar"
-                >
-                  <TrashIcon className="w-4 h-4" />
+                  <PencilIcon className="w-3.5 h-3.5" />
                 </button>
               </div>
             )
@@ -281,6 +282,7 @@ export default function UserManager({ forceShowForm = false }) {
           editingId={editingId}
           handleCancelEdit={handleCancelEdit}
           roles={roles}
+          handleDelete={handleDelete}
         />
       ) : (
         <UserList

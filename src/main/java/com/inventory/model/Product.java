@@ -15,6 +15,9 @@ public class Product {
     private double price;
     private int quantity;
 
+    @Column(nullable = false)
+    private boolean activo = true;
+
     @JsonBackReference // Evita la serialización recursiva
     @ManyToOne(fetch = FetchType.EAGER)  // Puedes cambiarlo a LAZY si es necesario
     @JoinColumn(name = "category_id", nullable = false)
@@ -61,6 +64,14 @@ public class Product {
 
     public void setQuantity(int quantity) {
         this.quantity = quantity;
+    }
+
+    public boolean isActivo() {
+        return activo;
+    }
+
+    public void setActivo(boolean activo) {
+        this.activo = activo;
     }
 
     public CategoryProduct getCategory() {

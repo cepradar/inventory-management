@@ -147,7 +147,16 @@ const AuditModule = () => {
                       Producto
                     </th>
                     <th className="px-2 py-1.5 text-left text-xs font-semibold text-gray-900 whitespace-nowrap">
-                      Cantidad
+                      Cant. Inicial
+                    </th>
+                    <th className="px-2 py-1.5 text-left text-xs font-semibold text-gray-900 whitespace-nowrap">
+                      Cant. Final
+                    </th>
+                    <th className="px-2 py-1.5 text-left text-xs font-semibold text-gray-900 whitespace-nowrap">
+                      Precio Inicial
+                    </th>
+                    <th className="px-2 py-1.5 text-left text-xs font-semibold text-gray-900 whitespace-nowrap">
+                      Precio Final
                     </th>
                     <th className="px-2 py-1.5 text-left text-xs font-semibold text-gray-900 whitespace-nowrap">
                       Tipo
@@ -173,7 +182,16 @@ const AuditModule = () => {
                         {movimiento.productName || "-"}
                       </td>
                       <td className="px-2 py-1.5 text-xs text-gray-900 whitespace-nowrap">
-                        {movimiento.cantidad || "-"}
+                        {movimiento.cantidadInicial ?? "-"}
+                      </td>
+                      <td className="px-2 py-1.5 text-xs text-gray-900 whitespace-nowrap">
+                        {movimiento.cantidadFinal ?? "-"}
+                      </td>
+                      <td className="px-2 py-1.5 text-xs text-gray-900 whitespace-nowrap">
+                        {movimiento.precioInicial ?? "-"}
+                      </td>
+                      <td className="px-2 py-1.5 text-xs text-gray-900 whitespace-nowrap">
+                        {movimiento.precioFinal ?? "-"}
                       </td>
                       <td className="px-2 py-1.5 whitespace-nowrap">
                         <span className={`inline-block px-1.5 py-0.5 rounded-full text-xs font-semibold ${obtenerColorTipo(movimiento.tipoEventoNombre)}`}>
@@ -226,8 +244,23 @@ const AuditModule = () => {
                   </div>
                   
                   <div className="flex justify-between gap-2">
-                    <span className="text-sm font-semibold text-gray-600">Cantidad:</span>
-                    <span className="text-sm text-gray-900">{movimiento.cantidad || "-"}</span>
+                    <span className="text-sm font-semibold text-gray-600">Cant. Inicial:</span>
+                    <span className="text-sm text-gray-900">{movimiento.cantidadInicial ?? "-"}</span>
+                  </div>
+
+                  <div className="flex justify-between gap-2">
+                    <span className="text-sm font-semibold text-gray-600">Cant. Final:</span>
+                    <span className="text-sm text-gray-900">{movimiento.cantidadFinal ?? "-"}</span>
+                  </div>
+
+                  <div className="flex justify-between gap-2">
+                    <span className="text-sm font-semibold text-gray-600">Precio Inicial:</span>
+                    <span className="text-sm text-gray-900">{movimiento.precioInicial ?? "-"}</span>
+                  </div>
+
+                  <div className="flex justify-between gap-2">
+                    <span className="text-sm font-semibold text-gray-600">Precio Final:</span>
+                    <span className="text-sm text-gray-900">{movimiento.precioFinal ?? "-"}</span>
                   </div>
                   
                   {movimiento.descripcion && (

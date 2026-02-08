@@ -170,11 +170,13 @@ export default function DataTable({
         <table className="w-full border-collapse min-w-full table-fixed">
           <thead>
             <tr className="bg-gray-100 border-b border-gray-300">
-              {columns.map(col => (
+              {columns.map(col => {
+                const colWidth = columnWidths[col.key] || col.width;
+                return (
                 <th
                   key={col.key}
-                  className="px-2 py-1.5 text-left relative whitespace-nowrap max-w-[200px]"
-                  style={{ width: columnWidths[col.key] ? `${columnWidths[col.key]}px` : undefined }}
+                  className={`px-2 py-1.5 text-left relative whitespace-nowrap max-w-[200px] ${col.headerClassName || ''}`}
+                  style={{ width: colWidth ? `${colWidth}px` : undefined }}
                 >
                   <div className="flex items-center justify-between gap-1">
                     <span className="font-semibold text-gray-700 text-xs truncate max-w-[160px]">{col.label}</span>
@@ -239,7 +241,8 @@ export default function DataTable({
                     title="Ajustar ancho"
                   />
                 </th>
-              ))}
+                );
+              })}
             </tr>
           </thead>
 
@@ -255,15 +258,18 @@ export default function DataTable({
                 const key = item?.id || item?.documento || item?.username || `row-${index}`;
                 return (
                     <tr key={key} className="border-b border-gray-200 hover:bg-gray-50 transition-colors even:bg-gray-50/50">
-                    {columns.map(col => (
+                    {columns.map(col => {
+                      const colWidth = columnWidths[col.key] || col.width;
+                      return (
                       <td
                         key={`${key}-${col.key}`}
-                        className="px-2 py-1.5 text-xs text-gray-700 whitespace-nowrap max-w-[200px] truncate"
-                        style={{ width: columnWidths[col.key] ? `${columnWidths[col.key]}px` : undefined }}
+                        className={`px-2 py-1.5 text-xs text-gray-700 whitespace-nowrap max-w-[200px] truncate ${col.cellClassName || ''}`}
+                        style={{ width: colWidth ? `${colWidth}px` : undefined }}
                       >
                         {col.render ? col.render(item) : (item?.[col.key] || '-')}
                       </td>
-                    ))}
+                      );
+                    })}
                   </tr>
                 );
               })

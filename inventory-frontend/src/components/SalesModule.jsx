@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from "react";
-import axios from "axios";
+import React, { useState, useEffect, useMemo } from "react";
+import api from "./utils/axiosConfig";
 
 const SalesModule = () => {
   const [ventas, setVentas] = useState([]);
@@ -8,15 +8,30 @@ const SalesModule = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [successMessage, setSuccessMessage] = useState("");
+  const [clienteEncontrado, setClienteEncontrado] = useState(null);
+  const [clientMatches, setClientMatches] = useState([]);
+  const [showClientMatches, setShowClientMatches] = useState(false);
+  const [productCodeInput, setProductCodeInput] = useState("");
+  const [showProductSearch, setShowProductSearch] = useState(false);
+  const [productFilters, setProductFilters] = useState({
+    codigo: "",
+    nombre: "",
+    descripcion: "",
+    categoria: "",
+    electrodomestico: "",
+    soloActivos: true,
+    minPrecio: "",
+    maxPrecio: "",
+    minStock: ""
+  });
 
   const [formulario, setFormulario] = useState({
-    productId: "",
-    cantidad: 1,
-    precioUnitario: 0,
+    documento: "",
     nombreComprador: "",
     telefonoComprador: "",
     emailComprador: "",
     observaciones: "",
+    items: []
   });
 
   // Cargar ventas y productos al montar
@@ -27,7 +42,7 @@ const SalesModule = () => {
 
   const cargarVentas = async () => {
     try {
-      const response = await axios.get("/api/ventas/listar");
+      const response = await api.get("/api/ventas/listar");
       // Asegurar que siempre sea un array
       const data = Array.isArray(response.data) ? response.data : [];
       setVentas(data);
@@ -39,8 +54,9 @@ const SalesModule = () => {
 
   const cargarProductos = async () => {
     try {
-      const response = await axios.get("/api/products/listar");
-      setProductos(response.data);
+      const response = await api.get("/api/products/listar");
+      const data = Array.isArray(response.data) ? response.data : [];
+      setProductos(data);
     } catch (err) {
       console.error("Error al cargar productos:", err);
     }
@@ -51,15 +67,164 @@ const SalesModule = () => {
     setFormulario({ ...formulario, [name]: value });
   };
 
-  const handleProductoChange = (e) => {
-    const productId = e.target.value;
-    setFormulario({ ...formulario, productId });
+  const handleDocumentoKeyDown = async (e) => {
+    if (e.key !== "Enter") return;
+    e.preventDefault();
+    await fetchClienteByDocumento(formulario.documento);
+  };
 
-    // Obtener precio del producto seleccionado
-    const producto = productos.find((p) => p.id == productId);
-    if (producto) {
-      setFormulario((prev) => ({ ...prev, precioUnitario: producto.price || 0 }));
+  const fetchClienteByDocumento = async (documento) => {
+    if (!documento || !documento.trim()) {
+      setError("Ingresa un documento válido");
+      return;
     }
+
+    try {
+      setError("");
+      const response = await api.get(`/api/clientes/${documento.trim()}`);
+      const data = response.data;
+
+      if (Array.isArray(data)) {
+        if (data.length === 1) {
+          seleccionarCliente(data[0]);
+        } else if (data.length > 1) {
+          setClientMatches(data);
+          setShowClientMatches(true);
+        } else {
+          setClienteEncontrado(null);
+          setError("Cliente no encontrado con ese documento");
+        }
+        return;
+      }
+
+      if (data) {
+        seleccionarCliente(data);
+      } else {
+        setClienteEncontrado(null);
+        setError("Cliente no encontrado con ese documento");
+      }
+    } catch (err) {
+      setClienteEncontrado(null);
+      setError("Cliente no encontrado con ese documento");
+    }
+  };
+
+  const seleccionarCliente = (cliente) => {
+    setClienteEncontrado(cliente);
+    setFormulario((prev) => ({
+      ...prev,
+      documento: cliente?.documento || prev.documento,
+      nombreComprador: cliente?.nombre || prev.nombreComprador
+    }));
+    setClientMatches([]);
+    setShowClientMatches(false);
+  };
+
+  const addProductoToItems = (producto) => {
+    setFormulario((prev) => {
+      const existing = prev.items.find(
+        (item) => String(item.productId) === String(producto.id)
+      );
+
+      if (existing) {
+        return {
+          ...prev,
+          items: prev.items.map((item) =>
+            String(item.productId) === String(producto.id)
+              ? { ...item, cantidad: parseInt(item.cantidad || 0) + 1 }
+              : item
+          )
+        };
+      }
+
+      const nuevoItem = {
+        id: `${producto.id}-${Date.now()}`,
+        productId: producto.id,
+        productName: producto.name,
+        cantidad: 1,
+        precioUnitario: producto.price || 0
+      };
+
+      return {
+        ...prev,
+        items: [...prev.items, nuevoItem]
+      };
+    });
+  };
+
+  const handleAddItemByCode = () => {
+    const code = productCodeInput.trim();
+    if (!code) {
+      setError("Ingresa un codigo de producto");
+      return;
+    }
+
+    const producto = productos.find((p) => String(p.id) === String(code));
+    if (!producto) {
+      setError("Producto no encontrado con ese codigo");
+      return;
+    }
+
+    if (producto.activo === false) {
+      setError("El producto seleccionado esta inactivo");
+      return;
+    }
+
+    addProductoToItems(producto);
+    setProductCodeInput("");
+    setError("");
+  };
+
+  const handleProductCodeKeyDown = (e) => {
+    if (e.key === "F2") {
+      e.preventDefault();
+      setShowProductSearch(true);
+      return;
+    }
+
+    if (e.key === "Enter") {
+      e.preventDefault();
+      handleAddItemByCode();
+    }
+  };
+
+  const handleSelectProducto = (producto) => {
+    if (!producto) {
+      return;
+    }
+
+    if (producto.activo === false) {
+      setError("El producto seleccionado esta inactivo");
+      return;
+    }
+
+    addProductoToItems(producto);
+    setProductCodeInput("");
+    setShowProductSearch(false);
+    setError("");
+  };
+
+  const updateProductFilter = (field, value) => {
+    setProductFilters((prev) => ({
+      ...prev,
+      [field]: value
+    }));
+  };
+
+  const handleRemoveItem = (itemId) => {
+    setFormulario((prev) => ({
+      ...prev,
+      items: prev.items.filter((item) => item.id !== itemId)
+    }));
+  };
+
+  const handleItemChange = (itemId, field, value) => {
+    setFormulario((prev) => ({
+      ...prev,
+      items: prev.items.map((item) =>
+        item.id === itemId ? { ...item, [field]: value } : item
+      )
+    }));
   };
 
   const handleSubmit = async (e) => {
@@ -70,59 +235,80 @@ const SalesModule = () => {
 
     try {
       // Validaciones
-      if (!formulario.productId) {
-        setError("Por favor selecciona un producto");
+      if (!formulario.documento || !clienteEncontrado) {
+        setError("Debes ingresar un documento válido y cargar el cliente");
         setLoading(false);
         return;
       }
-      if (formulario.cantidad <= 0) {
-        setError("La cantidad debe ser mayor a 0");
-        setLoading(false);
-        return;
-      }
+
       if (!formulario.nombreComprador) {
         setError("Por favor ingresa el nombre del comprador");
         setLoading(false);
         return;
       }
 
-      const producto = productos.find((p) => p.id == formulario.productId);
-      if (producto.quantity < formulario.cantidad) {
-        setError(
-          `No hay suficiente cantidad disponible. Disponible: ${producto.quantity}`
-        );
+      if (formulario.items.length === 0) {
+        setError("Agrega al menos un producto a la venta");
         setLoading(false);
         return;
       }
 
-      // Enviar venta
-      const response = await axios.post("/api/ventas/registrar", null, {
-        params: {
-          productId: formulario.productId,
-          cantidad: formulario.cantidad,
-          precioUnitario: formulario.precioUnitario,
-          nombreComprador: formulario.nombreComprador,
-          telefonoComprador: formulario.telefonoComprador,
-          emailComprador: formulario.emailComprador,
-          usuarioUsername: localStorage.getItem("userName") || "admin",
-          observaciones: formulario.observaciones,
-        },
-      });
+      for (const item of formulario.items) {
+        if (!item.productId) {
+          setError("Hay productos inválidos en la venta");
+          setLoading(false);
+          return;
+        }
+        if (!item.cantidad || item.cantidad <= 0) {
+          setError("La cantidad debe ser mayor a 0");
+          setLoading(false);
+          return;
+        }
+        const producto = productos.find((p) => String(p.id) === String(item.productId));
+        if (!producto) {
+          setError(`Producto no encontrado: ${item.productId}`);
+          setLoading(false);
+          return;
+        }
+        if (producto.quantity < item.cantidad) {
+          setError(`No hay suficiente cantidad de ${producto.name}. Disponible: ${producto.quantity}`);
+          setLoading(false);
+          return;
+        }
+      }
+
+      let totalVenta = 0;
+      for (const item of formulario.items) {
+        const response = await api.post("/api/ventas/registrar", null, {
+          params: {
+            productId: item.productId,
+            cantidad: item.cantidad,
+            precioUnitario: item.precioUnitario,
+            nombreComprador: formulario.nombreComprador,
+            telefonoComprador: formulario.telefonoComprador,
+            emailComprador: formulario.emailComprador,
+            usuarioUsername: localStorage.getItem("username") || "admin",
+            observaciones: formulario.observaciones,
+          },
+        });
+        totalVenta += parseFloat(response.data?.totalVenta || 0);
+      }
 
       setSuccessMessage(
-        `¡Venta registrada exitosamente! Total: $${response.data.totalVenta}`
+        `¡Venta registrada exitosamente! Total: $${totalVenta.toFixed(2)}`
       );
 
       // Limpiar formulario
       setFormulario({
-        productId: "",
-        cantidad: 1,
-        precioUnitario: 0,
+        documento: "",
         nombreComprador: "",
         telefonoComprador: "",
         emailComprador: "",
         observaciones: "",
+        items: []
       });
+      setClienteEncontrado(null);
+      setProductCodeInput("");
 
       // Recargar ventas y productos
       cargarVentas();
@@ -154,11 +340,77 @@ const SalesModule = () => {
   };
 
   const calcularTotal = () => {
-    return (
-      parseFloat(formulario.cantidad || 0) *
-      parseFloat(formulario.precioUnitario || 0)
-    ).toFixed(2);
+    return formulario.items
+      .reduce((total, item) => total + (parseFloat(item.cantidad || 0) * parseFloat(item.precioUnitario || 0)), 0)
+      .toFixed(2);
   };
+
+  const filteredProductos = useMemo(() => {
+    let result = productos;
+    const {
+      codigo,
+      nombre,
+      descripcion,
+      categoria,
+      electrodomestico,
+      soloActivos,
+      minPrecio,
+      maxPrecio,
+      minStock
+    } = productFilters;
+
+    if (soloActivos) {
+      result = result.filter((p) => p.activo !== false);
+    }
+
+    if (codigo) {
+      const value = codigo.toLowerCase();
+      result = result.filter((p) => String(p.id || "").toLowerCase().includes(value));
+    }
+
+    if (nombre) {
+      const value = nombre.toLowerCase();
+      result = result.filter((p) => String(p.name || "").toLowerCase().includes(value));
+    }
+
+    if (descripcion) {
+      const value = descripcion.toLowerCase();
+      result = result.filter((p) =>
+        String(p.description || "").toLowerCase().includes(value)
+      );
+    }
+
+    if (categoria) {
+      const value = categoria.toLowerCase();
+      result = result.filter((p) =>
+        String(p.categoryId || "").toLowerCase().includes(value)
+      );
+    }
+
+    if (electrodomestico) {
+      const value = electrodomestico.toLowerCase();
+      result = result.filter((p) =>
+        String(p.categoriaElectrodomesticoId || "").toLowerCase().includes(value)
+      );
+    }
+
+    const minPrecioValue = parseFloat(minPrecio);
+    if (!Number.isNaN(minPrecioValue)) {
+      result = result.filter((p) => parseFloat(p.price || 0) >= minPrecioValue);
+    }
+
+    const maxPrecioValue = parseFloat(maxPrecio);
+    if (!Number.isNaN(maxPrecioValue)) {
+      result = result.filter((p) => parseFloat(p.price || 0) <= maxPrecioValue);
+    }
+
+    const minStockValue = parseInt(minStock, 10);
+    if (!Number.isNaN(minStockValue)) {
+      result = result.filter((p) => parseInt(p.quantity || 0, 10) >= minStockValue);
+    }
+
+    return result;
+  }, [productos, productFilters]);
 
   return (
     <div className="p-6 bg-gray-50 min-h-screen">
@@ -190,74 +442,28 @@ const SalesModule = () => {
           <div className="mb-6 bg-white p-6 rounded-lg shadow">
             <h2 className="text-2xl font-semibold mb-4 text-gray-900">Registrar Nueva Venta</h2>
             <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {/* Producto */}
+              {/* Documento */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Producto *
-                </label>
-                <select
-                  name="productId"
-                  value={formulario.productId}
-                  onChange={handleProductoChange}
-                  required
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-600"
-                >
-                  <option value="">Selecciona un producto</option>
-                  {productos.map((producto) => (
-                    <option key={producto.id} value={producto.id}>
-                      {producto.nombre} (Disponible: {producto.quantity})
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              {/* Cantidad */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Cantidad *
+                  Documento *
                 </label>
                 <input
-                  type="number"
-                  name="cantidad"
-                  value={formulario.cantidad}
+                  type="text"
+                  name="documento"
+                  value={formulario.documento}
                   onChange={handleInputChange}
-                  min="1"
-                  required
+                  onKeyDown={handleDocumentoKeyDown}
                   className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-600"
-                />
-              </div>
-
-              {/* Precio Unitario */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Precio Unitario *
-                </label>
-                <input
-                  type="number"
-                  name="precioUnitario"
-                  value={formulario.precioUnitario}
-                  onChange={handleInputChange}
-                  step="0.01"
-                  min="0"
+                  placeholder="Número de documento"
                   required
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-600"
                 />
+                <p className="text-xs text-gray-500 mt-1">Presiona Enter para buscar el cliente</p>
               </div>
 
-              {/* Total */}
+              {/* Nombre */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Total
-                </label>
-                <div className="px-4 py-2 bg-gray-100 border border-gray-300 rounded-lg text-lg font-bold text-gray-900">
-                  ${calcularTotal()}
-                </div>
-              </div>
-
-              {/* Nombre Comprador */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Nombre Comprador *
+                  Nombre *
                 </label>
                 <input
                   type="text"
@@ -268,6 +474,105 @@ const SalesModule = () => {
                   className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-600"
                   placeholder="Nombre completo"
                 />
+              </div>
+
+              {/* Producto */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Codigo de producto *
+                </label>
+                <input
+                  type="text"
+                  name="productCode"
+                  value={productCodeInput}
+                  onChange={(e) => setProductCodeInput(e.target.value)}
+                  onKeyDown={handleProductCodeKeyDown}
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-600"
+                  placeholder="Codigo del producto"
+                />
+                <p className="text-xs text-gray-500 mt-1">
+                  Enter agrega el producto. F2 abre el buscador.
+                </p>
+              </div>
+
+              {/* Agregar producto */}
+              <div className="flex items-end">
+                <button
+                  type="button"
+                  onClick={handleAddItemByCode}
+                  className="w-full px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-all font-medium"
+                >
+                  Agregar Producto
+                </button>
+              </div>
+
+              {/* Lista de productos */}
+              <div className="md:col-span-2">
+                {formulario.items.length === 0 ? (
+                  <p className="text-sm text-gray-500">No hay productos agregados</p>
+                ) : (
+                  <div className="overflow-x-auto border border-gray-200 rounded-lg">
+                    <table className="w-full">
+                      <thead className="bg-gray-100 border-b border-gray-200">
+                        <tr>
+                          <th className="px-3 py-2 text-left text-sm font-semibold text-gray-900">Producto</th>
+                          <th className="px-3 py-2 text-left text-sm font-semibold text-gray-900">Cantidad</th>
+                          <th className="px-3 py-2 text-left text-sm font-semibold text-gray-900">Precio Unit.</th>
+                          <th className="px-3 py-2 text-left text-sm font-semibold text-gray-900">Subtotal</th>
+                          <th className="px-3 py-2 text-left text-sm font-semibold text-gray-900"></th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-gray-200">
+                        {formulario.items.map((item) => (
+                          <tr key={item.id}>
+                            <td className="px-3 py-2 text-sm text-gray-900">{item.productName}</td>
+                            <td className="px-3 py-2 text-sm text-gray-900">
+                              <input
+                                type="number"
+                                min="1"
+                                value={item.cantidad}
+                                onChange={(e) => handleItemChange(item.id, 'cantidad', parseInt(e.target.value || 0))}
+                                className="w-24 px-2 py-1 border border-gray-300 rounded"
+                              />
+                            </td>
+                            <td className="px-3 py-2 text-sm text-gray-900">
+                              <input
+                                type="number"
+                                min="0"
+                                step="0.01"
+                                value={item.precioUnitario}
+                                onChange={(e) => handleItemChange(item.id, 'precioUnitario', parseFloat(e.target.value || 0))}
+                                className="w-28 px-2 py-1 border border-gray-300 rounded"
+                              />
+                            </td>
+                            <td className="px-3 py-2 text-sm text-gray-900">
+                              ${(parseFloat(item.cantidad || 0) * parseFloat(item.precioUnitario || 0)).toFixed(2)}
+                            </td>
+                            <td className="px-3 py-2 text-right">
+                              <button
+                                type="button"
+                                onClick={() => handleRemoveItem(item.id)}
+                                className="text-red-600 hover:text-red-700 text-sm"
+                              >
+                                Quitar
+                              </button>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
+              </div>
+
+              {/* Total */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Total
+                </label>
+                <div className="px-4 py-2 bg-gray-100 border border-gray-300 rounded-lg text-lg font-bold text-gray-900">
+                  ${calcularTotal()}
+                </div>
               </div>
 
               {/* Teléfono */}
@@ -431,6 +736,199 @@ const SalesModule = () => {
                   ventas.length
                 ).toFixed(2)}
               </p>
+            </div>
+          </div>
+        )}
+
+        {showClientMatches && (
+          <div className="fixed inset-0 bg-gray-900 bg-opacity-40 flex items-center justify-center z-50 p-4">
+            <div className="bg-white rounded-lg shadow-xl w-full max-w-3xl">
+              <div className="px-6 py-4 border-b border-gray-200 flex items-center justify-between">
+                <h3 className="text-lg font-semibold text-gray-900">
+                  Selecciona el cliente
+                </h3>
+                <button
+                  type="button"
+                  onClick={() => setShowClientMatches(false)}
+                  className="text-gray-500 hover:text-gray-700"
+                >
+                  Cerrar
+                </button>
+              </div>
+              <div className="p-6">
+                <p className="text-sm text-gray-600 mb-3">
+                  Se encontraron varias coincidencias. Doble click para seleccionar.
+                </p>
+                <div className="overflow-x-auto border border-gray-200 rounded">
+                  <table className="w-full">
+                    <thead className="bg-gray-100 border-b border-gray-200">
+                      <tr>
+                        <th className="px-4 py-2 text-left text-sm font-semibold text-gray-900">Documento</th>
+                        <th className="px-4 py-2 text-left text-sm font-semibold text-gray-900">Tipo</th>
+                        <th className="px-4 py-2 text-left text-sm font-semibold text-gray-900">Nombre</th>
+                        <th className="px-4 py-2 text-left text-sm font-semibold text-gray-900">Telefono</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-gray-200">
+                      {clientMatches.map((cliente) => (
+                        <tr
+                          key={`${cliente.documento}-${cliente.tipoDocumentoId || ""}`}
+                          onDoubleClick={() => seleccionarCliente(cliente)}
+                          className="hover:bg-gray-50 cursor-pointer"
+                        >
+                          <td className="px-4 py-2 text-sm text-gray-900">{cliente.documento}</td>
+                          <td className="px-4 py-2 text-sm text-gray-900">
+                            {cliente.tipoDocumentoName || "-"}
+                          </td>
+                          <td className="px-4 py-2 text-sm text-gray-900">{cliente.nombre}</td>
+                          <td className="px-4 py-2 text-sm text-gray-900">{cliente.telefono || "-"}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {showProductSearch && (
+          <div className="fixed inset-0 bg-gray-900 bg-opacity-40 flex items-center justify-center z-50 p-4">
+            <div className="bg-white rounded-lg shadow-xl w-full max-w-6xl">
+              <div className="px-6 py-4 border-b border-gray-200 flex items-center justify-between">
+                <h3 className="text-lg font-semibold text-gray-900">
+                  Busqueda de productos
+                </h3>
+                <button
+                  type="button"
+                  onClick={() => setShowProductSearch(false)}
+                  className="text-gray-500 hover:text-gray-700"
+                >
+                  Cerrar
+                </button>
+              </div>
+              <div className="p-6">
+                <div className="grid grid-cols-1 md:grid-cols-4 gap-3 mb-4">
+                  <input
+                    type="text"
+                    value={productFilters.codigo}
+                    onChange={(e) => updateProductFilter("codigo", e.target.value)}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg"
+                    placeholder="Codigo"
+                  />
+                  <input
+                    type="text"
+                    value={productFilters.nombre}
+                    onChange={(e) => updateProductFilter("nombre", e.target.value)}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg"
+                    placeholder="Nombre"
+                  />
+                  <input
+                    type="text"
+                    value={productFilters.descripcion}
+                    onChange={(e) => updateProductFilter("descripcion", e.target.value)}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg"
+                    placeholder="Descripcion"
+                  />
+                  <input
+                    type="text"
+                    value={productFilters.categoria}
+                    onChange={(e) => updateProductFilter("categoria", e.target.value)}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg"
+                    placeholder="Categoria"
+                  />
+                  <input
+                    type="text"
+                    value={productFilters.electrodomestico}
+                    onChange={(e) => updateProductFilter("electrodomestico", e.target.value)}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg"
+                    placeholder="Electrodomestico"
+                  />
+                  <input
+                    type="number"
+                    value={productFilters.minPrecio}
+                    onChange={(e) => updateProductFilter("minPrecio", e.target.value)}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg"
+                    placeholder="Precio minimo"
+                    min="0"
+                    step="0.01"
+                  />
+                  <input
+                    type="number"
+                    value={productFilters.maxPrecio}
+                    onChange={(e) => updateProductFilter("maxPrecio", e.target.value)}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg"
+                    placeholder="Precio maximo"
+                    min="0"
+                    step="0.01"
+                  />
+                  <input
+                    type="number"
+                    value={productFilters.minStock}
+                    onChange={(e) => updateProductFilter("minStock", e.target.value)}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg"
+                    placeholder="Stock minimo"
+                    min="0"
+                    step="1"
+                  />
+                  <label className="flex items-center gap-2 text-sm text-gray-700">
+                    <input
+                      type="checkbox"
+                      checked={productFilters.soloActivos}
+                      onChange={(e) => updateProductFilter("soloActivos", e.target.checked)}
+                    />
+                    Solo activos
+                  </label>
+                </div>
+                <p className="text-sm text-gray-600 mb-3">
+                  Doble click sobre un producto para agregarlo.
+                </p>
+                <div className="overflow-x-auto border border-gray-200 rounded">
+                  <table className="w-full">
+                    <thead className="bg-gray-100 border-b border-gray-200">
+                      <tr>
+                        <th className="px-3 py-2 text-left text-sm font-semibold text-gray-900">Codigo</th>
+                        <th className="px-3 py-2 text-left text-sm font-semibold text-gray-900">Nombre</th>
+                        <th className="px-3 py-2 text-left text-sm font-semibold text-gray-900">Descripcion</th>
+                        <th className="px-3 py-2 text-left text-sm font-semibold text-gray-900">Precio</th>
+                        <th className="px-3 py-2 text-left text-sm font-semibold text-gray-900">Stock</th>
+                        <th className="px-3 py-2 text-left text-sm font-semibold text-gray-900">Categoria</th>
+                        <th className="px-3 py-2 text-left text-sm font-semibold text-gray-900">Electrodomestico</th>
+                        <th className="px-3 py-2 text-left text-sm font-semibold text-gray-900">Activo</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-gray-200">
+                      {filteredProductos.map((producto) => (
+                        <tr
+                          key={producto.id}
+                          onDoubleClick={() => handleSelectProducto(producto)}
+                          className="hover:bg-gray-50 cursor-pointer"
+                        >
+                          <td className="px-3 py-2 text-sm text-gray-900">{producto.id}</td>
+                          <td className="px-3 py-2 text-sm text-gray-900">{producto.name}</td>
+                          <td className="px-3 py-2 text-sm text-gray-900">{producto.description || "-"}</td>
+                          <td className="px-3 py-2 text-sm text-gray-900">${producto.price}</td>
+                          <td className="px-3 py-2 text-sm text-gray-900">{producto.quantity}</td>
+                          <td className="px-3 py-2 text-sm text-gray-900">{producto.categoryId || "-"}</td>
+                          <td className="px-3 py-2 text-sm text-gray-900">
+                            {producto.categoriaElectrodomesticoId || "-"}
+                          </td>
+                          <td className="px-3 py-2 text-sm text-gray-900">
+                            {producto.activo === false ? "No" : "Si"}
+                          </td>
+                        </tr>
+                      ))}
+                      {filteredProductos.length === 0 && (
+                        <tr>
+                          <td className="px-3 py-6 text-sm text-gray-500 text-center" colSpan={8}>
+                            No hay productos que coincidan con los filtros.
+                          </td>
+                        </tr>
+                      )}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
             </div>
           </div>
         )}

@@ -6,7 +6,8 @@ import { PencilIcon, TrashIcon } from '@heroicons/react/24/outline';
 import DataTable from './DataTable';
 
 // Formulario dinámico con etiquetas y estándares de usabilidad mejorados
-const ResourceForm = ({ resourceType, formData, categories, handleInputChange, handleFormSubmit, editingId, handleCancelEdit }) => {
+const ResourceForm = ({ resourceType, formData, categories, categoriasElectrodomestico, handleInputChange, handleFormSubmit, editingId, handleCancelEdit, handleDelete, userRole }) => {
+  const isAdmin = userRole === 'ADMIN';
   return (
     <form onSubmit={(e) => handleFormSubmit(e, resourceType)} className="max-w-2xl mx-auto p-4 md:p-6 bg-white border border-gray-300 rounded-lg shadow-md">
       <h2 className="text-xl md:text-2xl font-bold mb-4 md:mb-6 text-gray-800">
@@ -36,6 +37,20 @@ const ResourceForm = ({ resourceType, formData, categories, handleInputChange, h
               {editingId && <p className="text-xs text-gray-500 mt-1">El ID no puede modificarse una vez creado</p>}
             </div>
 
+            <div className="flex items-center gap-2">
+              <input
+                id="activo"
+                type="checkbox"
+                name="activo"
+                checked={formData.activo ?? true}
+                onChange={handleInputChange}
+                className="h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+              />
+              <label htmlFor="activo" className="text-xs md:text-sm text-gray-600">
+                Activo
+              </label>
+            </div>
+
             {/* Campo Nombre */}
             <div className="form-group">
               <label htmlFor="name" className="block text-xs md:text-sm font-semibold text-gray-700 mb-1">
@@ -56,7 +71,7 @@ const ResourceForm = ({ resourceType, formData, categories, handleInputChange, h
             {/* Campo Descripción */}
             <div className="form-group">
               <label htmlFor="description" className="block text-xs md:text-sm font-semibold text-gray-700 mb-1">
-                Descripción <span className="text-red-500">*</span>
+                Descripción
               </label>
               <textarea
                 id="description"
@@ -65,8 +80,7 @@ const ResourceForm = ({ resourceType, formData, categories, handleInputChange, h
                 onChange={handleInputChange}
                 className="w-full px-3 py-1.5 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-transparent transition-all resize-none"
                 placeholder="Describe brevemente las características del producto"
-                  rows="2"
-                required
+                    rows="2"
               />
             </div>
 
@@ -85,6 +99,25 @@ const ResourceForm = ({ resourceType, formData, categories, handleInputChange, h
               >
                 <option value="">-- Selecciona una categoría --</option>
                 {categories.map(cat => <option key={cat.id} value={cat.id}>{cat.name}</option>)}
+              </select>
+            </div>
+
+            {/* Campo Categoría de Electrodoméstico */}
+            <div className="form-group">
+              <label htmlFor="categoriaElectrodomesticoId" className="block text-xs md:text-sm font-semibold text-gray-700 mb-1">
+                Categoría de Electrodoméstico
+              </label>
+              <select
+                id="categoriaElectrodomesticoId"
+                name="categoriaElectrodomesticoId"
+                value={formData.categoriaElectrodomesticoId || ''}
+                onChange={handleInputChange}
+                className="w-full px-3 py-1.5 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-transparent transition-all bg-white"
+              >
+                <option value="">-- Selecciona una categoría --</option>
+                {categoriasElectrodomestico.map((cat) => (
+                  <option key={cat.id} value={cat.id}>{cat.nombre}</option>
+                ))}
               </select>
             </div>
 
@@ -124,6 +157,7 @@ const ResourceForm = ({ resourceType, formData, categories, handleInputChange, h
                 required
               />
             </div>
+
           </>
         ) : (
           <>
@@ -172,6 +206,15 @@ const ResourceForm = ({ resourceType, formData, categories, handleInputChange, h
         >
           {editingId ? '💾 Actualizar' : '✚ Crear'}
         </button>
+        {resourceType === 'products' && editingId && isAdmin && (
+          <button
+            type="button"
+            onClick={() => handleDelete(editingId)}
+            className="flex-1 bg-red-600 hover:bg-red-700 text-white font-semibold py-2 px-3 rounded transition-colors duration-200 text-xs md:text-sm"
+          >
+            🗑️ Eliminar
+          </button>
+        )}
         <button
           type="button"
           onClick={handleCancelEdit}
@@ -189,11 +232,30 @@ const ResourceForm = ({ resourceType, formData, categories, handleInputChange, h
   );
 };
 
-const ResourceList = ({ resourceType, data, categories, userRole, onEdit, onDelete, onAdd }) => {
+const ResourceList = ({ resourceType, data, categories, categoriasElectrodomestico, userRole, onEdit, onDelete, onAdd }) => {
   const isAdmin = userRole === 'ADMIN';
   const [isMobile, setIsMobile] = useState(false);
   const [mobileSearch, setMobileSearch] = useState('');
   const getCategoryName = (categoryId) => categories.find(cat => cat.id === categoryId)?.name || 'N/A';
+  const getCategoriaElectrodomesticoId = (item) => {
+    return (
+      item?.categoriaElectrodomesticoId ??
+      item?.categoriaElectrodomestico?.id ??
+      ''
+    );
+  };
+
+  const getCategoriaElectrodomesticoName = (item) => {
+    const directName = item?.categoriaElectrodomestico?.nombre
+      || item?.categoriaElectrodomesticoNombre
+      || item?.categoriaElectrodomesticoName;
+    if (directName) return directName;
+
+    const categoriaId = getCategoriaElectrodomesticoId(item);
+    if (!categoriaId) return 'N/A';
+    const match = categoriasElectrodomestico.find(cat => String(cat.id) === String(categoriaId));
+    return match?.nombre || 'N/A';
+  };
 
   useEffect(() => {
     const checkMobile = () => setIsMobile(window.innerWidth < 768);
@@ -213,6 +275,7 @@ const ResourceList = ({ resourceType, data, categories, userRole, onEdit, onDele
         item?.name,
         item?.description,
         categoryName,
+        getCategoriaElectrodomesticoName(item),
         item?.categoriaElectrodomestico,
         item?.categoriaElectrodomesticoNombre,
         item?.categoriaElectrodomesticoName
@@ -222,7 +285,7 @@ const ResourceList = ({ resourceType, data, categories, userRole, onEdit, onDele
 
       return values.some((value) => value.includes(query));
     });
-  }, [data, isMobile, mobileSearch, resourceType, categories]);
+  }, [data, isMobile, mobileSearch, resourceType, categories, categoriasElectrodomestico]);
 
   return (
     <div className="p-1 md:p-2">
@@ -250,7 +313,7 @@ const ResourceList = ({ resourceType, data, categories, userRole, onEdit, onDele
           )}
         </div>
       )}
-      
+
       <DataTable
         data={filteredData}
         columns={
@@ -266,28 +329,31 @@ const ResourceList = ({ resourceType, data, categories, userRole, onEdit, onDele
                   filterable: true,
                   render: (item) => getCategoryName(item.categoryId)
                 },
+                {
+                  key: 'categoriaElectrodomesticoId',
+                  label: 'Tipo Electrodoméstico',
+                  sortable: true,
+                  filterable: true,
+                  render: (item) => getCategoriaElectrodomesticoName(item)
+                },
                 { key: 'quantity', label: 'Cantidad', sortable: true, filterable: false },
                 { key: 'price', label: 'Precio', sortable: true, filterable: false },
                 ...(isAdmin ? [{
                   key: 'acciones',
-                  label: 'Acciones',
+                  label: '',
+                  width: 44,
+                  headerClassName: 'px-1',
+                  cellClassName: 'px-1',
                   sortable: false,
                   filterable: false,
                   render: (item) => (
-                    <div className="flex justify-center items-center gap-2 flex-nowrap">
-                      <button 
-                        onClick={() => onEdit(item.id)} 
-                        className="inline-flex items-center justify-center bg-yellow-500 hover:bg-yellow-600 text-white p-2 rounded transition-colors flex-shrink-0"
+                    <div className="flex justify-center items-center gap-1 flex-nowrap">
+                      <button
+                        onClick={() => onEdit(item.id)}
+                        className="inline-flex items-center justify-center bg-yellow-500 hover:bg-yellow-600 text-white p-0.5 rounded transition-colors flex-shrink-0"
                         title="Editar"
                       >
-                        <PencilIcon className="w-4 h-4" />
-                      </button>
-                      <button 
-                        onClick={() => onDelete(item.id)} 
-                        className="inline-flex items-center justify-center bg-red-500 hover:bg-red-600 text-white p-2 rounded transition-colors flex-shrink-0"
-                        title="Eliminar"
-                      >
-                        <TrashIcon className="w-4 h-4" />
+                        <PencilIcon className="w-3 h-3" />
                       </button>
                     </div>
                   )
@@ -299,24 +365,27 @@ const ResourceList = ({ resourceType, data, categories, userRole, onEdit, onDele
                 { key: 'description', label: 'Descripción', sortable: true, filterable: true },
                 ...(isAdmin ? [{
                   key: 'acciones',
-                  label: 'Acciones',
+                  label: '',
+                  width: 70,
+                  headerClassName: 'px-1',
+                  cellClassName: 'px-1',
                   sortable: false,
                   filterable: false,
                   render: (item) => (
-                    <div className="flex justify-center items-center gap-2 flex-nowrap">
-                      <button 
-                        onClick={() => onEdit(item.id)} 
-                        className="inline-flex items-center justify-center bg-yellow-500 hover:bg-yellow-600 text-white p-2 rounded transition-colors flex-shrink-0"
+                    <div className="flex justify-center items-center gap-1 flex-nowrap">
+                      <button
+                        onClick={() => onEdit(item.id)}
+                        className="inline-flex items-center justify-center bg-yellow-500 hover:bg-yellow-600 text-white p-1 rounded transition-colors flex-shrink-0"
                         title="Editar"
                       >
-                        <PencilIcon className="w-4 h-4" />
+                        <PencilIcon className="w-3.5 h-3.5" />
                       </button>
-                      <button 
-                        onClick={() => onDelete(item.id)} 
-                        className="inline-flex items-center justify-center bg-red-500 hover:bg-red-600 text-white p-2 rounded transition-colors flex-shrink-0"
+                      <button
+                        onClick={() => onDelete(item.id)}
+                        className="inline-flex items-center justify-center bg-red-500 hover:bg-red-600 text-white p-1 rounded transition-colors flex-shrink-0"
                         title="Eliminar"
                       >
-                        <TrashIcon className="w-4 h-4" />
+                        <TrashIcon className="w-3.5 h-3.5" />
                       </button>
                     </div>
                   )
@@ -331,6 +400,7 @@ const ResourceList = ({ resourceType, data, categories, userRole, onEdit, onDele
 export default function CrudManager({ resourceType, userRole, onFormStateChange }) {
   const [data, setData] = useState([]);
   const [categories, setCategories] = useState([]);
+  const [categoriasElectrodomestico, setCategoriasElectrodomestico] = useState([]);
   const [showForm, setShowForm] = useState(false);
   const [formData, setFormData] = useState({});
   const [editingId, setEditingId] = useState(null);
@@ -365,13 +435,34 @@ export default function CrudManager({ resourceType, userRole, onFormStateChange 
   const agregarEditarProductos = async (e, type) => {
     e.preventDefault();
 
+    const normalizedId = (formData.id || '').trim();
+    if (!editingId) {
+      if (!normalizedId) {
+        alert('Debes ingresar un codigo de producto.');
+        return;
+      }
+
+      const idExists = data.some((item) =>
+        String(item?.id || '')
+          .trim()
+          .toLowerCase() === normalizedId.toLowerCase()
+      );
+
+      if (idExists) {
+        alert('Ese codigo de producto ya existe. Ingresa uno diferente.');
+        return;
+      }
+    }
+
     const payload = {
-      id: editingId ? editingId : (formData.id || Date.now().toString()), // 👈 mismo id si edita
+      id: editingId ? editingId : normalizedId,
       name: formData.name,
       description: formData.description,
       price: parseFloat(formData.price),
       quantity: parseInt(formData.quantity),
-      categoryId: formData.categoryId
+      categoryId: formData.categoryId,
+      categoriaElectrodomesticoId: formData.categoriaElectrodomesticoId || null,
+      activo: formData.activo ?? true
     };
 
     try {
@@ -387,7 +478,17 @@ export default function CrudManager({ resourceType, userRole, onFormStateChange 
       if (resourceType === 'products') {
         // Usar el ID del producto retornado por el backend (puede diferir del temporal)
         const productIdReal = response.data?.id || payload.id;
-        await registrarEventoProducto(productIdReal, editingId ? 'ACTUALIZACION' : 'CREACION', payload.quantity);
+        const productoAnterior = data.find(item => item.id === editingId);
+        const cantidadInicial = editingId ? (productoAnterior?.quantity ?? payload.quantity) : payload.quantity;
+        const precioInicial = editingId ? (productoAnterior?.price ?? payload.price) : payload.price;
+        await registrarEventoProducto(
+          productIdReal,
+          editingId ? 'ACTUALIZACION' : 'CREACION',
+          cantidadInicial,
+          payload.quantity,
+          precioInicial,
+          payload.price
+        );
       }
 
       alert(`${type} ${editingId ? 'actualizado' : 'agregado'} exitosamente.`);
@@ -397,12 +498,20 @@ export default function CrudManager({ resourceType, userRole, onFormStateChange 
       cargarProductos();
     } catch (error) {
       console.error(`Error al ${editingId ? 'actualizar' : 'agregar'} ${type}:`, error);
-      alert(`Error al ${editingId ? 'actualizar' : 'agregar'} ${type}.`);
+      const message = error?.response?.data?.message;
+      alert(message || `Error al ${editingId ? 'actualizar' : 'agregar'} ${type}.`);
     }
   };
 
   // 🔔 Función para registrar eventos de auditoría
-  const registrarEventoProducto = async (productId, tipoEvento, cantidad) => {
+  const registrarEventoProducto = async (
+    productId,
+    tipoEvento,
+    cantidadInicial,
+    cantidadFinal,
+    precioInicial,
+    precioFinal
+  ) => {
     try {
       const username = localStorage.getItem('username') || 'ADMIN';
       
@@ -411,15 +520,15 @@ export default function CrudManager({ resourceType, userRole, onFormStateChange 
       switch(tipoEvento) {
         case 'CREACION':
           tipo = 'CP';  // CREACION_PRODUCTO
-          descripcion = `Producto creado con cantidad inicial: ${cantidad}`;
+          descripcion = `Producto creado con cantidad inicial: ${cantidadFinal}`;
           break;
         case 'ACTUALIZACION':
           tipo = 'MA';  // MOVIMIENTO_AJUSTE
-          descripcion = `Producto actualizado - Cantidad: ${cantidad}`;
+          descripcion = `Producto actualizado - Cantidad final: ${cantidadFinal}`;
           break;
         case 'ELIMINACION':
           tipo = 'EP';  // ELIMINACION_PRODUCTO
-          descripcion = `Producto eliminado del inventario - Cantidad anterior: ${cantidad}`;
+          descripcion = `Producto eliminado del inventario - Cantidad anterior: ${cantidadInicial}`;
           break;
         default:
           tipo = 'MA';  // MOVIMIENTO_AJUSTE
@@ -429,7 +538,10 @@ export default function CrudManager({ resourceType, userRole, onFormStateChange 
       await api.post('/api/auditoria/registrar', null, {
         params: {
           productId: productId,
-          cantidad: cantidad,
+          cantidadInicial: cantidadInicial,
+          cantidadFinal: cantidadFinal,
+          precioInicial: precioInicial,
+          precioFinal: precioFinal,
           tipo: tipo,
           descripcion: descripcion,
           usuarioUsername: username,
@@ -453,9 +565,22 @@ export default function CrudManager({ resourceType, userRole, onFormStateChange 
     }
   };
 
+  const cargarCategoriasElectrodomestico = async () => {
+    try {
+      const response = await api.get('/api/categorias-electrodomestico/listar');
+      setCategoriasElectrodomestico(response.data || []);
+    } catch (error) {
+      console.error('Error al cargar categorías de electrodoméstico:', error);
+      setCategoriasElectrodomestico([]);
+    }
+  };
+
   useEffect(() => {
     cargarProductos();
-    if (resourceType === 'products') cargarCategorias();
+    if (resourceType === 'products') {
+      cargarCategorias();
+      cargarCategoriasElectrodomestico();
+    }
   }, [resourceType]);
 
   // Notificar al Dashboard sobre cambios en el estado del formulario
@@ -472,11 +597,35 @@ export default function CrudManager({ resourceType, userRole, onFormStateChange 
     setFormData({});
   }, [resourceType]);
 
-  const handleInputChange = (e) => setFormData({ ...formData, [e.target.name]: e.target.value });
+  const handleInputChange = (e) => {
+    const { name, value, type, checked } = e.target;
+    setFormData({ ...formData, [name]: type === 'checkbox' ? checked : value });
+  };
   const handleEdit = (id) => {
     const itemToEdit = data.find(item => item.id === id);
     if (itemToEdit) {
-      setFormData(itemToEdit);
+      let categoriaElectrodomesticoId =
+        itemToEdit.categoriaElectrodomesticoId ??
+        itemToEdit.categoriaElectrodomestico?.id ??
+        '';
+
+      if (!categoriaElectrodomesticoId) {
+        const nombreCategoria =
+          itemToEdit.categoriaElectrodomesticoNombre ||
+          itemToEdit.categoriaElectrodomesticoName ||
+          itemToEdit.categoriaElectrodomestico?.nombre;
+        const match = categoriasElectrodomestico.find(
+          (cat) => cat.nombre === nombreCategoria
+        );
+        categoriaElectrodomesticoId = match?.id || '';
+      }
+
+      setFormData({
+        ...itemToEdit,
+        categoryId: itemToEdit.categoryId || '',
+        categoriaElectrodomesticoId: categoriaElectrodomesticoId ? String(categoriaElectrodomesticoId) : '',
+        activo: itemToEdit.activo ?? true
+      });
       setEditingId(id);
       setShowForm(true);
     }
@@ -490,20 +639,27 @@ export default function CrudManager({ resourceType, userRole, onFormStateChange 
         // Obtener datos del producto antes de eliminarlo para auditoría
         const productoAEliminar = data.find(item => item.id === id);
         
-        await api.delete(apiEndpoints[resourceType].eliminar, {
-          data: { id }
-        });
+        const deleteUrl = `${apiEndpoints[resourceType].eliminar}/${id}`;
+        await api.delete(deleteUrl);
 
         // 🔔 Registrar evento de auditoría para eliminación
         if (resourceType === 'products' && productoAEliminar) {
           await registrarEventoProducto(
-            id, 
-            'ELIMINACION', 
-            productoAEliminar.quantity || 0
+            id,
+            'ELIMINACION',
+            productoAEliminar.quantity || 0,
+            productoAEliminar.quantity || 0,
+            productoAEliminar.price || 0,
+            productoAEliminar.price || 0
           );
         }
 
         alert(`${resourceType} eliminado exitosamente.`);
+        if (editingId === id) {
+          setEditingId(null);
+          setShowForm(false);
+          setFormData({});
+        }
         cargarProductos();
       } catch (error) {
         console.error(`Error al eliminar ${resourceType}:`, error);
@@ -523,12 +679,14 @@ export default function CrudManager({ resourceType, userRole, onFormStateChange 
   const handleAdd = () => {
     setEditingId(null);
     setFormData({
-      id: Date.now().toString(),  // 👈 generamos ID por defecto
+      id: '',
       name: '',
       description: '',
       price: '',
       quantity: '',
-      categoryId: ''
+      categoryId: '',
+      categoriaElectrodomesticoId: '',
+      activo: true
     });
     setShowForm(true);
   };
@@ -542,16 +700,20 @@ export default function CrudManager({ resourceType, userRole, onFormStateChange 
           resourceType={resourceType}
           formData={formData}
           categories={categories}
+          categoriasElectrodomestico={categoriasElectrodomestico}
           handleInputChange={handleInputChange}
           handleFormSubmit={agregarEditarProductos}
           editingId={editingId}
           handleCancelEdit={handleCancelEdit}
+          handleDelete={handleDelete}
+          userRole={userRole}
         />
       ) : (
         <ResourceList
           resourceType={resourceType}
           data={data}
           categories={categories}
+          categoriasElectrodomestico={categoriasElectrodomestico}
           userRole={userRole}
           onEdit={handleEdit}
           onDelete={handleDelete}

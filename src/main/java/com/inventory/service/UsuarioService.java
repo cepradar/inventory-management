@@ -19,7 +19,18 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.awt.Graphics2D;
+import java.awt.Image;
+import java.awt.image.BufferedImage;
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+
+import javax.imageio.IIOImage;
+import javax.imageio.ImageIO;
+import javax.imageio.ImageWriteParam;
+import javax.imageio.ImageWriter;
+import javax.imageio.stream.ImageOutputStream;
 
 @Service
 public class UsuarioService implements UserDetailsService {
@@ -78,7 +89,7 @@ public class UsuarioService implements UserDetailsService {
         }
         
         // Guardar la foto SOLO en la BD sin cargar el usuario completo
-        byte[] fileBytes = file.getBytes();
+        byte[] fileBytes = compressProfileImage(file.getBytes(), 256, 0.8f);
         userRepository.updateProfilePictureByUsername(fileBytes, username);
         return true;
     }
@@ -181,5 +192,45 @@ public class UsuarioService implements UserDetailsService {
 
     public User saveUser(User user) {
         return userRepository.save(user);
+    }
+
+    private byte[] compressProfileImage(byte[] originalBytes, int maxSize, float quality) throws IOException {
+        if (originalBytes == null || originalBytes.length == 0) {
+            return originalBytes;
+        }
+
+        BufferedImage original = ImageIO.read(new ByteArrayInputStream(originalBytes));
+        if (original == null) {
+            return originalBytes;
+        }
+
+        int width = original.getWidth();
+        int height = original.getHeight();
+        double scale = Math.min(1.0, (double) maxSize / Math.max(width, height));
+        int targetWidth = Math.max(1, (int) Math.round(width * scale));
+        int targetHeight = Math.max(1, (int) Math.round(height * scale));
+
+        Image scaled = original.getScaledInstance(targetWidth, targetHeight, Image.SCALE_SMOOTH);
+        BufferedImage output = new BufferedImage(targetWidth, targetHeight, BufferedImage.TYPE_INT_RGB);
+        Graphics2D g2d = output.createGraphics();
+        g2d.drawImage(scaled, 0, 0, null);
+        g2d.dispose();
+
+        ByteArrayOutputStream out = new ByteArrayOutputStream();
+        ImageWriter writer = ImageIO.getImageWritersByFormatName("jpeg").next();
+        ImageWriteParam params = writer.getDefaultWriteParam();
+        if (params.canWriteCompressed()) {
+            params.setCompressionMode(ImageWriteParam.MODE_EXPLICIT);
+            params.setCompressionQuality(quality);
+        }
+
+        try (ImageOutputStream ios = ImageIO.createImageOutputStream(out)) {
+            writer.setOutput(ios);
+            writer.write(null, new IIOImage(output, null, null), params);
+        } finally {
+            writer.dispose();
+        }
+
+        return out.toByteArray();
     }
 }

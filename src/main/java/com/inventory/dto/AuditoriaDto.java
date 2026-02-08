@@ -1,6 +1,7 @@
 package com.inventory.dto;
 
 import com.inventory.model.Auditoria;
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 public class AuditoriaDto {
@@ -9,9 +10,12 @@ public class AuditoriaDto {
     private String tipoEventoId;
     private String tipoEventoNombre;
     private String tipoEventoCategoria; // 🔔 Nueva propiedad
-    private Long productId;
+    private String productId;
     private String productName;
-    private Integer cantidad;
+    private Integer cantidadInicial;
+    private Integer cantidadFinal;
+    private BigDecimal precioInicial;
+    private BigDecimal precioFinal;
     private String descripcion;
     private String usuarioUsername;
     private String usuarioNombreCompleto;
@@ -23,15 +27,20 @@ public class AuditoriaDto {
     }
 
     // Constructor completo
-    public AuditoriaDto(Long id, String tipoEventoId, String tipoEventoNombre, Long productId, 
-                        String productName, Integer cantidad, String descripcion, String usuarioUsername,
+    public AuditoriaDto(Long id, String tipoEventoId, String tipoEventoNombre, String productId,
+                        String productName, Integer cantidadInicial, Integer cantidadFinal,
+                        BigDecimal precioInicial, BigDecimal precioFinal,
+                        String descripcion, String usuarioUsername,
                         String usuarioNombreCompleto, LocalDateTime fecha, String referencia) {
         this.id = id;
         this.tipoEventoId = tipoEventoId;
         this.tipoEventoNombre = tipoEventoNombre;
         this.productId = productId;
         this.productName = productName;
-        this.cantidad = cantidad;
+        this.cantidadInicial = cantidadInicial;
+        this.cantidadFinal = cantidadFinal;
+        this.precioInicial = precioInicial;
+        this.precioFinal = precioFinal;
         this.descripcion = descripcion;
         this.usuarioUsername = usuarioUsername;
         this.usuarioNombreCompleto = usuarioNombreCompleto;
@@ -60,9 +69,12 @@ public class AuditoriaDto {
             this.tipoEventoCategoria = "SIN_CATEGORIA";
         }
         
-        this.productId = auditoria.getProduct() != null ? Long.parseLong(auditoria.getProduct().getId()) : null;
-        this.productName = auditoria.getProduct() != null ? auditoria.getProduct().getName() : "[Producto eliminado]";
-        this.cantidad = auditoria.getCantidad();
+        this.productId = auditoria.getProductId();
+        this.productName = auditoria.getProductName();
+        this.cantidadInicial = auditoria.getCantidadInicial();
+        this.cantidadFinal = auditoria.getCantidadFinal();
+        this.precioInicial = auditoria.getPrecioInicial();
+        this.precioFinal = auditoria.getPrecioFinal();
         this.descripcion = auditoria.getDescripcion();
         this.usuarioUsername = auditoria.getUsuario() != null ? auditoria.getUsuario().getUsername() : "Desconocido";
         this.usuarioNombreCompleto = auditoria.getUsuario() != null 
@@ -105,11 +117,11 @@ public class AuditoriaDto {
         this.tipoEventoCategoria = tipoEventoCategoria;
     }
 
-    public Long getProductId() {
+    public String getProductId() {
         return productId;
     }
 
-    public void setProductId(Long productId) {
+    public void setProductId(String productId) {
         this.productId = productId;
     }
 
@@ -121,12 +133,36 @@ public class AuditoriaDto {
         this.productName = productName;
     }
 
-    public Integer getCantidad() {
-        return cantidad;
+    public Integer getCantidadInicial() {
+        return cantidadInicial;
     }
 
-    public void setCantidad(Integer cantidad) {
-        this.cantidad = cantidad;
+    public void setCantidadInicial(Integer cantidadInicial) {
+        this.cantidadInicial = cantidadInicial;
+    }
+
+    public Integer getCantidadFinal() {
+        return cantidadFinal;
+    }
+
+    public void setCantidadFinal(Integer cantidadFinal) {
+        this.cantidadFinal = cantidadFinal;
+    }
+
+    public BigDecimal getPrecioInicial() {
+        return precioInicial;
+    }
+
+    public void setPrecioInicial(BigDecimal precioInicial) {
+        this.precioInicial = precioInicial;
+    }
+
+    public BigDecimal getPrecioFinal() {
+        return precioFinal;
+    }
+
+    public void setPrecioFinal(BigDecimal precioFinal) {
+        this.precioFinal = precioFinal;
     }
 
     public String getDescripcion() {

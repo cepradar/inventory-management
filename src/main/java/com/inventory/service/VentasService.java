@@ -59,9 +59,15 @@ public class VentasService {
         productRepository.save(producto);
 
         // Crear evento de auditoría SALIDA por venta
+        BigDecimal precioBase = precioUnitario != null ? precioUnitario : BigDecimal.valueOf(producto.getPrice());
+        Integer cantidadInicial = producto.getQuantity() + cantidad;
+        Integer cantidadFinal = producto.getQuantity();
         auditoriaService.registrarMovimiento(
                 productId,
-                cantidad,
+                cantidadInicial,
+                cantidadFinal,
+                precioBase,
+                precioBase,
                 "SALIDA",
                 "Venta a cliente: " + nombreComprador,
                 usuarioUsername,
@@ -151,7 +157,7 @@ public class VentasService {
     private VentaDto convertirADto(Venta venta) {
         return new VentaDto(
                 venta.getId(),
-                Long.parseLong(venta.getProduct().getId()),
+                venta.getProduct().getId(),
                 venta.getProduct().getName(),
                 venta.getCantidad(),
                 venta.getPrecioUnitario(),

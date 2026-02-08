@@ -1,14 +1,15 @@
 package com.inventory.service;
 
 import com.inventory.dto.ProductDto;
+import com.inventory.model.CategoriaElectrodomestico;
 import com.inventory.model.CategoryProduct;
 import com.inventory.model.Product;
+import com.inventory.repository.CategoriaElectrodomesticoRepository;
 import com.inventory.repository.CategoryProductRepository;
 import com.inventory.repository.ProductRepository;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -22,12 +23,20 @@ public class ProductoService {
     @Autowired
     private ProductRepository productRepository;
 
+    @Autowired
+    private CategoriaElectrodomesticoRepository categoriaElectrodomesticoRepository;
+
+
     public Product agregarProducto(ProductDto productDto) {
-        if (productDto.getId() != null) {
-            Optional<Product> productoExiste = productRepository.findById(productDto.getId());
-            if (productoExiste.isPresent()) {
-                throw new RuntimeException("El producto ya existe");
-            }
+        String productId = productDto.getId();
+        if (productId == null || productId.trim().isEmpty()) {
+            throw new RuntimeException("El codigo de producto es obligatorio");
+        }
+
+        productId = productId.trim();
+        productDto.setId(productId);
+        if (productRepository.existsById(productId)) {
+            throw new RuntimeException("El codigo de producto ya existe");
         }
 
         // 🔥 Validar que la categoría existe
@@ -38,6 +47,15 @@ public class ProductoService {
         // 🔧 Convertir DTO a entidad y setear categoría real
         Product producto = ProductDto.toProducto(productDto);
         producto.setCategory(categoria); // Esta categoría sí existe en la BD
+        if (productDto.getCategoriaElectrodomesticoId() != null) {
+            CategoriaElectrodomestico categoriaElectrodomestico = categoriaElectrodomesticoRepository
+                    .findById(productDto.getCategoriaElectrodomesticoId())
+                    .orElseThrow(() -> new RuntimeException(
+                            "La categoría de electrodoméstico con id " + productDto.getCategoriaElectrodomesticoId() + " no existe"));
+            producto.setCategoriaElectrodomestico(categoriaElectrodomestico);
+        } else {
+            producto.setCategoriaElectrodomestico(null);
+        }
 
         return productRepository.save(producto);
     }
@@ -61,15 +79,45 @@ public class ProductoService {
     }
 
     public Product actualizarProducto(ProductDto productDto) {
-        // Convertimos el ProductDto a Producto
-        Product producto = ProductDto.toProducto(productDto);
+        Product producto = productRepository.findById(productDto.getId())
+                .orElseThrow(() -> new RuntimeException("El producto con id " + productDto.getId() + " no existe"));
 
-        // Guardamos el Producto actualizado
+        producto.setName(productDto.getName());
+        producto.setDescription(productDto.getDescription());
+        producto.setPrice(productDto.getPrice());
+        producto.setQuantity(productDto.getQuantity());
+        if (productDto.getActivo() != null) {
+            producto.setActivo(productDto.getActivo());
+        }
+
+        if (productDto.getCategoryId() != null) {
+            CategoryProduct categoria = categoryRepository.findById(productDto.getCategoryId())
+                    .orElseThrow(() -> new RuntimeException("La categoría con id " + productDto.getCategoryId() + " no existe"));
+            producto.setCategory(categoria);
+        }
+
+        if (productDto.getCategoriaElectrodomesticoId() != null) {
+            CategoriaElectrodomestico categoriaElectrodomestico = categoriaElectrodomesticoRepository
+                    .findById(productDto.getCategoriaElectrodomesticoId())
+                    .orElseThrow(() -> new RuntimeException(
+                            "La categoría de electrodoméstico con id " + productDto.getCategoriaElectrodomesticoId() + " no existe"));
+            producto.setCategoriaElectrodomestico(categoriaElectrodomestico);
+        } else {
+            producto.setCategoriaElectrodomestico(null);
+        }
+
         return productRepository.save(producto);
     }
 
     public void eliminarProducto(ProductDto productDto) {
-        String id = productDto.getId();
+        String id = productDto != null ? productDto.getId() : null;
+        eliminarProductoPorId(id);
+    }
+
+    public void eliminarProductoPorId(String id) {
+        if (id == null || id.trim().isEmpty()) {
+            throw new RuntimeException("El id del producto es obligatorio");
+        }
 
         if (!productRepository.existsById(id)) {
             throw new RuntimeException("El producto con id " + id + " no existe");

@@ -15,6 +15,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.Arrays;
 import java.util.List;
@@ -44,7 +45,8 @@ public class AuditoriaService {
      * - AJUSTE → MA (MOVIMIENTO_AJUSTE)
      * - SALIDA → MS (MOVIMIENTO_SALIDA)
      */
-    public AuditoriaDto registrarMovimiento(String productId, Integer cantidad, String tipo, 
+    public AuditoriaDto registrarMovimiento(String productId, Integer cantidadInicial, Integer cantidadFinal,
+                                            BigDecimal precioInicial, BigDecimal precioFinal, String tipo,
                                             String descripcion, String usuarioUsername, String referencia) {
         // Mapear tipo del frontend a ID de tipo_evento
         String tipoEventoId = mapearTipoEvento(tipo);
@@ -59,13 +61,30 @@ public class AuditoriaService {
         
         logger.info("✅ Tipo de evento encontrado: {} - {}", tipoEvento.getId(), tipoEvento.getNombre());
         
-        // Buscar producto - puede no existir si fue eliminado
+        // Buscar producto para capturar nombre (sin FK)
         Product producto = productRepository.findById(productId).orElse(null);
+        String productName = producto != null ? producto.getName() : "[Producto eliminado]";
         
         User usuario = userRepository.findByUsernameIgnoreCase(usuarioUsername)
                 .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
 
-        Auditoria auditoria = new Auditoria(tipoEvento, producto, cantidad, descripcion, usuario, referencia);
+        Integer cantidadInicialFinal = cantidadInicial != null ? cantidadInicial : cantidadFinal;
+        Integer cantidadFinalFinal = cantidadFinal != null ? cantidadFinal : cantidadInicialFinal;
+        BigDecimal precioInicialFinal = precioInicial != null ? precioInicial : BigDecimal.ZERO;
+        BigDecimal precioFinalFinal = precioFinal != null ? precioFinal : precioInicialFinal;
+
+        Auditoria auditoria = new Auditoria(
+            tipoEvento,
+            productId,
+            productName,
+            cantidadInicialFinal,
+            cantidadFinalFinal,
+            precioInicialFinal,
+            precioFinalFinal,
+            descripcion,
+            usuario,
+            referencia
+        );
         Auditoria guardada = auditoriaRepository.save(auditoria);
         
         logger.info("✅ Auditoría registrada con ID: {}, tipoEvento: {}", guardada.getId(), 
