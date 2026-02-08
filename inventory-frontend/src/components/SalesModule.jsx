@@ -439,12 +439,12 @@ const SalesModule = () => {
 
         {/* Formulario de venta */}
         {mostrarFormulario && (
-          <div className="mb-6 bg-white p-6 rounded-lg shadow">
-            <h2 className="text-2xl font-semibold mb-4 text-gray-900">Registrar Nueva Venta</h2>
-            <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="mb-6 bg-white p-4 md:p-5 rounded-lg shadow">
+            <h2 className="text-xl font-semibold mb-3 text-gray-900">Registrar Nueva Venta</h2>
+            <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-3 gap-3">
               {/* Documento */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-xs font-semibold text-gray-700 mb-1">
                   Documento *
                 </label>
                 <input
@@ -453,16 +453,16 @@ const SalesModule = () => {
                   value={formulario.documento}
                   onChange={handleInputChange}
                   onKeyDown={handleDocumentoKeyDown}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-600"
+                  className="w-full h-9 px-3 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-600"
                   placeholder="Número de documento"
                   required
                 />
-                <p className="text-xs text-gray-500 mt-1">Presiona Enter para buscar el cliente</p>
+                <p className="text-[11px] text-gray-500 mt-1">Enter para buscar</p>
               </div>
 
               {/* Nombre */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-xs font-semibold text-gray-700 mb-1">
                   Nombre *
                 </label>
                 <input
@@ -471,14 +471,14 @@ const SalesModule = () => {
                   value={formulario.nombreComprador}
                   onChange={handleInputChange}
                   required
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-600"
+                  className="w-full h-9 px-3 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-600"
                   placeholder="Nombre completo"
                 />
               </div>
 
               {/* Producto */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-xs font-semibold text-gray-700 mb-1">
                   Codigo de producto *
                 </label>
                 <input
@@ -487,31 +487,29 @@ const SalesModule = () => {
                   value={productCodeInput}
                   onChange={(e) => setProductCodeInput(e.target.value)}
                   onKeyDown={handleProductCodeKeyDown}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-600"
+                  className="w-full h-9 px-3 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-600"
                   placeholder="Codigo del producto"
                 />
-                <p className="text-xs text-gray-500 mt-1">
-                  Enter agrega el producto. F2 abre el buscador.
-                </p>
+                <p className="text-[11px] text-gray-500 mt-1">Enter agrega, F2 busca</p>
               </div>
 
               {/* Agregar producto */}
-              <div className="flex items-end">
+              <div className="flex items-end md:col-span-1">
                 <button
                   type="button"
                   onClick={handleAddItemByCode}
-                  className="w-full px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-all font-medium"
+                  className="w-full h-9 px-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-all text-sm font-semibold"
                 >
                   Agregar Producto
                 </button>
               </div>
 
               {/* Lista de productos */}
-              <div className="md:col-span-2">
+              <div className="md:col-span-3">
                 {formulario.items.length === 0 ? (
                   <p className="text-sm text-gray-500">No hay productos agregados</p>
                 ) : (
-                  <div className="overflow-x-auto border border-gray-200 rounded-lg">
+                  <div className="overflow-x-auto border border-gray-200 rounded-lg max-h-[200px] overflow-y-auto">
                     <table className="w-full">
                       <thead className="bg-gray-100 border-b border-gray-200">
                         <tr>
@@ -532,7 +530,7 @@ const SalesModule = () => {
                                 min="1"
                                 value={item.cantidad}
                                 onChange={(e) => handleItemChange(item.id, 'cantidad', parseInt(e.target.value || 0))}
-                                className="w-24 px-2 py-1 border border-gray-300 rounded"
+                                className="w-20 px-2 py-1 border border-gray-300 rounded text-sm"
                               />
                             </td>
                             <td className="px-3 py-2 text-sm text-gray-900">
@@ -542,7 +540,7 @@ const SalesModule = () => {
                                 step="0.01"
                                 value={item.precioUnitario}
                                 onChange={(e) => handleItemChange(item.id, 'precioUnitario', parseFloat(e.target.value || 0))}
-                                className="w-28 px-2 py-1 border border-gray-300 rounded"
+                                className="w-24 px-2 py-1 border border-gray-300 rounded text-sm"
                               />
                             </td>
                             <td className="px-3 py-2 text-sm text-gray-900">
@@ -552,7 +550,7 @@ const SalesModule = () => {
                               <button
                                 type="button"
                                 onClick={() => handleRemoveItem(item.id)}
-                                className="text-red-600 hover:text-red-700 text-sm"
+                                className="text-red-600 hover:text-red-700 text-xs"
                               >
                                 Quitar
                               </button>
@@ -567,17 +565,17 @@ const SalesModule = () => {
 
               {/* Total */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-xs font-semibold text-gray-700 mb-1">
                   Total
                 </label>
-                <div className="px-4 py-2 bg-gray-100 border border-gray-300 rounded-lg text-lg font-bold text-gray-900">
+                <div className="px-3 py-2 bg-gray-100 border border-gray-300 rounded-lg text-base font-bold text-gray-900">
                   ${calcularTotal()}
                 </div>
               </div>
 
               {/* Teléfono */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-xs font-semibold text-gray-700 mb-1">
                   Teléfono
                 </label>
                 <input
@@ -585,14 +583,14 @@ const SalesModule = () => {
                   name="telefonoComprador"
                   value={formulario.telefonoComprador}
                   onChange={handleInputChange}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-600"
+                  className="w-full h-9 px-3 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-600"
                   placeholder="Teléfono (opcional)"
                 />
               </div>
 
               {/* Email */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-xs font-semibold text-gray-700 mb-1">
                   Email
                 </label>
                 <input
@@ -600,39 +598,39 @@ const SalesModule = () => {
                   name="emailComprador"
                   value={formulario.emailComprador}
                   onChange={handleInputChange}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-600"
+                  className="w-full h-9 px-3 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-600"
                   placeholder="Email (opcional)"
                 />
               </div>
 
               {/* Observaciones */}
-              <div className="md:col-span-2">
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+              <div className="md:col-span-3">
+                <label className="block text-xs font-semibold text-gray-700 mb-1">
                   Observaciones
                 </label>
                 <textarea
                   name="observaciones"
                   value={formulario.observaciones}
                   onChange={handleInputChange}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-600"
-                  rows="3"
+                  className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-600"
+                  rows="2"
                   placeholder="Notas adicionales (opcional)"
                 ></textarea>
               </div>
 
               {/* Botones */}
-              <div className="md:col-span-2 flex gap-3">
+              <div className="md:col-span-3 flex gap-3">
                 <button
                   type="submit"
                   disabled={loading}
-                  className="flex-1 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-all font-medium disabled:bg-gray-400"
+                  className="flex-1 h-9 px-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-all font-medium disabled:bg-gray-400 text-sm"
                 >
                   {loading ? "Registrando..." : "Registrar Venta"}
                 </button>
                 <button
                   type="button"
                   onClick={() => setMostrarFormulario(false)}
-                  className="flex-1 px-4 py-2 bg-gray-300 text-gray-700 rounded-lg hover:bg-gray-400 transition-all font-medium"
+                  className="flex-1 h-9 px-3 bg-gray-300 text-gray-700 rounded-lg hover:bg-gray-400 transition-all font-medium text-sm"
                 >
                   Cancelar
                 </button>

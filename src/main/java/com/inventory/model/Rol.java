@@ -13,6 +13,9 @@ public class Rol {
     @Column(nullable = true)
     private String color;
 
+    @Column(nullable = true)
+    private String description;
+
     // Constructor vacío requerido por JPA
     public Rol() {
     }
@@ -26,6 +29,12 @@ public class Rol {
     public Rol(String name, String color) {
         this.name = name;
         this.color = color;
+    }
+
+    public Rol(String name, String color, String description) {
+        this.name = name;
+        this.color = color;
+        this.description = description;
     }
 
     // Getters y setters
@@ -44,6 +53,14 @@ public class Rol {
 
     public void setColor(String color) {
         this.color = color;
+    }
+
+    public String getDescription() {
+        return description;
+    }
+
+    public void setDescription(String description) {
+        this.description = description;
     }
 
     @Override

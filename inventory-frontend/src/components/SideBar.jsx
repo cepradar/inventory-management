@@ -11,8 +11,9 @@ import {
   ClipboardDocumentListIcon,
 } from '@heroicons/react/24/outline';
 
-function Sidebar({ onModuleChange, activeModule, isExpanded, toggleSidebar, sidebarRef, userRole }) {
+function Sidebar({ onModuleChange, activeModule, isExpanded, toggleSidebar, sidebarRef, userRole, permissions = [] }) {
   const isAdmin = userRole && (userRole === 'ADMIN' || userRole.trim().toUpperCase() === 'ADMIN');
+  const hasPermission = (permName) => isAdmin || permissions.includes(permName);
   
   // Debug: mostrar rol en consola
   React.useEffect(() => {
@@ -36,18 +37,8 @@ function Sidebar({ onModuleChange, activeModule, isExpanded, toggleSidebar, side
       </div>
 
       <ul className="flex-1 overflow-y-auto space-y-0.5 px-1">
-        <li>
-          <button
-            onClick={() => onModuleChange('inventory')}
-            className={`w-full flex items-center gap-2 py-2 px-2 rounded-md transition-colors
-              ${activeModule === 'inventory' ? 'bg-gray-700 text-white' : 'text-gray-400 hover:bg-gray-800'}`}
-          >
-            <ArchiveBoxIcon className="h-5 w-5 flex-shrink-0" />
-            {isExpanded && <span className="text-sm font-medium whitespace-nowrap">Inventario</span>}
-          </button>
-        </li>
 
-        {isAdmin && (
+        {hasPermission('USUARIOS') && (
           <li>
             <button
               onClick={() => onModuleChange('users')}
@@ -60,20 +51,33 @@ function Sidebar({ onModuleChange, activeModule, isExpanded, toggleSidebar, side
           </li>
         )}
 
-        {isAdmin && (
+        {hasPermission('INVENTARIOS') && (
           <li>
             <button
-              onClick={() => onModuleChange('audit')}
+              onClick={() => onModuleChange('inventory')}
               className={`w-full flex items-center gap-2 py-2 px-2 rounded-md transition-colors
-                ${activeModule === 'audit' ? 'bg-gray-700 text-white' : 'text-gray-400 hover:bg-gray-800'}`}
+                ${activeModule === 'inventory' ? 'bg-gray-700 text-white' : 'text-gray-400 hover:bg-gray-800'}`}
             >
-              <DocumentTextIcon className="h-5 w-5 flex-shrink-0" />
-              {isExpanded && <span className="text-sm font-medium whitespace-nowrap">Auditoría</span>}
+              <ArchiveBoxIcon className="h-5 w-5 flex-shrink-0" />
+              {isExpanded && <span className="text-sm font-medium whitespace-nowrap">Inventario</span>}
             </button>
           </li>
         )}
 
-        {isAdmin && (
+        {hasPermission('CLIENTES') && (
+          <li>
+            <button
+              onClick={() => onModuleChange('clients')}
+              className={`w-full flex items-center gap-2 py-2 px-2 rounded-md transition-colors
+                ${activeModule === 'clients' ? 'bg-gray-700 text-white' : 'text-gray-400 hover:bg-gray-800'}`}
+            >
+              <UserGroupIcon className="h-5 w-5 flex-shrink-0" />
+              {isExpanded && <span className="text-sm font-medium whitespace-nowrap">Clientes</span>}
+            </button>
+          </li>
+        )}
+
+        {hasPermission('VENTAS') && (
           <li>
             <button
               onClick={() => onModuleChange('sales')}
@@ -86,7 +90,33 @@ function Sidebar({ onModuleChange, activeModule, isExpanded, toggleSidebar, side
           </li>
         )}
 
-        {isAdmin && (
+        {hasPermission('ORDENES_SERVICIO') && (
+          <li>
+            <button
+              onClick={() => onModuleChange('ordenes-servicio')}
+              className={`w-full flex items-center gap-2 py-2 px-2 rounded-md transition-colors
+                ${activeModule === 'ordenes-servicio' ? 'bg-gray-700 text-white' : 'text-gray-400 hover:bg-gray-800'}`}
+            >
+              <ClipboardDocumentListIcon className="h-5 w-5 flex-shrink-0" />
+              {isExpanded && <span className="text-sm font-medium whitespace-nowrap">Órdenes de Servicio</span>}
+            </button>
+          </li>
+        )}
+
+        {hasPermission('AUDITORIA') && (
+          <li>
+            <button
+              onClick={() => onModuleChange('audit')}
+              className={`w-full flex items-center gap-2 py-2 px-2 rounded-md transition-colors
+                ${activeModule === 'audit' ? 'bg-gray-700 text-white' : 'text-gray-400 hover:bg-gray-800'}`}
+            >
+              <DocumentTextIcon className="h-5 w-5 flex-shrink-0" />
+              {isExpanded && <span className="text-sm font-medium whitespace-nowrap">Auditoría</span>}
+            </button>
+          </li>
+        )}
+
+        {hasPermission('CONFIGURACION') && (
           <li>
             <button
               onClick={() => onModuleChange('settings')}
@@ -98,28 +128,6 @@ function Sidebar({ onModuleChange, activeModule, isExpanded, toggleSidebar, side
             </button>
           </li>
         )}
-
-        <li>
-          <button
-            onClick={() => onModuleChange('clients')}
-            className={`w-full flex items-center gap-2 py-2 px-2 rounded-md transition-colors
-              ${activeModule === 'clients' ? 'bg-gray-700 text-white' : 'text-gray-400 hover:bg-gray-800'}`}
-          >
-            <UserGroupIcon className="h-5 w-5 flex-shrink-0" />
-            {isExpanded && <span className="text-sm font-medium whitespace-nowrap">Clientes</span>}
-          </button>
-        </li>
-
-        <li>
-          <button
-            onClick={() => onModuleChange('ordenes-servicio')}
-            className={`w-full flex items-center gap-2 py-2 px-2 rounded-md transition-colors
-              ${activeModule === 'ordenes-servicio' ? 'bg-gray-700 text-white' : 'text-gray-400 hover:bg-gray-800'}`}
-          >
-            <ClipboardDocumentListIcon className="h-5 w-5 flex-shrink-0" />
-            {isExpanded && <span className="text-sm font-medium whitespace-nowrap">Órdenes de Servicio</span>}
-          </button>
-        </li>
       </ul>
     </div>
   );

@@ -9,6 +9,7 @@ import Modal from './Modal';
 import ClientManager from './ClientManager';
 import IngresoElectrodomestico from './IngresoElectrodomestico';
 import OrdenServicio from './OrdenServicio';
+import ConfigDashboard from './ConfigDashboard';
 import { useNavigate } from 'react-router-dom';
 import axios from './utils/axiosConfig';
 
@@ -25,6 +26,7 @@ function Dashboard() {
   const [companyLogoUrl, setCompanyLogoUrl] = useState(null);
   const [hasActiveForm, setHasActiveForm] = useState(false); // 🔔 Estado para saber si hay formulario activo
   const [pendingModuleChange, setPendingModuleChange] = useState(null); // 🔔 Cambio pendiente
+  const [permissions, setPermissions] = useState([]);
 
   const sidebarRef = useRef(null);
   const navRef = useRef(null);
@@ -36,6 +38,24 @@ function Dashboard() {
     if (role) setUserRole(role);
     else navigate('/login');
   }, [navigate]);
+
+  useEffect(() => {
+    const fetchPermissions = async () => {
+      if (!userRole) return;
+      try {
+        const response = await axios.get(`/api/permissions/role/${userRole}`);
+        const activePerms = (response.data || [])
+          .filter((perm) => perm.active)
+          .map((perm) => perm.permissionName);
+        setPermissions(activePerms);
+      } catch (error) {
+        console.warn('No se pudieron cargar permisos, usando acceso por rol:', error);
+        setPermissions([]);
+      }
+    };
+
+    fetchPermissions();
+  }, [userRole]);
 
   useEffect(() => {
     let isMounted = true;
@@ -228,6 +248,8 @@ function Dashboard() {
             <ClientManager />
           </div>
         );
+      case 'settings':
+        return <ConfigDashboard />;
       case 'ordenes-servicio':
         return <OrdenServicio />;
       case 'ingresos':
@@ -247,6 +269,7 @@ function Dashboard() {
         toggleSidebar={toggleSidebar}
         activeModule={activeModule}
         userRole={userRole}
+        permissions={permissions}
       />
 
       {/* Navbar fijo: calculamos offset según ancho real del sidebar */}
