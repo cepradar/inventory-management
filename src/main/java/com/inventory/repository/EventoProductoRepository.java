@@ -12,5 +12,6 @@ import com.inventory.model.EventoProducto;
 public interface EventoProductoRepository extends JpaRepository<EventoProducto, String> {
     List<EventoProducto> findByProducto_Id(String productoId);
     List<EventoProducto> findByCliente_Id(String id);
+    List<EventoProducto> findByCliente_IdAndCliente_TipoDocumentoId(String id, String tipoDocumentoId);
     List<EventoProducto> findByFechaEventoBetween(LocalDateTime desde, LocalDateTime hasta);
 }

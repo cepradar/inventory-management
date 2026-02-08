@@ -58,7 +58,9 @@ export default function OrdenServicio() {
       const fetchElectrodomesticos = async () => {
         try {
           // Usar documento como clienteId (es el ID en el backend)
-          const response = await api.get(`/api/cliente-electrodomestico/cliente/${selectedCliente.documento}`);
+          const response = await api.get(
+            `/api/cliente-electrodomestico/cliente/${selectedCliente.documento}/${selectedCliente.tipoDocumentoId}`
+          );
           setClienteElectrodomesticos(response.data || []);
           setSelectedElectrodomestico(null); // Reset selection
         } catch (err) {
@@ -116,6 +118,7 @@ export default function OrdenServicio() {
       // Preparar payload según la estructura del backend
       const payload = {
         clienteId: selectedCliente.documento, // El documento es el ID del cliente
+        clienteTipoDocumentoId: selectedCliente.tipoDocumentoId,
         electrodomesticoId: selectedElectrodomestico.id,
         tipoServicio: 'REPARACION', // O el valor que corresponda
         descripcionProblema: descripcionProblema.trim(),
@@ -184,17 +187,27 @@ export default function OrdenServicio() {
             <div>
               <label className="block text-sm font-semibold mb-2 text-gray-700">Cliente *</label>
               <select
-                value={selectedCliente ? selectedCliente.documento : ''}
+                value={
+                  selectedCliente
+                    ? `${selectedCliente.documento}::${selectedCliente.tipoDocumentoId}`
+                    : ''
+                }
                 onChange={(e) => {
-                  const cliente = clientes.find(c => c.documento === e.target.value);
+                  const [documento, tipoDocumentoId] = e.target.value.split('::');
+                  const cliente = clientes.find(
+                    (c) => c.documento === documento && c.tipoDocumentoId === tipoDocumentoId
+                  );
                   setSelectedCliente(cliente || null);
                 }}
                 className="w-full border-2 border-gray-300 rounded px-4 py-2 focus:border-blue-500 focus:outline-none"
               >
                 <option value="">Seleccionar cliente...</option>
                 {clientes.map((cliente) => (
-                  <option key={cliente.documento} value={cliente.documento}>
-                    {cliente.nombre} {cliente.apellido} - {cliente.documento}
+                  <option
+                    key={`${cliente.documento}::${cliente.tipoDocumentoId}`}
+                    value={`${cliente.documento}::${cliente.tipoDocumentoId}`}
+                  >
+                    {cliente.nombre} {cliente.apellido} - {cliente.documento} ({cliente.tipoDocumentoId})
                   </option>
                 ))}
               </select>

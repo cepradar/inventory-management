@@ -17,8 +17,8 @@ import org.slf4j.LoggerFactory;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
-import java.util.Arrays;
 import java.util.List;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 @Service
@@ -53,7 +53,7 @@ public class AuditoriaService {
         logger.info("🔍 Registrando auditoría - tipo entrada: '{}', tipo mapeado: '{}'", tipo, tipoEventoId);
         
         // Buscar tipo de evento
-        TipoEvento tipoEvento = tipoEventoRepository.findById(tipoEventoId)
+        TipoEvento tipoEvento = tipoEventoRepository.findById(Objects.requireNonNull(tipoEventoId, "tipoEventoId"))
                 .orElseThrow(() -> {
                     logger.error("❌ Tipo de evento NO ENCONTRADO en BD: '{}'", tipoEventoId);
                     return new RuntimeException("Tipo de evento no encontrado: " + tipoEventoId);
@@ -62,10 +62,11 @@ public class AuditoriaService {
         logger.info("✅ Tipo de evento encontrado: {} - {}", tipoEvento.getId(), tipoEvento.getNombre());
         
         // Buscar producto para capturar nombre (sin FK)
-        Product producto = productRepository.findById(productId).orElse(null);
+        String safeProductId = Objects.requireNonNull(productId, "productId");
+        Product producto = productRepository.findById(safeProductId).orElse(null);
         String productName = producto != null ? producto.getName() : "[Producto eliminado]";
         
-        User usuario = userRepository.findByUsernameIgnoreCase(usuarioUsername)
+        User usuario = userRepository.findByUsernameIgnoreCase(Objects.requireNonNull(usuarioUsername, "usuarioUsername"))
                 .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
 
         Integer cantidadInicialFinal = cantidadInicial != null ? cantidadInicial : cantidadFinal;
@@ -75,7 +76,7 @@ public class AuditoriaService {
 
         Auditoria auditoria = new Auditoria(
             tipoEvento,
-            productId,
+            safeProductId,
             productName,
             cantidadInicialFinal,
             cantidadFinalFinal,
@@ -112,6 +113,12 @@ public class AuditoriaService {
                 return "MA"; // MOVIMIENTO_AJUSTE
             case "EP":
                 return "EP"; // ELIMINACION_PRODUCTO
+            case "V":
+                return "V"; // VENTA
+            case "VENTA":
+                return "V"; // VENTA
+            case "VC":
+                return "VC"; // VENTA_CREADA
             // Códigos legados (compatibilidad hacia atrás)
             case "INGRESO":
                 logger.info("ℹ️ Usando código legacy 'INGRESO', mapeando a 'ME'");
@@ -206,7 +213,7 @@ public class AuditoriaService {
      * Obtiene un evento por ID
      */
     public AuditoriaDto obtenerMovimientoPorId(Long auditoriaId) {
-        return auditoriaRepository.findById(auditoriaId)
+        return auditoriaRepository.findById(Objects.requireNonNull(auditoriaId, "auditoriaId"))
                 .map(AuditoriaDto::new)
                 .orElseThrow(() -> new RuntimeException("Evento de auditoría no encontrado"));
     }

@@ -2,6 +2,7 @@ package com.inventory.service;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Objects;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -25,7 +26,7 @@ public class EventoProductoService {
     private EventoProductoRepository repository;
 
     public EventoProducto registrarEvento(EventoProducto evento) {
-        return repository.save(evento);
+        return repository.save(Objects.requireNonNull(evento, "evento"));
     }
 
     public List<EventoProducto> obtenerEventosPorProducto(String productoId) {
@@ -50,13 +51,13 @@ private EventoProductoRepository eventoRepository;
 public EventoProducto registrarDesdeDTO(EventoProductoDto dto) {
     EventoProducto evento = new EventoProducto();
 
-    User usuario = userRepository.findById(dto.getUsuarioUsername())
+    User usuario = userRepository.findById(Objects.requireNonNull(dto.getUsuarioUsername(), "usuarioUsername"))
         .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
 
-    TipoEvento tipo = tipoEventoRepository.findById(dto.getTipoDeEventoId())
+    TipoEvento tipo = tipoEventoRepository.findById(Objects.requireNonNull(dto.getTipoDeEventoId(), "tipoDeEventoId"))
         .orElseThrow(() -> new RuntimeException("Tipo de evento no encontrado"));
 
-    Product producto = productRepository.findById(dto.getProductoId())
+    Product producto = productRepository.findById(Objects.requireNonNull(dto.getProductoId(), "productoId"))
         .orElseThrow(() -> new RuntimeException("Producto no encontrado"));
 
     evento.setUsuario(usuario);
@@ -65,7 +66,13 @@ public EventoProducto registrarDesdeDTO(EventoProductoDto dto) {
     evento.setFechaEvento(dto.getFechaEvento() != null ? dto.getFechaEvento() : LocalDateTime.now());
 
     if (dto.getClienteId() != null) {
-        Cliente cliente = clienteRepository.findById(dto.getClienteId())
+        if (dto.getClienteTipoDocumentoId() == null) {
+            throw new RuntimeException("Tipo de documento del cliente es obligatorio");
+        }
+        Cliente cliente = clienteRepository.findByIdAndTipoDocumentoId(
+            Objects.requireNonNull(dto.getClienteId(), "clienteId"),
+            Objects.requireNonNull(dto.getClienteTipoDocumentoId(), "clienteTipoDocumentoId")
+        )
             .orElseThrow(() -> new RuntimeException("Cliente no encontrado"));
         evento.setCliente(cliente);
     }

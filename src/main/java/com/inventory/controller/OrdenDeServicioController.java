@@ -69,6 +69,17 @@ public class OrdenDeServicioController {
         }
     }
 
+    @GetMapping("/cliente/{clienteId}/{tipoDocumentoId}")
+    @PreAuthorize("isAuthenticated()")
+    public ResponseEntity<?> porCliente(@PathVariable String clienteId, @PathVariable String tipoDocumentoId) {
+        try {
+            List<OrdenDeServicioDto> list = service.obtenerServiciosPorCliente(clienteId, tipoDocumentoId);
+            return ResponseEntity.ok(list);
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Error: " + e.getMessage());
+        }
+    }
+
     @GetMapping("/listar")
     @PreAuthorize("isAuthenticated()")
     public ResponseEntity<?> listar() {

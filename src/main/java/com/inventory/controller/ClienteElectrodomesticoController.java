@@ -71,6 +71,17 @@ public class ClienteElectrodomesticoController {
         }
     }
 
+    @GetMapping("/cliente/{clienteId}/{tipoDocumentoId}")
+    @PreAuthorize("isAuthenticated()")
+    public ResponseEntity<?> listarPorCliente(@PathVariable String clienteId, @PathVariable String tipoDocumentoId) {
+        try {
+            List<ClienteElectrodomesticoDto> list = service.listarPorCliente(clienteId, tipoDocumentoId);
+            return ResponseEntity.ok(list);
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Error: " + e.getMessage());
+        }
+    }
+
     @GetMapping("/listar")
     @PreAuthorize("isAuthenticated()")
     public ResponseEntity<?> listarTodos() {

@@ -16,7 +16,10 @@ public class OrdenDeServicio {
     private String id;
     
     @ManyToOne
-    @JoinColumn(name = "cliente_id", nullable = false)
+    @JoinColumns({
+        @JoinColumn(name = "cliente_id", nullable = false),
+        @JoinColumn(name = "cliente_tipo_documento", nullable = false)
+    })
     private Cliente cliente;
 
     @ManyToOne

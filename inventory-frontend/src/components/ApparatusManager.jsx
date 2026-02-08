@@ -6,12 +6,13 @@ import DataTable from './DataTable';
 export default function ApparatusManager() {
   const [apparatus, setApparatus] = useState([]);
   const [clients, setClients] = useState([]);
-  const [selectedClientId, setSelectedClientId] = useState('');
+  const [selectedClientKey, setSelectedClientKey] = useState('');
   const [loading, setLoading] = useState(false);
   const [showForm, setShowForm] = useState(false);
   const [editingApparatus, setEditingApparatus] = useState(null);
   const [formData, setFormData] = useState({
     clienteId: '',
+    clienteTipoDocumentoId: '',
     tipo: '',
     marca: '',
     modelo: '',
@@ -47,7 +48,8 @@ export default function ApparatusManager() {
 
   const resetForm = () => {
     setFormData({
-      clienteId: selectedClientId || '',
+      clienteId: selectedClientKey ? selectedClientKey.split('::')[0] : '',
+      clienteTipoDocumentoId: selectedClientKey ? selectedClientKey.split('::')[1] : '',
       tipo: '',
       marca: '',
       modelo: '',
@@ -59,16 +61,21 @@ export default function ApparatusManager() {
   };
 
   const handleNewApparatus = () => {
-    if (!selectedClientId) {
+    if (!selectedClientKey) {
       alert('Por favor, seleccione un cliente primero');
       return;
     }
-    setFormData(prev => ({ ...prev, clienteId: selectedClientId }));
+    const [clienteId, clienteTipoDocumentoId] = selectedClientKey.split('::');
+    setFormData(prev => ({ ...prev, clienteId, clienteTipoDocumentoId }));
     setShowForm(true);
   };
 
-  const filteredApparatus = selectedClientId
-    ? apparatus.filter(item => item.clienteId?.toString() === selectedClientId)
+  const filteredApparatus = selectedClientKey
+    ? apparatus.filter(
+        item =>
+          item.clienteId?.toString() === selectedClientKey.split('::')[0] &&
+          item.clienteTipoDocumentoId === selectedClientKey.split('::')[1]
+      )
     : apparatus;
 
   const handleInputChange = (e) => {
@@ -81,6 +88,7 @@ export default function ApparatusManager() {
     try {
       const payload = {
         clienteId: formData.clienteId,
+        clienteTipoDocumentoId: formData.clienteTipoDocumentoId,
         electrodomesticoTipo: formData.tipo,
         electrodomesticoMarca: formData.marca,
         electrodomesticoModelo: formData.modelo,
@@ -105,6 +113,7 @@ export default function ApparatusManager() {
     setEditingApparatus(item);
     setFormData({
       clienteId: item.clienteId?.toString() || '',
+      clienteTipoDocumentoId: item.clienteTipoDocumentoId || '',
       tipo: item.electrodomesticoTipo || '',
       marca: item.electrodomesticoMarca || '',
       modelo: item.electrodomesticoModelo || '',
@@ -131,9 +140,9 @@ export default function ApparatusManager() {
       <div className="mb-4">
         <label className="block text-sm font-medium mb-2">Seleccionar Cliente</label>
         <select
-          value={selectedClientId}
+          value={selectedClientKey}
           onChange={(e) => {
-            setSelectedClientId(e.target.value);
+            setSelectedClientKey(e.target.value);
             setShowForm(false);
             setEditingApparatus(null);
           }}
@@ -141,8 +150,11 @@ export default function ApparatusManager() {
         >
           <option value="">Todos los clientes</option>
           {clients.map(client => (
-            <option key={client.documento} value={client.documento}>
-              {client.documento} - {client.nombre}
+            <option
+              key={`${client.documento}::${client.tipoDocumentoId}`}
+              value={`${client.documento}::${client.tipoDocumentoId}`}
+            >
+              {client.documento} ({client.tipoDocumentoId}) - {client.nombre}
             </option>
           ))}
         </select>
@@ -167,15 +179,25 @@ export default function ApparatusManager() {
               <label className="block text-sm font-medium mb-1">Cliente *</label>
               <select
                 name="clienteId"
-                value={formData.clienteId}
-                onChange={handleInputChange}
+                value={
+                  formData.clienteId && formData.clienteTipoDocumentoId
+                    ? `${formData.clienteId}::${formData.clienteTipoDocumentoId}`
+                    : ''
+                }
+                onChange={(e) => {
+                  const [clienteId, clienteTipoDocumentoId] = e.target.value.split('::');
+                  setFormData(prev => ({ ...prev, clienteId, clienteTipoDocumentoId }));
+                }}
                 required
                 className="w-full border rounded px-3 py-2"
               >
                 <option value="">Seleccione un cliente</option>
                 {clients.map(client => (
-                  <option key={client.id} value={client.id}>
-                    {client.nombre} {client.apellido}
+                  <option
+                    key={`${client.documento}::${client.tipoDocumentoId}`}
+                    value={`${client.documento}::${client.tipoDocumentoId}`}
+                  >
+                    {client.nombre} {client.apellido} - {client.documento} ({client.tipoDocumentoId})
                   </option>
                 ))}
               </select>

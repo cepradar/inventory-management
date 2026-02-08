@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import axios from "./utils/axiosConfig";
+import DataTable from "./DataTable";
 
 const AuditModule = () => {
   const [movimientos, setMovimientos] = useState([]);
@@ -125,171 +126,99 @@ const AuditModule = () => {
           </div>
         </div>
 
-        {/* Tabla de movimientos - Vista Desktop */}
-        <div className="hidden md:block bg-white rounded-lg shadow overflow-hidden">
-          {loading ? (
-            <div className="p-8 text-center">
-              <p className="text-gray-500 text-lg">Cargando movimientos...</p>
-            </div>
-          ) : movimientos.length === 0 ? (
-            <div className="p-4 md:p-6 text-center">
-              <p className="text-gray-500 text-sm md:text-base">No hay movimientos registrados en esta categoría</p>
-            </div>
-          ) : (
-            <div className="overflow-x-auto">
-              <table className="w-full min-w-full">
-                <thead className="bg-gray-50 border-b border-gray-200">
-                  <tr>
-                    <th className="px-2 py-1.5 text-left text-xs font-semibold text-gray-900 whitespace-nowrap">
-                      Fecha
-                    </th>
-                    <th className="px-2 py-1.5 text-left text-xs font-semibold text-gray-900 whitespace-nowrap">
-                      Producto
-                    </th>
-                    <th className="px-2 py-1.5 text-left text-xs font-semibold text-gray-900 whitespace-nowrap">
-                      Cant. Inicial
-                    </th>
-                    <th className="px-2 py-1.5 text-left text-xs font-semibold text-gray-900 whitespace-nowrap">
-                      Cant. Final
-                    </th>
-                    <th className="px-2 py-1.5 text-left text-xs font-semibold text-gray-900 whitespace-nowrap">
-                      Precio Inicial
-                    </th>
-                    <th className="px-2 py-1.5 text-left text-xs font-semibold text-gray-900 whitespace-nowrap">
-                      Precio Final
-                    </th>
-                    <th className="px-2 py-1.5 text-left text-xs font-semibold text-gray-900 whitespace-nowrap">
-                      Tipo
-                    </th>
-                    <th className="px-2 py-1.5 text-left text-xs font-semibold text-gray-900 whitespace-nowrap">
-                      Descripción
-                    </th>
-                    <th className="px-2 py-1.5 text-left text-xs font-semibold text-gray-900 whitespace-nowrap">
-                      Usuario
-                    </th>
-                    <th className="px-2 py-1.5 text-left text-xs font-semibold text-gray-900 whitespace-nowrap">
-                      Referencia
-                    </th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-gray-200">
-                  {movimientos.map((movimiento) => (
-                    <tr key={movimiento.id} className="hover:bg-gray-50 transition-colors even:bg-gray-50/50">
-                      <td className="px-2 py-1.5 text-xs text-gray-900 whitespace-nowrap">
-                        {formatearFecha(movimiento.fecha)}
-                      </td>
-                      <td className="px-2 py-1.5 text-xs text-gray-900 font-medium">
-                        {movimiento.productName || "-"}
-                      </td>
-                      <td className="px-2 py-1.5 text-xs text-gray-900 whitespace-nowrap">
-                        {movimiento.cantidadInicial ?? "-"}
-                      </td>
-                      <td className="px-2 py-1.5 text-xs text-gray-900 whitespace-nowrap">
-                        {movimiento.cantidadFinal ?? "-"}
-                      </td>
-                      <td className="px-2 py-1.5 text-xs text-gray-900 whitespace-nowrap">
-                        {movimiento.precioInicial ?? "-"}
-                      </td>
-                      <td className="px-2 py-1.5 text-xs text-gray-900 whitespace-nowrap">
-                        {movimiento.precioFinal ?? "-"}
-                      </td>
-                      <td className="px-2 py-1.5 whitespace-nowrap">
-                        <span className={`inline-block px-1.5 py-0.5 rounded-full text-xs font-semibold ${obtenerColorTipo(movimiento.tipoEventoNombre)}`}>
-                          {movimiento.tipoEventoNombre}
-                        </span>
-                      </td>
-                      <td className="px-2 py-1.5 text-xs text-gray-600 max-w-xs truncate">
-                        {movimiento.descripcion || "-"}
-                      </td>
-                      <td className="px-2 py-1.5 text-xs text-gray-900 whitespace-nowrap">
-                        {movimiento.usuarioNombreCompleto || movimiento.usuarioUsername}
-                      </td>
-                      <td className="px-2 py-1.5 text-xs text-gray-600 max-w-xs truncate">
-                        {movimiento.referencia || "-"}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          )}
-        </div>
-
-        {/* Vista de Cards para Móvil */}
-        <div className="md:hidden space-y-3">
-          {loading ? (
-            <div className="bg-white rounded-lg p-6 text-center">
-              <p className="text-gray-500">Cargando movimientos...</p>
-            </div>
-          ) : movimientos.length === 0 ? (
-            <div className="bg-white rounded-lg p-6 text-center">
-              <p className="text-gray-500">No hay movimientos registrados</p>
-            </div>
-          ) : (
-            movimientos.map((movimiento) => (
-              <div key={movimiento.id} className="bg-white rounded-lg shadow border border-gray-200 p-4 space-y-2">
-                <div className="flex justify-between items-start gap-2 pb-2 border-b border-gray-200">
-                  <span className="text-xs text-gray-500">
-                    {formatearFecha(movimiento.fecha)}
-                  </span>
-                  <span className={`inline-block px-2 py-1 rounded-full text-xs font-semibold ${obtenerColorTipo(movimiento.tipoEventoNombre)}`}>
-                    {movimiento.tipoEventoNombre}
-                  </span>
-                </div>
-                
-                <div className="space-y-1.5">
-                  <div className="flex justify-between gap-2">
-                    <span className="text-sm font-semibold text-gray-600">Producto:</span>
-                    <span className="text-sm text-gray-900 text-right">{movimiento.productName || "-"}</span>
-                  </div>
-                  
-                  <div className="flex justify-between gap-2">
-                    <span className="text-sm font-semibold text-gray-600">Cant. Inicial:</span>
-                    <span className="text-sm text-gray-900">{movimiento.cantidadInicial ?? "-"}</span>
-                  </div>
-
-                  <div className="flex justify-between gap-2">
-                    <span className="text-sm font-semibold text-gray-600">Cant. Final:</span>
-                    <span className="text-sm text-gray-900">{movimiento.cantidadFinal ?? "-"}</span>
-                  </div>
-
-                  <div className="flex justify-between gap-2">
-                    <span className="text-sm font-semibold text-gray-600">Precio Inicial:</span>
-                    <span className="text-sm text-gray-900">{movimiento.precioInicial ?? "-"}</span>
-                  </div>
-
-                  <div className="flex justify-between gap-2">
-                    <span className="text-sm font-semibold text-gray-600">Precio Final:</span>
-                    <span className="text-sm text-gray-900">{movimiento.precioFinal ?? "-"}</span>
-                  </div>
-                  
-                  {movimiento.descripcion && (
-                    <div className="pt-1">
-                      <span className="text-sm font-semibold text-gray-600">Descripción:</span>
-                      <p className="text-sm text-gray-700 mt-1">{movimiento.descripcion}</p>
-                    </div>
-                  )}
-                  
-                  <div className="flex justify-between gap-2">
-                    <span className="text-sm font-semibold text-gray-600">Usuario:</span>
-                    <span className="text-sm text-gray-900 text-right">
-                      {movimiento.usuarioNombreCompleto || movimiento.usuarioUsername}
-                    </span>
-                  </div>
-                  
-                  {movimiento.referencia && (
-                    <div className="flex justify-between gap-2">
-                      <span className="text-sm font-semibold text-gray-600">Ref:</span>
-                      <span className="text-sm text-gray-600 text-right truncate max-w-[200px]">
-                        {movimiento.referencia}
+        {/* Tabla de movimientos */}
+        {loading ? (
+          <div className="bg-white rounded-lg shadow p-6 text-center">
+            <p className="text-gray-500">Cargando movimientos...</p>
+          </div>
+        ) : (
+          <div className="overflow-x-auto">
+            <div className="min-w-[1100px]">
+              <DataTable
+                title="Movimientos de auditoria"
+                data={movimientos}
+                columns={[
+                  {
+                    key: "fecha",
+                    label: "Fecha",
+                    sortable: true,
+                    filterable: true,
+                    render: (mov) => formatearFecha(mov.fecha)
+                  },
+                  {
+                    key: "productName",
+                    label: "Producto",
+                    sortable: true,
+                    filterable: true,
+                    render: (mov) => mov.productName || "-"
+                  },
+                  {
+                    key: "cantidadInicial",
+                    label: "Cant. Inicial",
+                    sortable: true,
+                    filterable: false,
+                    render: (mov) => mov.cantidadInicial ?? "-"
+                  },
+                  {
+                    key: "cantidadFinal",
+                    label: "Cant. Final",
+                    sortable: true,
+                    filterable: false,
+                    render: (mov) => mov.cantidadFinal ?? "-"
+                  },
+                  {
+                    key: "precioInicial",
+                    label: "Precio Inicial",
+                    sortable: true,
+                    filterable: false,
+                    render: (mov) => mov.precioInicial ?? "-"
+                  },
+                  {
+                    key: "precioFinal",
+                    label: "Precio Final",
+                    sortable: true,
+                    filterable: false,
+                    render: (mov) => mov.precioFinal ?? "-"
+                  },
+                  {
+                    key: "tipoEventoNombre",
+                    label: "Tipo",
+                    sortable: true,
+                    filterable: false,
+                    render: (mov) => (
+                      <span
+                        className={`inline-block px-2 py-0.5 rounded-full text-xs font-semibold ${obtenerColorTipo(mov.tipoEventoNombre)}`}
+                      >
+                        {mov.tipoEventoNombre || "-"}
                       </span>
-                    </div>
-                  )}
-                </div>
-              </div>
-            ))
-          )}
-        </div>
+                    )
+                  },
+                  {
+                    key: "descripcion",
+                    label: "Descripcion",
+                    sortable: false,
+                    filterable: false,
+                    render: (mov) => mov.descripcion || "-"
+                  },
+                  {
+                    key: "usuarioNombreCompleto",
+                    label: "Usuario",
+                    sortable: true,
+                    filterable: true,
+                    render: (mov) => mov.usuarioNombreCompleto || mov.usuarioUsername
+                  },
+                  {
+                    key: "referencia",
+                    label: "Referencia",
+                    sortable: true,
+                    filterable: false,
+                    render: (mov) => mov.referencia || "-"
+                  }
+                ]}
+              />
+            </div>
+          </div>
+        )}
 
         {/* Resumen */}
         {movimientos.length > 0 && (

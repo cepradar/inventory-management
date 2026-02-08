@@ -7,6 +7,7 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
+import jakarta.persistence.JoinColumns;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 
@@ -31,7 +32,10 @@ public class EventoProducto {
     private Product producto;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "cliente_id")
+    @JoinColumns({
+        @JoinColumn(name = "cliente_id"),
+        @JoinColumn(name = "cliente_tipo_documento")
+    })
     private Cliente cliente;
 
     @Column(nullable = false)

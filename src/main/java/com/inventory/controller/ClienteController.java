@@ -27,21 +27,26 @@ public class ClienteController {
         return ResponseEntity.ok(clienteService.listarClientes());
     }
 
-    @GetMapping("/{id}")
-    public ResponseEntity<ClienteDto> buscarCliente(@PathVariable String id) {
-        Optional<ClienteDto> cliente = clienteService.buscarCliente(id);
+    @GetMapping("/{documento}")
+    public ResponseEntity<List<ClienteDto>> buscarClientesPorDocumento(@PathVariable String documento) {
+        return ResponseEntity.ok(clienteService.buscarClientesPorDocumento(documento));
+    }
+
+    @GetMapping("/{documento}/{tipoDocumentoId}")
+    public ResponseEntity<ClienteDto> buscarCliente(@PathVariable String documento, @PathVariable String tipoDocumentoId) {
+        Optional<ClienteDto> cliente = clienteService.buscarCliente(documento, tipoDocumentoId);
         return cliente.map(ResponseEntity::ok)
                 .orElse(ResponseEntity.notFound().build());
     }
 
-    @PutMapping("/actualizar/{id}")
-    public ResponseEntity<ClienteDto> actualizarCliente(@PathVariable String id, @RequestBody ClienteDto clienteDto) {
-        return ResponseEntity.ok(clienteService.actualizarCliente(id, clienteDto));
+    @PutMapping("/actualizar/{documento}/{tipoDocumentoId}")
+    public ResponseEntity<ClienteDto> actualizarCliente(@PathVariable String documento, @PathVariable String tipoDocumentoId, @RequestBody ClienteDto clienteDto) {
+        return ResponseEntity.ok(clienteService.actualizarCliente(documento, tipoDocumentoId, clienteDto));
     }
 
-    @DeleteMapping("/eliminar/{id}")
-    public ResponseEntity<Void> eliminarCliente(@PathVariable String id) {
-        clienteService.eliminarCliente(id);
+    @DeleteMapping("/eliminar/{documento}/{tipoDocumentoId}")
+    public ResponseEntity<Void> eliminarCliente(@PathVariable String documento, @PathVariable String tipoDocumentoId) {
+        clienteService.eliminarCliente(documento, tipoDocumentoId);
         return ResponseEntity.ok().build();
     }
 }

@@ -14,6 +14,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 @Service
@@ -33,8 +34,13 @@ public class ClienteElectrodomesticoService {
     private MarcaElectrodomesticoRepository marcaRepository;
 
     public ClienteElectrodomesticoDto registrar(ClienteElectrodomesticoDto dto, String username) {
-        User usuario = userRepository.findById(username).orElseThrow(() -> new RuntimeException("Usuario no encontrado: " + username));
-        Cliente cliente = clienteRepository.findById(dto.getClienteId()).orElseThrow(() -> new RuntimeException("Cliente no encontrado: " + dto.getClienteId()));
+        User usuario = userRepository.findById(Objects.requireNonNull(username, "username"))
+            .orElseThrow(() -> new RuntimeException("Usuario no encontrado: " + username));
+        Cliente cliente = clienteRepository.findByIdAndTipoDocumentoId(
+                Objects.requireNonNull(dto.getClienteId(), "clienteId"),
+                Objects.requireNonNull(dto.getClienteTipoDocumentoId(), "clienteTipoDocumentoId")
+            )
+            .orElseThrow(() -> new RuntimeException("Cliente no encontrado: " + dto.getClienteId()));
 
         // Validar número de serie obligatorio
         if (dto.getNumeroSerie() == null || dto.getNumeroSerie().isBlank()) {
@@ -43,10 +49,11 @@ public class ClienteElectrodomesticoService {
 
         // Validar que la combinación serial+marca+cliente sea única
         if (dto.getMarcaElectrodomesticoId() != null && dto.getMarcaElectrodomesticoId() > 0) {
-            boolean existe = repo.existsByNumeroSerieAndMarcaElectrodomesticoIdAndClienteId(
-                dto.getNumeroSerie(), 
-                dto.getMarcaElectrodomesticoId(), 
-                dto.getClienteId()
+            boolean existe = repo.existsByNumeroSerieAndMarcaElectrodomesticoIdAndClienteIdAndClienteTipoDocumentoId(
+                dto.getNumeroSerie(),
+                dto.getMarcaElectrodomesticoId(),
+                dto.getClienteId(),
+                dto.getClienteTipoDocumentoId()
             );
             if (existe) {
                 throw new RuntimeException("Ya existe un electrodoméstico con este número de serie y marca para este cliente");
@@ -59,7 +66,8 @@ public class ClienteElectrodomesticoService {
         
         // Manejar marca desde tabla independiente
         if (dto.getMarcaElectrodomesticoId() != null && dto.getMarcaElectrodomesticoId() > 0) {
-            MarcaElectrodomestico marca = marcaRepository.findById(dto.getMarcaElectrodomesticoId())
+            Long marcaId = Objects.requireNonNull(dto.getMarcaElectrodomesticoId(), "marcaElectrodomesticoId");
+            MarcaElectrodomestico marca = marcaRepository.findById(marcaId)
                 .orElseThrow(() -> new RuntimeException("Marca no encontrada: " + dto.getMarcaElectrodomesticoId()));
             ce.setMarcaElectrodomestico(marca);
         }
@@ -73,12 +81,14 @@ public class ClienteElectrodomesticoService {
     }
 
     public ClienteElectrodomesticoDto actualizar(Long id, ClienteElectrodomesticoDto dto) {
-        ClienteElectrodomestico ce = repo.findById(id).orElseThrow(() -> new RuntimeException("No encontrado: " + id));
+        ClienteElectrodomestico ce = repo.findById(Objects.requireNonNull(id, "id"))
+            .orElseThrow(() -> new RuntimeException("No encontrado: " + id));
         ce.setElectrodomesticoTipo(dto.getElectrodomesticoTipo());
         
         // Manejar marca desde tabla independiente
         if (dto.getMarcaElectrodomesticoId() != null) {
-            MarcaElectrodomestico marca = marcaRepository.findById(dto.getMarcaElectrodomesticoId())
+            Long marcaId = Objects.requireNonNull(dto.getMarcaElectrodomesticoId(), "marcaElectrodomesticoId");
+            MarcaElectrodomestico marca = marcaRepository.findById(marcaId)
                 .orElseThrow(() -> new RuntimeException("Marca no encontrada: " + dto.getMarcaElectrodomesticoId()));
             ce.setMarcaElectrodomestico(marca);
         }
@@ -94,7 +104,8 @@ public class ClienteElectrodomesticoService {
     }
 
     public ClienteElectrodomesticoDto obtenerPorId(Long id) {
-        ClienteElectrodomestico ce = repo.findById(id).orElseThrow(() -> new RuntimeException("No encontrado: " + id));
+        ClienteElectrodomestico ce = repo.findById(Objects.requireNonNull(id, "id"))
+            .orElseThrow(() -> new RuntimeException("No encontrado: " + id));
         return convertirADto(ce);
     }
 
@@ -102,12 +113,20 @@ public class ClienteElectrodomesticoService {
         return repo.findByClienteId(clienteId).stream().map(this::convertirADto).collect(Collectors.toList());
     }
 
+    public List<ClienteElectrodomesticoDto> listarPorCliente(String clienteId, String clienteTipoDocumentoId) {
+        return repo.findByClienteIdAndClienteTipoDocumentoId(clienteId, clienteTipoDocumentoId)
+                .stream()
+                .map(this::convertirADto)
+                .collect(Collectors.toList());
+    }
+
     public List<ClienteElectrodomesticoDto> listarTodos() {
         return repo.findAll().stream().map(this::convertirADto).collect(Collectors.toList());
     }
 
     public void eliminar(Long id) {
-        ClienteElectrodomestico ce = repo.findById(id).orElseThrow(() -> new RuntimeException("No encontrado: " + id));
+        ClienteElectrodomestico ce = repo.findById(Objects.requireNonNull(id, "id"))
+            .orElseThrow(() -> new RuntimeException("No encontrado: " + id));
         repo.delete(ce);
     }
 
@@ -115,6 +134,7 @@ public class ClienteElectrodomesticoService {
         ClienteElectrodomesticoDto dto = new ClienteElectrodomesticoDto();
         dto.setId(ce.getId());
         dto.setClienteId(ce.getCliente().getId());
+        dto.setClienteTipoDocumentoId(ce.getCliente().getTipoDocumentoId());
         dto.setClienteNombre(ce.getCliente().getNombre());
         dto.setClienteTelefono(ce.getCliente().getTelefono());
         dto.setElectrodomesticoTipo(ce.getElectrodomesticoTipo());

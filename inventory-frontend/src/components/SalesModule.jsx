@@ -641,103 +641,107 @@ const SalesModule = () => {
           </div>
         )}
 
-        {/* Tabla de ventas */}
-        <div className="bg-white rounded-lg shadow overflow-hidden">
-          <div className="px-6 py-4 border-b border-gray-200 bg-gray-50">
-            <h2 className="text-lg font-semibold text-gray-900">
-              Historial de Ventas ({ventas.length})
-            </h2>
-          </div>
+        {!mostrarFormulario && (
+          <>
+            {/* Tabla de ventas */}
+            <div className="bg-white rounded-lg shadow overflow-hidden">
+              <div className="px-6 py-4 border-b border-gray-200 bg-gray-50">
+                <h2 className="text-lg font-semibold text-gray-900">
+                  Historial de Ventas ({ventas.length})
+                </h2>
+              </div>
 
-          {ventas.length === 0 ? (
-            <div className="p-8 text-center">
-              <p className="text-gray-500 text-lg">No hay ventas registradas</p>
+              {ventas.length === 0 ? (
+                <div className="p-8 text-center">
+                  <p className="text-gray-500 text-lg">No hay ventas registradas</p>
+                </div>
+              ) : (
+                <div className="overflow-x-auto">
+                  <table className="w-full">
+                    <thead className="bg-gray-100 border-b border-gray-200">
+                      <tr>
+                        <th className="px-6 py-3 text-left text-sm font-semibold text-gray-900">
+                          Fecha
+                        </th>
+                        <th className="px-6 py-3 text-left text-sm font-semibold text-gray-900">
+                          Producto
+                        </th>
+                        <th className="px-6 py-3 text-left text-sm font-semibold text-gray-900">
+                          Comprador
+                        </th>
+                        <th className="px-6 py-3 text-left text-sm font-semibold text-gray-900">
+                          Cantidad
+                        </th>
+                        <th className="px-6 py-3 text-left text-sm font-semibold text-gray-900">
+                          Precio Unit.
+                        </th>
+                        <th className="px-6 py-3 text-left text-sm font-semibold text-gray-900">
+                          Total
+                        </th>
+                        <th className="px-6 py-3 text-left text-sm font-semibold text-gray-900">
+                          Usuario
+                        </th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-gray-200">
+                      {ventas.map((venta) => (
+                        <tr key={venta.id} className="hover:bg-gray-50 transition-colors">
+                          <td className="px-6 py-4 text-sm text-gray-900">
+                            {formatearFecha(venta.fecha)}
+                          </td>
+                          <td className="px-6 py-4 text-sm text-gray-900 font-medium">
+                            {venta.productNombre}
+                          </td>
+                          <td className="px-6 py-4 text-sm text-gray-900">
+                            {venta.nombreComprador}
+                          </td>
+                          <td className="px-6 py-4 text-sm text-gray-900">
+                            {venta.cantidad}
+                          </td>
+                          <td className="px-6 py-4 text-sm text-gray-900">
+                            ${venta.precioUnitario}
+                          </td>
+                          <td className="px-6 py-4 text-sm font-semibold text-green-600">
+                            ${venta.totalVenta}
+                          </td>
+                          <td className="px-6 py-4 text-sm text-gray-600">
+                            {venta.usuarioNombre}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
             </div>
-          ) : (
-            <div className="overflow-x-auto">
-              <table className="w-full">
-                <thead className="bg-gray-100 border-b border-gray-200">
-                  <tr>
-                    <th className="px-6 py-3 text-left text-sm font-semibold text-gray-900">
-                      Fecha
-                    </th>
-                    <th className="px-6 py-3 text-left text-sm font-semibold text-gray-900">
-                      Producto
-                    </th>
-                    <th className="px-6 py-3 text-left text-sm font-semibold text-gray-900">
-                      Comprador
-                    </th>
-                    <th className="px-6 py-3 text-left text-sm font-semibold text-gray-900">
-                      Cantidad
-                    </th>
-                    <th className="px-6 py-3 text-left text-sm font-semibold text-gray-900">
-                      Precio Unit.
-                    </th>
-                    <th className="px-6 py-3 text-left text-sm font-semibold text-gray-900">
-                      Total
-                    </th>
-                    <th className="px-6 py-3 text-left text-sm font-semibold text-gray-900">
-                      Usuario
-                    </th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-gray-200">
-                  {ventas.map((venta) => (
-                    <tr key={venta.id} className="hover:bg-gray-50 transition-colors">
-                      <td className="px-6 py-4 text-sm text-gray-900">
-                        {formatearFecha(venta.fecha)}
-                      </td>
-                      <td className="px-6 py-4 text-sm text-gray-900 font-medium">
-                        {venta.productNombre}
-                      </td>
-                      <td className="px-6 py-4 text-sm text-gray-900">
-                        {venta.nombreComprador}
-                      </td>
-                      <td className="px-6 py-4 text-sm text-gray-900">
-                        {venta.cantidad}
-                      </td>
-                      <td className="px-6 py-4 text-sm text-gray-900">
-                        ${venta.precioUnitario}
-                      </td>
-                      <td className="px-6 py-4 text-sm font-semibold text-green-600">
-                        ${venta.totalVenta}
-                      </td>
-                      <td className="px-6 py-4 text-sm text-gray-600">
-                        {venta.usuarioNombre}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          )}
-        </div>
 
-        {/* Resumen */}
-        {ventas.length > 0 && (
-          <div className="mt-6 grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div className="bg-white p-4 rounded-lg shadow">
-              <p className="text-gray-600 text-sm mb-2">Total Ventas</p>
-              <p className="text-3xl font-bold text-gray-900">{ventas.length}</p>
-            </div>
-            <div className="bg-white p-4 rounded-lg shadow">
-              <p className="text-gray-600 text-sm mb-2">Monto Total</p>
-              <p className="text-3xl font-bold text-green-600">
-                ${ventas
-                  .reduce((total, v) => total + parseFloat(v.totalVenta || 0), 0)
-                  .toFixed(2)}
-              </p>
-            </div>
-            <div className="bg-white p-4 rounded-lg shadow">
-              <p className="text-gray-600 text-sm mb-2">Promedio por Venta</p>
-              <p className="text-3xl font-bold text-blue-600">
-                ${(
-                  ventas.reduce((total, v) => total + parseFloat(v.totalVenta || 0), 0) /
-                  ventas.length
-                ).toFixed(2)}
-              </p>
-            </div>
-          </div>
+            {/* Resumen */}
+            {ventas.length > 0 && (
+              <div className="mt-6 grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div className="bg-white p-4 rounded-lg shadow">
+                  <p className="text-gray-600 text-sm mb-2">Total Ventas</p>
+                  <p className="text-3xl font-bold text-gray-900">{ventas.length}</p>
+                </div>
+                <div className="bg-white p-4 rounded-lg shadow">
+                  <p className="text-gray-600 text-sm mb-2">Monto Total</p>
+                  <p className="text-3xl font-bold text-green-600">
+                    ${ventas
+                      .reduce((total, v) => total + parseFloat(v.totalVenta || 0), 0)
+                      .toFixed(2)}
+                  </p>
+                </div>
+                <div className="bg-white p-4 rounded-lg shadow">
+                  <p className="text-gray-600 text-sm mb-2">Promedio por Venta</p>
+                  <p className="text-3xl font-bold text-blue-600">
+                    ${(
+                      ventas.reduce((total, v) => total + parseFloat(v.totalVenta || 0), 0) /
+                      ventas.length
+                    ).toFixed(2)}
+                  </p>
+                </div>
+              </div>
+            )}
+          </>
         )}
 
         {showClientMatches && (
@@ -793,63 +797,68 @@ const SalesModule = () => {
         )}
 
         {showProductSearch && (
-          <div className="fixed inset-0 bg-gray-900 bg-opacity-40 flex items-center justify-center z-50 p-4">
-            <div className="bg-white rounded-lg shadow-xl w-full max-w-6xl">
-              <div className="px-6 py-4 border-b border-gray-200 flex items-center justify-between">
-                <h3 className="text-lg font-semibold text-gray-900">
-                  Busqueda de productos
-                </h3>
+          <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+            <div className="bg-gradient-to-br from-slate-50 to-amber-50 rounded-2xl shadow-2xl w-full max-w-3xl border border-slate-200/70">
+              <div className="px-4 py-3 border-b border-slate-200/70 flex items-center justify-between">
+                <div>
+                  <h3 className="text-base font-semibold text-slate-900">
+                    Busqueda rapida
+                  </h3>
+                  <p className="text-xs text-slate-500">
+                    Enter agrega, F2 abre, doble click selecciona.
+                  </p>
+                </div>
                 <button
                   type="button"
                   onClick={() => setShowProductSearch(false)}
-                  className="text-gray-500 hover:text-gray-700"
+                  className="text-slate-500 hover:text-slate-700 text-sm"
                 >
                   Cerrar
                 </button>
               </div>
-              <div className="p-6">
-                <div className="grid grid-cols-1 md:grid-cols-4 gap-3 mb-4">
+              <div className="p-4">
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-2 mb-3">
                   <input
                     type="text"
                     value={productFilters.codigo}
                     onChange={(e) => updateProductFilter("codigo", e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg"
+                    className="w-full h-9 px-3 text-sm bg-white/80 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-400"
                     placeholder="Codigo"
                   />
                   <input
                     type="text"
                     value={productFilters.nombre}
                     onChange={(e) => updateProductFilter("nombre", e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg"
+                    className="w-full h-9 px-3 text-sm bg-white/80 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-400"
                     placeholder="Nombre"
                   />
                   <input
                     type="text"
                     value={productFilters.descripcion}
                     onChange={(e) => updateProductFilter("descripcion", e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg"
+                    className="w-full h-9 px-3 text-sm bg-white/80 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-400"
                     placeholder="Descripcion"
                   />
                   <input
                     type="text"
                     value={productFilters.categoria}
                     onChange={(e) => updateProductFilter("categoria", e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg"
+                    className="w-full h-9 px-3 text-sm bg-white/80 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-400"
                     placeholder="Categoria"
                   />
                   <input
                     type="text"
                     value={productFilters.electrodomestico}
                     onChange={(e) => updateProductFilter("electrodomestico", e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg"
+                    className="w-full h-9 px-3 text-sm bg-white/80 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-400"
                     placeholder="Electrodomestico"
                   />
                   <input
                     type="number"
                     value={productFilters.minPrecio}
                     onChange={(e) => updateProductFilter("minPrecio", e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg"
-                    placeholder="Precio minimo"
+                    className="w-full h-9 px-3 text-sm bg-white/80 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-400"
+                    placeholder="Min $"
                     min="0"
                     step="0.01"
                   />
@@ -857,8 +866,8 @@ const SalesModule = () => {
                     type="number"
                     value={productFilters.maxPrecio}
                     onChange={(e) => updateProductFilter("maxPrecio", e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg"
-                    placeholder="Precio maximo"
+                    className="w-full h-9 px-3 text-sm bg-white/80 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-400"
+                    placeholder="Max $"
                     min="0"
                     step="0.01"
                   />
@@ -866,12 +875,15 @@ const SalesModule = () => {
                     type="number"
                     value={productFilters.minStock}
                     onChange={(e) => updateProductFilter("minStock", e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg"
-                    placeholder="Stock minimo"
+                    className="w-full h-9 px-3 text-sm bg-white/80 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-400"
+                    placeholder="Stock min"
                     min="0"
                     step="1"
                   />
-                  <label className="flex items-center gap-2 text-sm text-gray-700">
+                </div>
+
+                <div className="flex items-center justify-between mb-3">
+                  <label className="inline-flex items-center gap-2 text-xs text-slate-700 bg-white/80 border border-slate-200 rounded-full px-3 py-1">
                     <input
                       type="checkbox"
                       checked={productFilters.soloActivos}
@@ -879,48 +891,49 @@ const SalesModule = () => {
                     />
                     Solo activos
                   </label>
+                  <span className="text-xs text-slate-500">
+                    {filteredProductos.length} resultados
+                  </span>
                 </div>
-                <p className="text-sm text-gray-600 mb-3">
-                  Doble click sobre un producto para agregarlo.
-                </p>
-                <div className="overflow-x-auto border border-gray-200 rounded">
+
+                <div className="max-h-[45vh] overflow-y-auto border border-slate-200 rounded-xl bg-white/70">
                   <table className="w-full">
-                    <thead className="bg-gray-100 border-b border-gray-200">
+                    <thead className="bg-slate-100/80 border-b border-slate-200 sticky top-0">
                       <tr>
-                        <th className="px-3 py-2 text-left text-sm font-semibold text-gray-900">Codigo</th>
-                        <th className="px-3 py-2 text-left text-sm font-semibold text-gray-900">Nombre</th>
-                        <th className="px-3 py-2 text-left text-sm font-semibold text-gray-900">Descripcion</th>
-                        <th className="px-3 py-2 text-left text-sm font-semibold text-gray-900">Precio</th>
-                        <th className="px-3 py-2 text-left text-sm font-semibold text-gray-900">Stock</th>
-                        <th className="px-3 py-2 text-left text-sm font-semibold text-gray-900">Categoria</th>
-                        <th className="px-3 py-2 text-left text-sm font-semibold text-gray-900">Electrodomestico</th>
-                        <th className="px-3 py-2 text-left text-sm font-semibold text-gray-900">Activo</th>
+                        <th className="px-2 py-2 text-left text-xs font-semibold text-slate-900">Codigo</th>
+                        <th className="px-2 py-2 text-left text-xs font-semibold text-slate-900">Nombre</th>
+                        <th className="px-2 py-2 text-left text-xs font-semibold text-slate-900">Descripcion</th>
+                        <th className="px-2 py-2 text-left text-xs font-semibold text-slate-900">Precio</th>
+                        <th className="px-2 py-2 text-left text-xs font-semibold text-slate-900">Stock</th>
+                        <th className="px-2 py-2 text-left text-xs font-semibold text-slate-900">Categoria</th>
+                        <th className="px-2 py-2 text-left text-xs font-semibold text-slate-900">Electrodomestico</th>
+                        <th className="px-2 py-2 text-left text-xs font-semibold text-slate-900">Activo</th>
                       </tr>
                     </thead>
-                    <tbody className="divide-y divide-gray-200">
+                    <tbody className="divide-y divide-slate-200">
                       {filteredProductos.map((producto) => (
                         <tr
                           key={producto.id}
                           onDoubleClick={() => handleSelectProducto(producto)}
-                          className="hover:bg-gray-50 cursor-pointer"
+                          className="hover:bg-amber-50/60 cursor-pointer"
                         >
-                          <td className="px-3 py-2 text-sm text-gray-900">{producto.id}</td>
-                          <td className="px-3 py-2 text-sm text-gray-900">{producto.name}</td>
-                          <td className="px-3 py-2 text-sm text-gray-900">{producto.description || "-"}</td>
-                          <td className="px-3 py-2 text-sm text-gray-900">${producto.price}</td>
-                          <td className="px-3 py-2 text-sm text-gray-900">{producto.quantity}</td>
-                          <td className="px-3 py-2 text-sm text-gray-900">{producto.categoryId || "-"}</td>
-                          <td className="px-3 py-2 text-sm text-gray-900">
+                          <td className="px-2 py-2 text-xs text-slate-900">{producto.id}</td>
+                          <td className="px-2 py-2 text-xs text-slate-900">{producto.name}</td>
+                          <td className="px-2 py-2 text-xs text-slate-900">{producto.description || "-"}</td>
+                          <td className="px-2 py-2 text-xs text-slate-900">${producto.price}</td>
+                          <td className="px-2 py-2 text-xs text-slate-900">{producto.quantity}</td>
+                          <td className="px-2 py-2 text-xs text-slate-900">{producto.categoryId || "-"}</td>
+                          <td className="px-2 py-2 text-xs text-slate-900">
                             {producto.categoriaElectrodomesticoId || "-"}
                           </td>
-                          <td className="px-3 py-2 text-sm text-gray-900">
+                          <td className="px-2 py-2 text-xs text-slate-900">
                             {producto.activo === false ? "No" : "Si"}
                           </td>
                         </tr>
                       ))}
                       {filteredProductos.length === 0 && (
                         <tr>
-                          <td className="px-3 py-6 text-sm text-gray-500 text-center" colSpan={8}>
+                          <td className="px-3 py-6 text-xs text-slate-500 text-center" colSpan={8}>
                             No hay productos que coincidan con los filtros.
                           </td>
                         </tr>

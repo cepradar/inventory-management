@@ -8,6 +8,7 @@ import java.util.List;
 public class OrdenDeServicioDto {
     private String id;
     private String clienteId;
+    private String clienteTipoDocumentoId;
     private String clienteNombre;
     private String clienteApellido;
     private Long electrodomesticoId;
@@ -40,6 +41,9 @@ public class OrdenDeServicioDto {
 
     public String getClienteId() { return clienteId; }
     public void setClienteId(String clienteId) { this.clienteId = clienteId; }
+
+    public String getClienteTipoDocumentoId() { return clienteTipoDocumentoId; }
+    public void setClienteTipoDocumentoId(String clienteTipoDocumentoId) { this.clienteTipoDocumentoId = clienteTipoDocumentoId; }
 
     public String getClienteNombre() { return clienteNombre; }
     public void setClienteNombre(String clienteNombre) { this.clienteNombre = clienteNombre; }

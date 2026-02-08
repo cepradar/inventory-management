@@ -10,6 +10,7 @@ import com.inventory.repository.ProductRepository;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import java.util.Objects;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -40,7 +41,7 @@ public class ProductoService {
         }
 
         // 🔥 Validar que la categoría existe
-        String categoryId = productDto.getCategoryId();
+        String categoryId = Objects.requireNonNull(productDto.getCategoryId(), "categoryId");
         CategoryProduct categoria = categoryRepository.findById(categoryId)
                 .orElseThrow(() -> new RuntimeException("La categoría con id " + categoryId + " no existe"));
 
@@ -48,8 +49,9 @@ public class ProductoService {
         Product producto = ProductDto.toProducto(productDto);
         producto.setCategory(categoria); // Esta categoría sí existe en la BD
         if (productDto.getCategoriaElectrodomesticoId() != null) {
-            CategoriaElectrodomestico categoriaElectrodomestico = categoriaElectrodomesticoRepository
-                    .findById(productDto.getCategoriaElectrodomesticoId())
+                Long categoriaElectrodomesticoId = Objects.requireNonNull(productDto.getCategoriaElectrodomesticoId(), "categoriaElectrodomesticoId");
+                CategoriaElectrodomestico categoriaElectrodomestico = categoriaElectrodomesticoRepository
+                    .findById(categoriaElectrodomesticoId)
                     .orElseThrow(() -> new RuntimeException(
                             "La categoría de electrodoméstico con id " + productDto.getCategoriaElectrodomesticoId() + " no existe"));
             producto.setCategoriaElectrodomestico(categoriaElectrodomestico);
@@ -72,14 +74,15 @@ public class ProductoService {
 
     public Optional<ProductDto> obtenerProductoPorId(String id) {
         // Buscamos el producto por ID
-        Optional<Product> producto = productRepository.findById(id);
+        Optional<Product> producto = productRepository.findById(Objects.requireNonNull(id, "id"));
 
         // Si se encuentra, lo convertimos a ProductDto y lo devolvemos
         return producto.map(ProductDto::new);
     }
 
     public Product actualizarProducto(ProductDto productDto) {
-        Product producto = productRepository.findById(productDto.getId())
+        String productoId = Objects.requireNonNull(productDto.getId(), "productId");
+        Product producto = productRepository.findById(productoId)
                 .orElseThrow(() -> new RuntimeException("El producto con id " + productDto.getId() + " no existe"));
 
         producto.setName(productDto.getName());
@@ -91,14 +94,16 @@ public class ProductoService {
         }
 
         if (productDto.getCategoryId() != null) {
-            CategoryProduct categoria = categoryRepository.findById(productDto.getCategoryId())
+                String categoryId = Objects.requireNonNull(productDto.getCategoryId(), "categoryId");
+                CategoryProduct categoria = categoryRepository.findById(categoryId)
                     .orElseThrow(() -> new RuntimeException("La categoría con id " + productDto.getCategoryId() + " no existe"));
             producto.setCategory(categoria);
         }
 
         if (productDto.getCategoriaElectrodomesticoId() != null) {
-            CategoriaElectrodomestico categoriaElectrodomestico = categoriaElectrodomesticoRepository
-                    .findById(productDto.getCategoriaElectrodomesticoId())
+                Long categoriaElectrodomesticoId = Objects.requireNonNull(productDto.getCategoriaElectrodomesticoId(), "categoriaElectrodomesticoId");
+                CategoriaElectrodomestico categoriaElectrodomestico = categoriaElectrodomesticoRepository
+                    .findById(categoriaElectrodomesticoId)
                     .orElseThrow(() -> new RuntimeException(
                             "La categoría de electrodoméstico con id " + productDto.getCategoriaElectrodomesticoId() + " no existe"));
             producto.setCategoriaElectrodomestico(categoriaElectrodomestico);

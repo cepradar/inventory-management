@@ -8,6 +8,7 @@ public class EventoProductoDto {
     private String tipoDeEventoId;
     private String productoId;
     private String clienteId; // Opcional
+    private String clienteTipoDocumentoId; // Opcional
     private LocalDateTime fechaEvento;
     private Integer cantidad;
     private String observacion;
@@ -44,6 +45,14 @@ public class EventoProductoDto {
 
     public void setClienteId(String clienteId) {
         this.clienteId = clienteId;
+    }
+
+    public String getClienteTipoDocumentoId() {
+        return clienteTipoDocumentoId;
+    }
+
+    public void setClienteTipoDocumentoId(String clienteTipoDocumentoId) {
+        this.clienteTipoDocumentoId = clienteTipoDocumentoId;
     }
 
     public LocalDateTime getFechaEvento() {

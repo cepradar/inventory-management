@@ -14,6 +14,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
@@ -39,9 +40,9 @@ public class VentasService {
     public VentaDto registrarVenta(String productId, Integer cantidad, BigDecimal precioUnitario, 
                                     String nombreComprador, String telefonoComprador, String emailComprador,
                                     String usuarioUsername, String observaciones) {
-        Product producto = productRepository.findById(productId)
+        Product producto = productRepository.findById(Objects.requireNonNull(productId, "productId"))
                 .orElseThrow(() -> new RuntimeException("Producto no encontrado"));
-        User usuario = userRepository.findById(usuarioUsername)
+        User usuario = userRepository.findById(Objects.requireNonNull(usuarioUsername, "usuarioUsername"))
                 .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
 
         // Validar que haya suficiente cantidad
@@ -58,7 +59,7 @@ public class VentasService {
         producto.setQuantity(producto.getQuantity() - cantidad);
         productRepository.save(producto);
 
-        // Crear evento de auditoría SALIDA por venta
+        // Crear evento de auditoría de VENTA (categoria VENTA)
         BigDecimal precioBase = precioUnitario != null ? precioUnitario : BigDecimal.valueOf(producto.getPrice());
         Integer cantidadInicial = producto.getQuantity() + cantidad;
         Integer cantidadFinal = producto.getQuantity();
@@ -68,7 +69,7 @@ public class VentasService {
                 cantidadFinal,
                 precioBase,
                 precioBase,
-                "SALIDA",
+                "VC",
                 "Venta a cliente: " + nombreComprador,
                 usuarioUsername,
                 "VENTA-" + ventaGuardada.getId()
@@ -92,7 +93,7 @@ public class VentasService {
      * Obtiene ventas de un producto específico
      */
     public List<VentaDto> obtenerVentasProducto(String productId) {
-        Product producto = productRepository.findById(productId)
+                Product producto = productRepository.findById(Objects.requireNonNull(productId, "productId"))
                 .orElseThrow(() -> new RuntimeException("Producto no encontrado"));
         List<Venta> ventas = ventaRepository.findByProduct(producto);
         return ventas.stream()
@@ -104,7 +105,7 @@ public class VentasService {
      * Obtiene ventas realizadas por un usuario
      */
     public List<VentaDto> obtenerVentasUsuario(String usuarioUsername) {
-        User usuario = userRepository.findById(usuarioUsername)
+                User usuario = userRepository.findById(Objects.requireNonNull(usuarioUsername, "usuarioUsername"))
                 .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
         List<Venta> ventas = ventaRepository.findByUsuario(usuario);
         return ventas.stream()
@@ -136,7 +137,7 @@ public class VentasService {
      * Obtiene una venta por ID
      */
     public VentaDto obtenerVentaPorId(Long ventaId) {
-        Optional<Venta> venta = ventaRepository.findById(ventaId);
+                Optional<Venta> venta = ventaRepository.findById(Objects.requireNonNull(ventaId, "ventaId"));
         return venta.map(this::convertirADto)
                 .orElseThrow(() -> new RuntimeException("Venta no encontrada"));
     }

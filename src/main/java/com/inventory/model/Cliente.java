@@ -6,10 +6,15 @@ import jakarta.persistence.*;
 
 @Entity
 @Table(name = "clientes")
+@IdClass(ClienteId.class)
 public class Cliente {
     @Id
-    @Column(nullable = false, unique = true)
+    @Column(nullable = false)
     private String id;
+
+    @Id
+    @Column(name = "tipo_documento", nullable = false)
+    private String tipoDocumentoId;
 
     private String nit;
 
@@ -19,8 +24,8 @@ public class Cliente {
     private CategoryClient category;
 
     @JsonBackReference // Evita la serialización recursiva
-    @ManyToOne(fetch = FetchType.EAGER)  // Puedes cambiarlo a LAZY si es necesario
-    @JoinColumn(name = "tipo_documento", nullable = false)
+    @ManyToOne(fetch = FetchType.EAGER)
+    @JoinColumn(name = "tipo_documento", nullable = false, insertable = false, updatable = false)
     private DocumentoTipo tipoDocumento;
 
     private String nombre;
@@ -38,6 +43,7 @@ public class Cliente {
         this.nit = nit;
         this.category = category;
         this.tipoDocumento = tipoDocumento;
+        this.tipoDocumentoId = tipoDocumento != null ? tipoDocumento.getId() : null;
         this.nombre = nombre;
         this.telefono = telefono;
         this.direccion = direccion;
@@ -50,6 +56,14 @@ public class Cliente {
 
     public void setId(String id) {
         this.id = id;
+    }
+
+    public String getTipoDocumentoId() {
+        return tipoDocumentoId;
+    }
+
+    public void setTipoDocumentoId(String tipoDocumentoId) {
+        this.tipoDocumentoId = tipoDocumentoId;
     }
 
     public String getNit() {
@@ -74,6 +88,7 @@ public class Cliente {
 
     public void setTipoDocumento(DocumentoTipo tipoDocumento) {
         this.tipoDocumento = tipoDocumento;
+        this.tipoDocumentoId = tipoDocumento != null ? tipoDocumento.getId() : null;
     }
 
     public String getNombre() {

@@ -8,7 +8,7 @@ import java.time.LocalDateTime;
 @Table(name = "cliente_electrodomesticos",
     uniqueConstraints = @UniqueConstraint(
         name = "uk_serial_marca_cliente",
-        columnNames = {"numero_serie", "marca_electrodomestico_id", "cliente_id"}
+        columnNames = {"numero_serie", "marca_electrodomestico_id", "cliente_id", "cliente_tipo_documento"}
     )
 )
 public class ClienteElectrodomestico {
@@ -18,7 +18,10 @@ public class ClienteElectrodomestico {
     private Long id;
     
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "cliente_id", nullable = false)
+    @JoinColumns({
+        @JoinColumn(name = "cliente_id", nullable = false),
+        @JoinColumn(name = "cliente_tipo_documento", nullable = false)
+    })
     private Cliente cliente;
     
     @Column(name = "electrodomestico_tipo")

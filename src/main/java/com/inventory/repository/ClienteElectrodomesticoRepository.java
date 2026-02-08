@@ -16,13 +16,18 @@ public interface ClienteElectrodomesticoRepository extends JpaRepository<Cliente
     Optional<ClienteElectrodomestico> findByNumeroSerie(String numeroSerie);
     
     List<ClienteElectrodomestico> findByClienteId(String clienteId);
+    List<ClienteElectrodomestico> findByClienteIdAndClienteTipoDocumentoId(String clienteId, String clienteTipoDocumentoId);
     
     List<ClienteElectrodomestico> findByEstado(String estado);
     
     List<ClienteElectrodomestico> findByClienteIdAndEstado(String clienteId, String estado);
+    List<ClienteElectrodomestico> findByClienteIdAndClienteTipoDocumentoIdAndEstado(String clienteId, String clienteTipoDocumentoId, String estado);
     
     @Query("SELECT ce FROM ClienteElectrodomestico ce WHERE ce.cliente.id = :clienteId AND ce.garantiaVigente = true")
     List<ClienteElectrodomestico> findConGarantiaVigenteByCliente(@Param("clienteId") String clienteId);
+
+    @Query("SELECT ce FROM ClienteElectrodomestico ce WHERE ce.cliente.id = :clienteId AND ce.cliente.tipoDocumentoId = :clienteTipoDocumentoId AND ce.garantiaVigente = true")
+    List<ClienteElectrodomestico> findConGarantiaVigenteByCliente(@Param("clienteId") String clienteId, @Param("clienteTipoDocumentoId") String clienteTipoDocumentoId);
     
     @Query("SELECT ce FROM ClienteElectrodomestico ce WHERE ce.usuario.username = :username")
     List<ClienteElectrodomestico> findByUsuarioUsername(@Param("username") String username);
@@ -32,4 +37,5 @@ public interface ClienteElectrodomesticoRepository extends JpaRepository<Cliente
     
     // Validar unicidad de serial + marca + cliente
     boolean existsByNumeroSerieAndMarcaElectrodomesticoIdAndClienteId(String numeroSerie, Long marcaElectrodomesticoId, String clienteId);
+    boolean existsByNumeroSerieAndMarcaElectrodomesticoIdAndClienteIdAndClienteTipoDocumentoId(String numeroSerie, Long marcaElectrodomesticoId, String clienteId, String clienteTipoDocumentoId);
 }

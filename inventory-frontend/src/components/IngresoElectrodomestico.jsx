@@ -57,7 +57,7 @@ export default function IngresoElectrodomestico() {
     const encontrado = clientes.find(
       (c) =>
         String(c.documento) === String(formElectro.documentoCliente).trim() &&
-        (!c.tipoDocumentoId || c.tipoDocumentoId === formElectro.tipoDocumentoId)
+        c.tipoDocumentoId === formElectro.tipoDocumentoId
     );
 
     setClienteEncontrado(encontrado || null);
@@ -118,6 +118,7 @@ export default function IngresoElectrodomestico() {
     // El POST se hará cuando se clickee "Finalizar Proceso"
     const electrodomesticoTemporal = {
       clienteId: clienteEncontrado.documento, // ✅ Usar documento como ID, no id
+      clienteTipoDocumentoId: clienteEncontrado.tipoDocumentoId,
       clienteNombre: clienteEncontrado.nombre || clienteEncontrado.documento,
       numeroSerie: formElectro.numeroSerie,
       marcaElectrodomesticoId: parseInt(formElectro.marcaElectrodomesticoId), // ✅ Asegurar que sea number
@@ -199,6 +200,7 @@ export default function IngresoElectrodomestico() {
       if (!electrodomesticoGuardado.id || isNaN(electrodomesticoGuardado.id)) {
         const payloadElectro = {
           clienteId: electrodomesticoGuardado.clienteId,
+          clienteTipoDocumentoId: electrodomesticoGuardado.clienteTipoDocumentoId,
           numeroSerie: electrodomesticoGuardado.numeroSerie,
           marcaElectrodomesticoId: electrodomesticoGuardado.marcaElectrodomesticoId,
           electrodomesticoTipo: electrodomesticoGuardado.tipoElectrodomestico || '',
@@ -220,6 +222,7 @@ export default function IngresoElectrodomestico() {
 
         const payloadServicio = {
           clienteId: electrodomesticoGuardado.clienteId,
+          clienteTipoDocumentoId: electrodomesticoGuardado.clienteTipoDocumentoId,
           electrodomesticoId: electrodomesticoGuardado.id,
           tipoServicio: 'REPARACION',
           descripcionProblema: 'Servicio técnico con productos',

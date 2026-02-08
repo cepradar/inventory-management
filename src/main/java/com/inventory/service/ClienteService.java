@@ -1,6 +1,7 @@
 package com.inventory.service;
 
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
@@ -29,7 +30,7 @@ public class ClienteService {
 
     public ClienteDto crearCliente(ClienteDto clienteDto){
         Cliente cliente = convertirDtoAEntidad(clienteDto);
-        cliente.setId(clienteDto.getDocumento()); // El documento es el ID
+        cliente.setId(clienteDto.getDocumento()); // El documento es parte de la PK
         Cliente clienteGuardado = clienteRepository.save(cliente);
         return new ClienteDto(clienteGuardado);
     }
@@ -40,13 +41,28 @@ public class ClienteService {
                 .collect(Collectors.toList());
     }
 
-    public Optional<ClienteDto> buscarCliente(String id){
-        Optional<Cliente> cli = clienteRepository.findById(id);
+    public List<ClienteDto> buscarClientesPorDocumento(String documento){
+        if (documento == null || documento.trim().isEmpty()) {
+            return List.of();
+        }
+        return clienteRepository.findByDocumento(documento).stream()
+                .map(ClienteDto::new)
+                .collect(Collectors.toList());
+    }
+
+    public Optional<ClienteDto> buscarCliente(String documento, String tipoDocumentoId){
+        if (documento == null || documento.trim().isEmpty() || tipoDocumentoId == null || tipoDocumentoId.trim().isEmpty()) {
+            return Optional.empty();
+        }
+        Optional<Cliente> cli = clienteRepository.findByIdAndTipoDocumentoId(documento, tipoDocumentoId);
         return cli.map(ClienteDto::new);
     }
 
-    public ClienteDto actualizarCliente(String id, ClienteDto clienteDto){
-        Cliente clienteExistente = clienteRepository.findById(id)
+    public ClienteDto actualizarCliente(String documento, String tipoDocumentoId, ClienteDto clienteDto){
+        if (documento == null || documento.trim().isEmpty() || tipoDocumentoId == null || tipoDocumentoId.trim().isEmpty()) {
+            throw new RuntimeException("Documento y tipo de documento son obligatorios");
+        }
+        Cliente clienteExistente = clienteRepository.findByIdAndTipoDocumentoId(documento, tipoDocumentoId)
                 .orElseThrow(() -> new RuntimeException("Cliente no encontrado"));
         
         // Actualizar campos
@@ -57,14 +73,16 @@ public class ClienteService {
         
         // Actualizar categoría si cambió
         if (clienteDto.getCategoryId() != null) {
-            CategoryClient category = categoryClientRepository.findById(clienteDto.getCategoryId())
+            String categoryId = Objects.requireNonNull(clienteDto.getCategoryId(), "categoryId");
+            CategoryClient category = categoryClientRepository.findById(categoryId)
                     .orElseThrow(() -> new RuntimeException("Categoría no encontrada"));
             clienteExistente.setCategory(category);
         }
 
         // Actualizar tipo documento si cambió
         if (clienteDto.getTipoDocumentoId() != null) {
-            DocumentoTipo tipoDoc = documentoTipoRepository.findById(clienteDto.getTipoDocumentoId())
+            String tipoDocId = Objects.requireNonNull(clienteDto.getTipoDocumentoId(), "tipoDocumentoId");
+            DocumentoTipo tipoDoc = documentoTipoRepository.findById(tipoDocId)
                     .orElseThrow(() -> new RuntimeException("Tipo de documento no encontrado"));
             clienteExistente.setTipoDocumento(tipoDoc);
         }
@@ -73,14 +91,19 @@ public class ClienteService {
         return new ClienteDto(clienteActualizado);
     }
 
-    public void eliminarCliente(String id){
-        clienteRepository.deleteById(id);
+    public void eliminarCliente(String documento, String tipoDocumentoId){
+        if (documento == null || documento.trim().isEmpty() || tipoDocumentoId == null || tipoDocumentoId.trim().isEmpty()) {
+            throw new RuntimeException("Documento y tipo de documento son obligatorios");
+        }
+        Cliente clienteExistente = clienteRepository.findByIdAndTipoDocumentoId(documento, tipoDocumentoId)
+                .orElseThrow(() -> new RuntimeException("Cliente no encontrado"));
+        clienteRepository.delete(clienteExistente);
     }
 
     private Cliente convertirDtoAEntidad(ClienteDto clienteDto){
         Cliente cliente = new Cliente();
         cliente.setId(clienteDto.getDocumento());
-        cliente.setNit(clienteDto.getDocumento()); // Usar el documento como NIT también
+        cliente.setNit(clienteDto.getNit() != null ? clienteDto.getNit() : clienteDto.getDocumento());
         cliente.setNombre(clienteDto.getNombre());
         cliente.setTelefono(clienteDto.getTelefono());
         cliente.setDireccion(clienteDto.getDireccion());
@@ -93,9 +116,16 @@ public class ClienteService {
         cliente.setCategory(category);
         
         // Buscar y asignar tipo documento por defecto "CC" o el primero disponible
-        DocumentoTipo tipoDoc = documentoTipoRepository.findAll().stream()
+        DocumentoTipo tipoDoc;
+        if (clienteDto.getTipoDocumentoId() != null && !clienteDto.getTipoDocumentoId().isEmpty()) {
+            String tipoDocId = Objects.requireNonNull(clienteDto.getTipoDocumentoId(), "tipoDocumentoId");
+            tipoDoc = documentoTipoRepository.findById(tipoDocId)
+                .orElseThrow(() -> new RuntimeException("Tipo de documento no encontrado"));
+        } else {
+            tipoDoc = documentoTipoRepository.findAll().stream()
                 .findFirst()
                 .orElseThrow(() -> new RuntimeException("No hay tipos de documento disponibles"));
+        }
         cliente.setTipoDocumento(tipoDoc);
         
         return cliente;

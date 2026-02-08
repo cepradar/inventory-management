@@ -16,6 +16,9 @@ public interface OrdenDeServicioRepository extends JpaRepository<OrdenDeServicio
     
     @Query("SELECT s FROM OrdenDeServicio s WHERE s.cliente.id = :clienteId ORDER BY s.fechaIngreso DESC")
     List<OrdenDeServicio> findByClienteId(String clienteId);
+
+    @Query("SELECT s FROM OrdenDeServicio s WHERE s.cliente.id = :clienteId AND s.cliente.tipoDocumentoId = :clienteTipoDocumentoId ORDER BY s.fechaIngreso DESC")
+    List<OrdenDeServicio> findByClienteIdAndTipoDocumentoId(String clienteId, String clienteTipoDocumentoId);
     
     @Query("SELECT s FROM OrdenDeServicio s WHERE s.clienteElectrodomestico.id = :clienteElectrodomesticoId ORDER BY s.fechaIngreso DESC")
     List<OrdenDeServicio> findByClienteElectrodomesticoId(Long clienteElectrodomesticoId);
@@ -40,4 +43,7 @@ public interface OrdenDeServicioRepository extends JpaRepository<OrdenDeServicio
     
     @Query("SELECT s FROM OrdenDeServicio s WHERE s.cliente.id = :clienteId AND s.estado = :estado ORDER BY s.fechaIngreso DESC")
     List<OrdenDeServicio> findByClienteIdAndEstado(String clienteId, String estado);
+
+    @Query("SELECT s FROM OrdenDeServicio s WHERE s.cliente.id = :clienteId AND s.cliente.tipoDocumentoId = :clienteTipoDocumentoId AND s.estado = :estado ORDER BY s.fechaIngreso DESC")
+    List<OrdenDeServicio> findByClienteIdAndTipoDocumentoIdAndEstado(String clienteId, String clienteTipoDocumentoId, String estado);
 }

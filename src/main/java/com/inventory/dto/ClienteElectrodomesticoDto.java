@@ -6,6 +6,7 @@ import java.time.LocalDateTime;
 public class ClienteElectrodomesticoDto {
     private Long id;
     private String clienteId;
+    private String clienteTipoDocumentoId;
     private String clienteNombre;
     private String clienteTelefono;
     private String electrodomesticoTipo;
@@ -41,6 +42,9 @@ public class ClienteElectrodomesticoDto {
     
     public String getClienteId() { return clienteId; }
     public void setClienteId(String clienteId) { this.clienteId = clienteId; }
+
+    public String getClienteTipoDocumentoId() { return clienteTipoDocumentoId; }
+    public void setClienteTipoDocumentoId(String clienteTipoDocumentoId) { this.clienteTipoDocumentoId = clienteTipoDocumentoId; }
     
     public String getClienteNombre() { return clienteNombre; }
     public void setClienteNombre(String clienteNombre) { this.clienteNombre = clienteNombre; }

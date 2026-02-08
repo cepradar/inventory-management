@@ -12,7 +12,6 @@ import com.inventory.repository.ClienteElectrodomesticoRepository;
 import com.inventory.repository.ClienteRepository;
 import com.inventory.repository.ProductRepository;
 import com.inventory.repository.OrdenDeServicioRepository;
-import com.inventory.repository.OrdenServicioProductoRepository;
 import com.inventory.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -23,6 +22,7 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 @Service
@@ -45,16 +45,29 @@ public class OrdenDeServicioService {
     private ProductRepository productRepository;
 
     public OrdenDeServicioDto registrarServicio(OrdenDeServicioDto dto, String usernameLogeado) {
-        User usuario = userRepository.findById(usernameLogeado)
+        if (dto.getClienteId() == null || dto.getClienteTipoDocumentoId() == null) {
+            throw new RuntimeException("Cliente y tipo documento son obligatorios");
+        }
+        if (dto.getElectrodomesticoId() == null) {
+            throw new RuntimeException("Debe seleccionar un electrodoméstico");
+        }
+
+        User usuario = userRepository.findById(Objects.requireNonNull(usernameLogeado, "usernameLogeado"))
                 .orElseThrow(() -> new RuntimeException("Usuario no encontrado: " + usernameLogeado));
 
-        Cliente cliente = clienteRepository.findById(dto.getClienteId())
-                .orElseThrow(() -> new RuntimeException("Cliente no encontrado: " + dto.getClienteId()));
+        Cliente cliente = clienteRepository.findByIdAndTipoDocumentoId(
+                Objects.requireNonNull(dto.getClienteId(), "clienteId"),
+                Objects.requireNonNull(dto.getClienteTipoDocumentoId(), "clienteTipoDocumentoId")
+            )
+            .orElseThrow(() -> new RuntimeException("Cliente no encontrado: " + dto.getClienteId()));
 
-        ClienteElectrodomestico ce = clienteElectrodomesticoRepository.findById(dto.getElectrodomesticoId())
+        ClienteElectrodomestico ce = clienteElectrodomesticoRepository.findById(
+                Objects.requireNonNull(dto.getElectrodomesticoId(), "electrodomesticoId")
+            )
                 .orElseThrow(() -> new RuntimeException("ClienteElectrodomestico no encontrado: " + dto.getElectrodomesticoId()));
 
-        if (!ce.getCliente().getId().equals(cliente.getId())) {
+        if (!ce.getCliente().getId().equals(cliente.getId()) ||
+            !ce.getCliente().getTipoDocumentoId().equals(cliente.getTipoDocumentoId())) {
             throw new RuntimeException("El electrodoméstico no pertenece al cliente indicado");
         }
 
@@ -76,7 +89,7 @@ public class OrdenDeServicioService {
 
         // Asignar técnico si se proporciona
         if (dto.getTecnicoAsignadoUsername() != null && !dto.getTecnicoAsignadoUsername().isEmpty()) {
-            User tecnico = userRepository.findById(dto.getTecnicoAsignadoUsername())
+            User tecnico = userRepository.findById(Objects.requireNonNull(dto.getTecnicoAsignadoUsername(), "tecnicoAsignadoUsername"))
                     .orElseThrow(() -> new RuntimeException("Técnico no encontrado: " + dto.getTecnicoAsignadoUsername()));
             servicio.setTecnicoAsignado(tecnico);
         }
@@ -85,7 +98,7 @@ public class OrdenDeServicioService {
         if (dto.getProductos() != null && !dto.getProductos().isEmpty()) {
             int regProd = 1;
             for (OrdenServicioProductoDto productoDto : dto.getProductos()) {
-                Product producto = productRepository.findById(productoDto.getProductId())
+                Product producto = productRepository.findById(Objects.requireNonNull(productoDto.getProductId(), "productId"))
                         .orElseThrow(() -> new RuntimeException("Producto no encontrado: " + productoDto.getProductId()));
                 
                 OrdenServicioProducto srp = new OrdenServicioProducto();
@@ -104,7 +117,7 @@ public class OrdenDeServicioService {
     }
 
     public OrdenDeServicioDto actualizarServicio(String id, OrdenDeServicioDto dto) {
-        OrdenDeServicio servicio = servicioRepository.findById(id)
+        OrdenDeServicio servicio = servicioRepository.findById(Objects.requireNonNull(id, "id"))
                 .orElseThrow(() -> new RuntimeException("Servicio de reparación no encontrado: " + id));
 
         servicio.setTipoServicio(dto.getTipoServicio());
@@ -125,13 +138,19 @@ public class OrdenDeServicioService {
     }
 
     public OrdenDeServicioDto obtenerServicioPorId(String id) {
-        OrdenDeServicio servicio = servicioRepository.findById(id)
+        OrdenDeServicio servicio = servicioRepository.findById(Objects.requireNonNull(id, "id"))
                 .orElseThrow(() -> new RuntimeException("Servicio de reparación no encontrado: " + id));
         return convertirADto(servicio);
     }
 
     public List<OrdenDeServicioDto> obtenerServiciosPorCliente(String clienteId) {
         return servicioRepository.findByClienteId(clienteId).stream()
+                .map(this::convertirADto)
+                .collect(Collectors.toList());
+    }
+
+    public List<OrdenDeServicioDto> obtenerServiciosPorCliente(String clienteId, String clienteTipoDocumentoId) {
+        return servicioRepository.findByClienteIdAndTipoDocumentoId(clienteId, clienteTipoDocumentoId).stream()
                 .map(this::convertirADto)
                 .collect(Collectors.toList());
     }
@@ -150,7 +169,7 @@ public class OrdenDeServicioService {
     }
 
     public OrdenDeServicioDto cambiarEstado(String id, String nuevoEstado) {
-        OrdenDeServicio servicio = servicioRepository.findById(id)
+        OrdenDeServicio servicio = servicioRepository.findById(Objects.requireNonNull(id, "id"))
                 .orElseThrow(() -> new RuntimeException("Servicio de reparación no encontrado: " + id));
 
         servicio.setEstado(nuevoEstado);
@@ -168,7 +187,7 @@ public class OrdenDeServicioService {
     }
 
     public void eliminarServicio(String id) {
-        OrdenDeServicio servicio = servicioRepository.findById(id)
+        OrdenDeServicio servicio = servicioRepository.findById(Objects.requireNonNull(id, "id"))
                 .orElseThrow(() -> new RuntimeException("Servicio de reparación no encontrado: " + id));
         servicioRepository.delete(servicio);
     }
@@ -189,6 +208,7 @@ public class OrdenDeServicioService {
         OrdenDeServicioDto dto = new OrdenDeServicioDto();
         dto.setId(servicio.getId());
         dto.setClienteId(servicio.getCliente() != null ? servicio.getCliente().getId() : null);
+        dto.setClienteTipoDocumentoId(servicio.getCliente() != null ? servicio.getCliente().getTipoDocumentoId() : null);
         dto.setClienteNombre(servicio.getCliente() != null ? servicio.getCliente().getNombre() : null);
         dto.setClienteApellido(servicio.getCliente() != null ? servicio.getCliente().getNombre() : null);
         dto.setElectrodomesticoId(servicio.getClienteElectrodomestico() != null ? servicio.getClienteElectrodomestico().getId() : null);
@@ -221,6 +241,7 @@ public class OrdenDeServicioService {
                         servicio.getId(),
                         servicio.getFechaIngreso(),
                         servicio.getCliente().getId(),
+                        servicio.getCliente().getTipoDocumentoId(),
                         srp.getRegProd()
                     );
                     Product producto = srp.getProducto();
@@ -258,13 +279,13 @@ public class OrdenDeServicioService {
         return String.format("%06d", siguiente);
     }
 
-    private String generarClaveCompuesta(String ordenId, LocalDateTime fechaOrden, String clienteId, Integer regProd) {
+    private String generarClaveCompuesta(String ordenId, LocalDateTime fechaOrden, String clienteId, String clienteTipoDocumentoId, Integer regProd) {
         DateTimeFormatter dateFormatter = DateTimeFormatter.ofPattern("yyyyMMdd");
         DateTimeFormatter timeFormatter = DateTimeFormatter.ofPattern("HHmmss");
         
         String fecha = fechaOrden.format(dateFormatter);
         String hora = fechaOrden.format(timeFormatter);
         
-        return String.format("%s-%s-%s-%s-%03d", ordenId, fecha, hora, clienteId, regProd);
+        return String.format("%s-%s-%s-%s-%s-%03d", ordenId, fecha, hora, clienteId, clienteTipoDocumentoId, regProd);
     }
 }

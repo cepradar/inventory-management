@@ -11,7 +11,7 @@ export default function ClientManager() {
   const [tiposDocumento, setTiposDocumento] = useState([]);
   const [marcas, setMarcas] = useState([]);
   const [categoriasElectrodomestico, setCategoriasElectrodomestico] = useState([]);
-  const [expandedClientId, setExpandedClientId] = useState(null);
+  const [expandedClientKey, setExpandedClientKey] = useState(null);
   const [electrodomesticos, setElectrodomesticos] = useState([]);
   const [showElectroForm, setShowElectroForm] = useState(null);
   const [formData, setFormData] = useState({
@@ -26,6 +26,7 @@ export default function ClientManager() {
   });
   const [electroFormData, setElectroFormData] = useState({
     clienteId: '',
+    clienteTipoDocumentoId: '',
     numeroSerie: '',
     marcaElectrodomesticoId: '',
     electrodomesticoTipo: '',
@@ -120,7 +121,7 @@ export default function ClientManager() {
     e.preventDefault();
     try {
       if (editingClient) {
-        await api.put(`/api/clientes/actualizar/${editingClient.documento}`, formData);
+        await api.put(`/api/clientes/actualizar/${editingClient.documento}/${editingClient.tipoDocumentoId}`, formData);
       } else {
         await api.post('/api/clientes/crear', formData);
       }
@@ -147,10 +148,10 @@ export default function ClientManager() {
     setShowForm(true);
   };
 
-  const handleDelete = async (id) => {
+  const handleDelete = async (client) => {
     if (!confirm('¿Eliminar cliente?')) return;
     try {
-      await api.delete(`/api/clientes/eliminar/${id}`);
+      await api.delete(`/api/clientes/eliminar/${client.documento}/${client.tipoDocumentoId}`);
       fetchClients();
     } catch (err) {
       console.error('Error al eliminar:', err);
@@ -166,6 +167,7 @@ export default function ClientManager() {
   const resetElectroForm = () => {
     setElectroFormData({
       clienteId: '',
+      clienteTipoDocumentoId: '',
       numeroSerie: '',
       marcaElectrodomesticoId: '',
       electrodomesticoTipo: '',
@@ -174,9 +176,14 @@ export default function ClientManager() {
     setShowElectroForm(null);
   };
 
-  const handleAddElectrodomestico = (clienteId) => {
-    setElectroFormData(prev => ({ ...prev, clienteId }));
-    setShowElectroForm(clienteId);
+  const handleAddElectrodomestico = (cliente) => {
+    const compositeKey = `${cliente.documento}::${cliente.tipoDocumentoId}`;
+    setElectroFormData(prev => ({
+      ...prev,
+      clienteId: cliente.documento,
+      clienteTipoDocumentoId: cliente.tipoDocumentoId
+    }));
+    setShowElectroForm(compositeKey);
   };
 
   const handleSubmitElectrodomestico = async (e) => {
@@ -184,6 +191,7 @@ export default function ClientManager() {
     try {
       const payload = {
         clienteId: electroFormData.clienteId,
+        clienteTipoDocumentoId: electroFormData.clienteTipoDocumentoId,
         numeroSerie: electroFormData.numeroSerie,
         marcaElectrodomesticoId: parseInt(electroFormData.marcaElectrodomesticoId),
         electrodomesticoTipo: electroFormData.electrodomesticoTipo,
@@ -200,8 +208,10 @@ export default function ClientManager() {
     }
   };
 
-  const getClientElectrodomesticos = (clienteId) => {
-    return electrodomesticos.filter(e => e.clienteId === clienteId);
+  const getClientElectrodomesticos = (clienteId, clienteTipoDocumentoId) => {
+    return electrodomesticos.filter(
+      (e) => e.clienteId === clienteId && e.clienteTipoDocumentoId === clienteTipoDocumentoId
+    );
   };
 
   if (loading) return <div className="text-center p-4">Cargando...</div>;
@@ -346,10 +356,13 @@ export default function ClientManager() {
             filterable: false,
             render: (client) => (
               <button
-                onClick={() => setExpandedClientId(expandedClientId === client.documento ? null : client.documento)}
+                onClick={() => {
+                  const key = `${client.documento}::${client.tipoDocumentoId}`;
+                  setExpandedClientKey(expandedClientKey === key ? null : key);
+                }}
                 className="bg-blue-500 hover:bg-blue-600 text-white p-2 rounded"
               >
-                {expandedClientId === client.documento ? (
+                {expandedClientKey === `${client.documento}::${client.tipoDocumentoId}` ? (
                   <ChevronUpIcon className="w-4 h-4" />
                 ) : (
                   <ChevronDownIcon className="w-4 h-4" />
@@ -377,7 +390,7 @@ export default function ClientManager() {
                   <PencilIcon className="w-4 h-4" />
                 </button>
                 <button
-                  onClick={() => handleDelete(client.documento)}
+                  onClick={() => handleDelete(client)}
                   className="bg-red-500 hover:bg-red-600 text-white p-2 rounded inline-flex"
                   title="Eliminar"
                 >
@@ -390,16 +403,21 @@ export default function ClientManager() {
       />
 
       {/* Sección de Electrodomésticos expandida */}
-      {expandedClientId && (
+      {expandedClientKey && (
         <div className="mt-6 border rounded-lg p-4 bg-gray-50">
-          {clients.find(c => c.documento === expandedClientId) && (
+          {clients.find(c => `${c.documento}::${c.tipoDocumentoId}` === expandedClientKey) && (
             <>
               <div className="flex justify-between items-center mb-4">
                 <h4 className="text-lg font-semibold">
-                  Electrodomésticos - {clients.find(c => c.documento === expandedClientId)?.nombre}
+                  Electrodomésticos - {clients.find(c => `${c.documento}::${c.tipoDocumentoId}` === expandedClientKey)?.nombre}
                 </h4>
                 <button
-                  onClick={() => handleAddElectrodomestico(expandedClientId)}
+                  onClick={() => {
+                    const cliente = clients.find(c => `${c.documento}::${c.tipoDocumentoId}` === expandedClientKey);
+                    if (cliente) {
+                      handleAddElectrodomestico(cliente);
+                    }
+                  }}
                   className="bg-blue-600 hover:bg-blue-700 text-white px-3 py-2 rounded flex items-center gap-2"
                 >
                   <PlusIcon className="w-4 h-4" />
@@ -407,7 +425,7 @@ export default function ClientManager() {
                 </button>
               </div>
 
-              {showElectroForm === expandedClientId && (
+              {showElectroForm === expandedClientKey && (
                 <div className="bg-white p-4 rounded-lg mb-4 border-l-4 border-blue-500">
                   <h5 className="font-semibold mb-3">Nuevo Electrodoméstico</h5>
                   <form onSubmit={handleSubmitElectrodomestico} className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -500,8 +518,12 @@ export default function ClientManager() {
                     </tr>
                   </thead>
                   <tbody>
-                    {getClientElectrodomesticos(expandedClientId).length > 0 ? (
-                      getClientElectrodomesticos(expandedClientId).map((electro) => (
+                    {(() => {
+                      const selectedClient = clients.find(c => `${c.documento}::${c.tipoDocumentoId}` === expandedClientKey);
+                      if (!selectedClient) return null;
+                      const list = getClientElectrodomesticos(selectedClient.documento, selectedClient.tipoDocumentoId);
+                      return list.length > 0 ? (
+                        list.map((electro) => (
                         <tr key={electro.id} className="border-t hover:bg-gray-50">
                           <td className="px-4 py-2">{electro.electrodomesticoTipo}</td>
                           <td className="px-4 py-2">{electro.marcaElectrodomestico?.nombre}</td>
@@ -514,13 +536,14 @@ export default function ClientManager() {
                           </td>
                         </tr>
                       ))
-                    ) : (
+                      ) : (
                       <tr className="border-t">
                         <td colSpan="5" className="px-4 py-3 text-center text-gray-500">
                           No hay electrodomésticos registrados
                         </td>
                       </tr>
-                    )}
+                      );
+                    })()}
                   </tbody>
                 </table>
               </div>
