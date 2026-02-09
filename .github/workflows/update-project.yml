@@ -1,0 +1,16 @@
+name: Update Project on Server
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+jobs:
+  update:
+    runs-on: self-hosted
+    steps:
+      - name: Update repository on server
+        shell: powershell
+        run: |
+          Write-Host "Actualizando proyecto en el servidor..."
