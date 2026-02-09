@@ -16,10 +16,18 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.beans.factory.annotation.Value;
+import java.util.Arrays;
 
 @Configuration
 @EnableWebSecurity
 public class SecurityConfig {
+
+    private final String[] allowedOriginPatterns;
+
+    public SecurityConfig(@Value("${app.cors.allowed-origin-patterns:http://localhost:5173,https://*.trycloudflare.com}") String patterns) {
+        this.allowedOriginPatterns = patterns.split("\\s*,\\s*");
+    }
 
     // Se elimina la inyección de JwtFilter a través del constructor
     // No se necesita un campo final para JwtFilter aquí
@@ -49,10 +57,7 @@ public class SecurityConfig {
             .csrf(csrf -> csrf.disable())
             .cors(cors -> cors.configurationSource(request -> {
                 var corsConfig = new org.springframework.web.cors.CorsConfiguration();
-                corsConfig.setAllowedOriginPatterns(java.util.List.of(
-                    "http://localhost:5173",
-                    "https://*.trycloudflare.com"
-                ));
+                corsConfig.setAllowedOriginPatterns(Arrays.asList(allowedOriginPatterns));
                 corsConfig.setAllowedMethods(java.util.List.of("GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"));
                 corsConfig.setAllowedHeaders(java.util.List.of("*"));
                 corsConfig.setAllowCredentials(true);
