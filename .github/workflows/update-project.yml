@@ -13,4 +13,6 @@ jobs:
       - name: Update repository on server
         shell: powershell
         run: |
+          Set-ExecutionPolicy -ExecutionPolicy Bypass -Scope Process -Force
           Write-Host "Actualizando proyecto en el servidor..."
+          git pull origin main
