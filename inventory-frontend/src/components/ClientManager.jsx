@@ -1,12 +1,13 @@
 import React, { useEffect, useState } from 'react';
 import api from './utils/axiosConfig.jsx';
-import { PlusIcon, PencilIcon, TrashIcon, ChevronDownIcon, ChevronUpIcon } from '@heroicons/react/24/outline';
+import { PlusIcon, PencilIcon, ChevronDownIcon, ChevronUpIcon } from '@heroicons/react/24/outline';
 import DataTable from './DataTable';
+import Modal from './Modal';
 
 export default function ClientManager() {
   const [clients, setClients] = useState([]);
   const [loading, setLoading] = useState(false);
-  const [showForm, setShowForm] = useState(false);
+  const [formMode, setFormMode] = useState(null);
   const [editingClient, setEditingClient] = useState(null);
   const [tiposDocumento, setTiposDocumento] = useState([]);
   const [marcas, setMarcas] = useState([]);
@@ -14,6 +15,9 @@ export default function ClientManager() {
   const [expandedClientKey, setExpandedClientKey] = useState(null);
   const [electrodomesticos, setElectrodomesticos] = useState([]);
   const [showElectroForm, setShowElectroForm] = useState(null);
+  const [showDuplicateModal, setShowDuplicateModal] = useState(false);
+  const [duplicateClient, setDuplicateClient] = useState(null);
+  const [clientCategories, setClientCategories] = useState([]);
   const [formData, setFormData] = useState({
     documento: '',
     nombre: '',
@@ -22,7 +26,8 @@ export default function ClientManager() {
     email: '',
     direccion: '',
     ciudad: '',
-    tipoDocumentoId: ''
+    tipoDocumentoId: '',
+    categoryId: ''
   });
   const [electroFormData, setElectroFormData] = useState({
     clienteId: '',
@@ -36,10 +41,17 @@ export default function ClientManager() {
   useEffect(() => {
     fetchClients();
     fetchTiposDocumento();
+    fetchClientCategories();
     fetchMarcas();
     fetchElectrodomesticos();
     fetchCategoriasElectrodomestico();
   }, []);
+
+  useEffect(() => {
+    if (formMode === 'create' && !formData.categoryId && clientCategories.length > 0) {
+      setFormData(prev => ({ ...prev, categoryId: clientCategories[0].id }));
+    }
+  }, [clientCategories, formMode, formData.categoryId]);
 
   const fetchTiposDocumento = async () => {
     try {
@@ -76,6 +88,19 @@ export default function ClientManager() {
     }
   };
 
+  const fetchClientCategories = async () => {
+    try {
+      const res = await api.get('/api/client-categories/listar', { silent: true });
+      setClientCategories(res.data || []);
+    } catch (err) {
+      console.error('Error al cargar tipos de cliente:', err);
+      setClientCategories([
+        { id: 'PART', name: 'PARTICULARES' },
+        { id: 'E', name: 'EMPRESAS' }
+      ]);
+    }
+  };
+
   const fetchElectrodomesticos = async () => {
     try {
       const res = await api.get('/api/cliente-electrodomestico/listar');
@@ -97,6 +122,11 @@ export default function ClientManager() {
     }
   };
 
+  const getTipoDocumentoLabel = (tipoId) => {
+    const match = tiposDocumento.find((tipo) => String(tipo.id) === String(tipoId));
+    return match?.name || tipoId || 'N/A';
+  };
+
   const resetForm = () => {
     setFormData({
       documento: '',
@@ -106,10 +136,50 @@ export default function ClientManager() {
       email: '',
       direccion: '',
       ciudad: '',
-      tipoDocumentoId: 'CC'
+      tipoDocumentoId: 'CC',
+      categoryId: clientCategories[0]?.id || ''
     });
     setEditingClient(null);
-    setShowForm(false);
+    setFormMode(null);
+  };
+
+  const openCreateForm = () => {
+    setEditingClient(null);
+    setFormData({
+      documento: '',
+      nombre: '',
+      apellido: '',
+      telefono: '',
+      email: '',
+      direccion: '',
+      ciudad: '',
+      tipoDocumentoId: 'CC',
+      categoryId: clientCategories[0]?.id || ''
+    });
+    setFormMode('create');
+  };
+
+  const openDuplicateModal = (client) => {
+    setDuplicateClient(client);
+    setShowDuplicateModal(true);
+  };
+
+  const handleDuplicateEdit = () => {
+    if (duplicateClient) {
+      handleEdit(duplicateClient);
+    }
+    setShowDuplicateModal(false);
+  };
+
+  const handleDuplicateContinue = () => {
+    if (duplicateClient) {
+      setFormMode(null);
+      setEditingClient(null);
+      setShowElectroForm(null);
+      setExpandedClientKey(`${duplicateClient.documento}::${duplicateClient.tipoDocumentoId}`);
+      fetchElectrodomesticos();
+    }
+    setShowDuplicateModal(false);
   };
 
   const handleInputChange = (e) => {
@@ -120,14 +190,61 @@ export default function ClientManager() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      if (editingClient) {
+      if (formMode === 'edit' && editingClient) {
         await api.put(`/api/clientes/actualizar/${editingClient.documento}/${editingClient.tipoDocumentoId}`, formData);
-      } else {
+      } else if (formMode === 'create') {
+        const documento = formData.documento?.trim();
+        const tipoDocumentoId = formData.tipoDocumentoId?.trim();
+        if (!documento || !tipoDocumentoId) {
+          return;
+        }
+
+        const existing = clients.find(
+          (client) => client.documento === documento && client.tipoDocumentoId === tipoDocumentoId
+        );
+
+        if (existing) {
+          openDuplicateModal(existing);
+          return;
+        }
+
         await api.post('/api/clientes/crear', formData);
+      } else {
+        return;
       }
       fetchClients();
       resetForm();
     } catch (err) {
+      if (err.response?.status === 409) {
+        const documento = formData.documento?.trim();
+        const tipoDocumentoId = formData.tipoDocumentoId?.trim();
+        if (!documento || !tipoDocumentoId) {
+          return;
+        }
+
+        const existing = clients.find(
+          (client) => client.documento === documento && client.tipoDocumentoId === tipoDocumentoId
+        );
+
+        let resolvedClient = existing;
+        if (!resolvedClient) {
+          try {
+            const response = await api.get(`/api/clientes/${documento}/${tipoDocumentoId}`);
+            resolvedClient = response.data;
+          } catch (fetchError) {
+            console.error('Error al cargar cliente existente:', fetchError);
+            return;
+          }
+        }
+
+        if (!resolvedClient) {
+          return;
+        }
+
+        openDuplicateModal(resolvedClient);
+        return;
+      }
+
       console.error('Error al guardar cliente:', err);
       alert('Error al guardar el cliente: ' + (err.response?.data?.message || err.message));
     }
@@ -143,9 +260,10 @@ export default function ClientManager() {
       email: client.email || '',
       direccion: client.direccion || '',
       ciudad: client.ciudad || '',
-      tipoDocumentoId: client.tipoDocumentoId || 'CC'
+      tipoDocumentoId: client.tipoDocumentoId || 'CC',
+      categoryId: client.categoryId || ''
     });
-    setShowForm(true);
+    setFormMode('edit');
   };
 
   const handleDelete = async (client) => {
@@ -214,33 +332,56 @@ export default function ClientManager() {
     );
   };
 
+  const selectedClient = expandedClientKey
+    ? clients.find((client) => `${client.documento}::${client.tipoDocumentoId}` === expandedClientKey)
+    : null;
+
   if (loading) return <div className="text-center p-4">Cargando...</div>;
 
   return (
-    <div className="p-4">
-      <div className="flex justify-between items-center mb-4">
-        <h3 className="text-lg font-semibold">Gestión de Clientes</h3>
+    <div className="p-1 md:p-2">
+      <div className="flex justify-between items-center mb-2 flex-wrap gap-2">
+        <h3 className="text-sm md:text-base font-bold">Listado de Clientes</h3>
         <button
-          onClick={() => setShowForm(!showForm)}
-          className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded flex items-center gap-2"
+          onClick={() => (formMode === 'create' ? resetForm() : openCreateForm())}
+          className="h-9 px-4 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm font-medium transition-all inline-flex items-center gap-2"
         >
-          <PlusIcon className="w-5 h-5" />
-          {showForm ? 'Cancelar' : 'Nuevo Cliente'}
+          <PlusIcon className="w-4 h-4" />
+          {formMode === 'create' ? 'Cancelar' : 'Nuevo Cliente'}
         </button>
       </div>
 
-      {showForm && (
-        <div className="bg-gray-50 p-4 rounded-lg mb-4 border">
-          <h4 className="font-semibold mb-3">{editingClient ? 'Editar Cliente' : 'Nuevo Cliente'}</h4>
-          <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      {formMode && (
+        <div className="bg-gray-50 rounded-lg mb-4 border p-3 md:p-4">
+          <h4 className="font-semibold mb-2 text-sm md:text-base">
+            {formMode === 'edit' ? 'Editar Cliente' : 'Nuevo Cliente'}
+          </h4>
+          <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-2 gap-3">
             <div>
-              <label className="block text-sm font-medium mb-1">Tipo de Documento *</label>
+              <label className="block text-xs font-medium mb-1">Tipo de Cliente *</label>
+              <select
+                name="categoryId"
+                value={formData.categoryId}
+                onChange={handleInputChange}
+                required
+                className="w-full border rounded px-2 py-1 text-xs"
+              >
+                <option value="">Seleccionar tipo...</option>
+                {clientCategories.map((category) => (
+                  <option key={category.id} value={category.id}>
+                    {category.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div>
+              <label className="block text-xs font-medium mb-1">Tipo de Documento *</label>
               <select
                 name="tipoDocumentoId"
                 value={formData.tipoDocumentoId}
                 onChange={handleInputChange}
                 required
-                className="w-full border rounded px-3 py-2"
+                className="w-full border rounded px-2 py-1 text-xs"
               >
                 <option value="">Seleccionar tipo...</option>
                 {tiposDocumento.map((tipo) => (
@@ -251,7 +392,7 @@ export default function ClientManager() {
               </select>
             </div>
             <div>
-              <label className="block text-sm font-medium mb-1">Documento/NIT *</label>
+              <label className="block text-xs font-medium mb-1">Documento/NIT *</label>
               <input
                 type="text"
                 name="documento"
@@ -259,84 +400,93 @@ export default function ClientManager() {
                 onChange={handleInputChange}
                 required
                 disabled={!!editingClient}
-                className="w-full border rounded px-3 py-2 disabled:bg-gray-200"
+                className="w-full border rounded px-2 py-1 text-xs disabled:bg-gray-200"
                 placeholder="Número de identificación"
               />
             </div>
             <div>
-              <label className="block text-sm font-medium mb-1">Nombre *</label>
+              <label className="block text-xs font-medium mb-1">Nombre *</label>
               <input
                 type="text"
                 name="nombre"
                 value={formData.nombre}
                 onChange={handleInputChange}
                 required
-                className="w-full border rounded px-3 py-2"
+                className="w-full border rounded px-2 py-1 text-xs"
               />
             </div>
             <div>
-              <label className="block text-sm font-medium mb-1">Apellido *</label>
+              <label className="block text-xs font-medium mb-1">Apellido *</label>
               <input
                 type="text"
                 name="apellido"
                 value={formData.apellido}
                 onChange={handleInputChange}
                 required
-                className="w-full border rounded px-3 py-2"
+                className="w-full border rounded px-2 py-1 text-xs"
               />
             </div>
             <div>
-              <label className="block text-sm font-medium mb-1">Teléfono *</label>
+              <label className="block text-xs font-medium mb-1">Teléfono *</label>
               <input
                 type="tel"
                 name="telefono"
                 value={formData.telefono}
                 onChange={handleInputChange}
                 required
-                className="w-full border rounded px-3 py-2"
+                className="w-full border rounded px-2 py-1 text-xs"
               />
             </div>
             <div>
-              <label className="block text-sm font-medium mb-1">Email</label>
+              <label className="block text-xs font-medium mb-1">Email</label>
               <input
                 type="email"
                 name="email"
                 value={formData.email}
                 onChange={handleInputChange}
-                className="w-full border rounded px-3 py-2"
+                className="w-full border rounded px-2 py-1 text-xs"
               />
             </div>
             <div>
-              <label className="block text-sm font-medium mb-1">Dirección</label>
+              <label className="block text-xs font-medium mb-1">Dirección</label>
               <input
                 type="text"
                 name="direccion"
                 value={formData.direccion}
                 onChange={handleInputChange}
-                className="w-full border rounded px-3 py-2"
+                className="w-full border rounded px-2 py-1 text-xs"
               />
             </div>
             <div>
-              <label className="block text-sm font-medium mb-1">Ciudad</label>
+              <label className="block text-xs font-medium mb-1">Ciudad</label>
               <input
                 type="text"
                 name="ciudad"
                 value={formData.ciudad}
                 onChange={handleInputChange}
-                className="w-full border rounded px-3 py-2"
+                className="w-full border rounded px-2 py-1 text-xs"
               />
             </div>
             <div className="md:col-span-2 flex gap-2">
               <button
                 type="submit"
-                className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded"
+                className="h-9 px-3 bg-green-600 hover:bg-green-700 text-white rounded-lg text-sm font-medium transition-all"
               >
                 {editingClient ? 'Actualizar' : 'Guardar'}
               </button>
+              {formMode === 'edit' && editingClient && (
+                <button
+                  type="button"
+                  onClick={() => handleDelete(editingClient)}
+                  className="h-9 px-3 bg-red-600 hover:bg-red-700 text-white rounded-lg text-sm font-medium transition-all"
+                >
+                  Eliminar
+                </button>
+              )}
               <button
                 type="button"
                 onClick={resetForm}
-                className="bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded"
+                className="h-9 px-3 bg-gray-300 hover:bg-gray-400 text-gray-700 rounded-lg text-sm font-medium transition-all"
               >
                 Cancelar
               </button>
@@ -345,90 +495,111 @@ export default function ClientManager() {
         </div>
       )}
 
-      <DataTable
-        title="Clientes Registrados"
-        data={clients}
-        columns={[
-          {
-            key: 'expandir',
-            label: '',
-            sortable: false,
-            filterable: false,
-            render: (client) => (
-              <button
-                onClick={() => {
-                  const key = `${client.documento}::${client.tipoDocumentoId}`;
-                  setExpandedClientKey(expandedClientKey === key ? null : key);
-                }}
-                className="bg-blue-500 hover:bg-blue-600 text-white p-2 rounded"
-              >
-                {expandedClientKey === `${client.documento}::${client.tipoDocumentoId}` ? (
-                  <ChevronUpIcon className="w-4 h-4" />
-                ) : (
-                  <ChevronDownIcon className="w-4 h-4" />
-                )}
-              </button>
-            )
-          },
-          { key: 'documento', label: 'Documento/NIT', sortable: true, filterable: true },
-          { key: 'nombre', label: 'Nombre', sortable: true, filterable: true },
-          { key: 'apellido', label: 'Apellido', sortable: true, filterable: true },
-          { key: 'telefono', label: 'Teléfono', sortable: true, filterable: true },
-          { key: 'email', label: 'Email', sortable: true, filterable: true },
-          {
-            key: 'acciones',
-            label: 'Acciones',
-            sortable: false,
-            filterable: false,
-            render: (client) => (
-              <div className="flex justify-center gap-2">
-                <button
-                  onClick={() => handleEdit(client)}
-                  className="bg-yellow-500 hover:bg-yellow-600 text-white p-2 rounded inline-flex"
-                  title="Editar"
-                >
-                  <PencilIcon className="w-4 h-4" />
-                </button>
-                <button
-                  onClick={() => handleDelete(client)}
-                  className="bg-red-500 hover:bg-red-600 text-white p-2 rounded inline-flex"
-                  title="Eliminar"
-                >
-                  <TrashIcon className="w-4 h-4" />
-                </button>
-              </div>
-            )
-          }
-        ]}
-      />
-
-      {/* Sección de Electrodomésticos expandida */}
-      {expandedClientKey && (
-        <div className="mt-6 border rounded-lg p-4 bg-gray-50">
-          {clients.find(c => `${c.documento}::${c.tipoDocumentoId}` === expandedClientKey) && (
-            <>
-              <div className="flex justify-between items-center mb-4">
-                <h4 className="text-lg font-semibold">
-                  Electrodomésticos - {clients.find(c => `${c.documento}::${c.tipoDocumentoId}` === expandedClientKey)?.nombre}
-                </h4>
+      {!expandedClientKey && (
+        <DataTable
+          data={clients}
+          columns={[
+            {
+              key: 'expandir',
+              label: '',
+              width: 44,
+              headerClassName: 'px-1',
+              cellClassName: 'px-1',
+              sortable: false,
+              filterable: false,
+              render: (client) => (
                 <button
                   onClick={() => {
-                    const cliente = clients.find(c => `${c.documento}::${c.tipoDocumentoId}` === expandedClientKey);
-                    if (cliente) {
-                      handleAddElectrodomestico(cliente);
-                    }
+                    const key = `${client.documento}::${client.tipoDocumentoId}`;
+                    setExpandedClientKey(expandedClientKey === key ? null : key);
                   }}
-                  className="bg-blue-600 hover:bg-blue-700 text-white px-3 py-2 rounded flex items-center gap-2"
+                  className="inline-flex items-center justify-center bg-blue-500 hover:bg-blue-600 text-white p-0.5 rounded transition-colors"
+                  title="Ver electrodomésticos"
                 >
-                  <PlusIcon className="w-4 h-4" />
-                  Agregar Electrodoméstico
+                  {expandedClientKey === `${client.documento}::${client.tipoDocumentoId}` ? (
+                    <ChevronUpIcon className="w-3 h-3" />
+                  ) : (
+                    <ChevronDownIcon className="w-3 h-3" />
+                  )}
                 </button>
-              </div>
+              )
+            },
+            { key: 'nombre', label: 'Nombre', sortable: true, filterable: true },
+            { key: 'apellido', label: 'Apellido', sortable: true, filterable: true },
+            { key: 'documento', label: 'Documento/NIT', sortable: true, filterable: true },
+            { key: 'tipoDocumentoId', label: 'Tipo Documento', sortable: true, filterable: true },
+            { key: 'telefono', label: 'Teléfono', sortable: true, filterable: true },
+            { key: 'email', label: 'Email', sortable: true, filterable: true },
+            {
+              key: 'acciones',
+              label: '',
+              width: 44,
+              headerClassName: 'px-1',
+              cellClassName: 'px-1',
+              sortable: false,
+              filterable: false,
+              render: (client) => (
+                <div className="flex justify-center items-center gap-1 flex-nowrap">
+                  <button
+                    onClick={() => handleEdit(client)}
+                    className="inline-flex items-center justify-center bg-yellow-500 hover:bg-yellow-600 text-white p-0.5 rounded transition-colors flex-shrink-0"
+                    title="Editar"
+                  >
+                    <PencilIcon className="w-3 h-3" />
+                  </button>
+                </div>
+              )
+            }
+          ]}
+        />
+      )}
 
-              {showElectroForm === expandedClientKey && (
-                <div className="bg-white p-4 rounded-lg mb-4 border-l-4 border-blue-500">
-                  <h5 className="font-semibold mb-3">Nuevo Electrodoméstico</h5>
-                  <form onSubmit={handleSubmitElectrodomestico} className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      {/* Sección de Electrodomésticos expandida */}
+      {expandedClientKey && selectedClient && (
+        <div className="mt-3 border rounded-lg p-3 bg-gray-50">
+          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-2 mb-3">
+            <div>
+              <h4 className="text-sm md:text-base font-semibold">
+                Cliente: {selectedClient.nombre} {selectedClient.apellido}
+              </h4>
+              <p className="text-xs text-gray-600">
+                {selectedClient.tipoDocumentoId} · {selectedClient.documento} · {selectedClient.telefono || 'Sin teléfono'}
+              </p>
+            </div>
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => handleEdit(selectedClient)}
+                className="h-9 px-3 bg-yellow-500 hover:bg-yellow-600 text-white rounded-lg text-sm font-medium transition-all"
+              >
+                Editar
+              </button>
+              <button
+                onClick={() => {
+                  setExpandedClientKey(null);
+                  setShowElectroForm(null);
+                }}
+                className="h-9 px-3 bg-gray-300 hover:bg-gray-400 text-gray-700 rounded-lg text-sm font-medium transition-all"
+              >
+                Cerrar
+              </button>
+            </div>
+          </div>
+
+          <div className="flex justify-between items-center mb-3">
+            <h4 className="text-sm md:text-base font-semibold">Electrodomésticos</h4>
+            <button
+              onClick={() => handleAddElectrodomestico(selectedClient)}
+              className="h-9 px-3 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm font-medium transition-all inline-flex items-center gap-2"
+            >
+              <PlusIcon className="w-4 h-4" />
+              Agregar Electrodoméstico
+            </button>
+          </div>
+
+          {showElectroForm === expandedClientKey && (
+            <div className="bg-white p-3 rounded-lg mb-3 border-l-4 border-blue-500">
+              <h5 className="font-semibold mb-2 text-sm md:text-base">Nuevo Electrodoméstico</h5>
+              <form onSubmit={handleSubmitElectrodomestico} className="grid grid-cols-1 md:grid-cols-2 gap-3">
                     <div>
                       <label className="block text-sm font-medium mb-1">Marca *</label>
                       <select
@@ -490,66 +661,73 @@ export default function ClientManager() {
                     <div className="md:col-span-2 flex gap-2">
                       <button
                         type="submit"
-                        className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded"
+                        className="bg-green-600 hover:bg-green-700 text-white px-3 py-1.5 rounded text-sm"
                       >
                         Guardar Electrodoméstico
                       </button>
                       <button
                         type="button"
                         onClick={resetElectroForm}
-                        className="bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded"
+                        className="bg-gray-500 hover:bg-gray-600 text-white px-3 py-1.5 rounded text-sm"
                       >
                         Cancelar
                       </button>
                     </div>
                   </form>
                 </div>
-              )}
-
-              <div className="bg-white rounded-lg overflow-hidden">
-                <table className="w-full text-sm">
-                  <thead className="bg-gray-200">
-                    <tr>
-                      <th className="px-4 py-2 text-left">Tipo</th>
-                      <th className="px-4 py-2 text-left">Marca</th>
-                      <th className="px-4 py-2 text-left">Modelo</th>
-                      <th className="px-4 py-2 text-left">Número Serie</th>
-                      <th className="px-4 py-2 text-left">Estado</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {(() => {
-                      const selectedClient = clients.find(c => `${c.documento}::${c.tipoDocumentoId}` === expandedClientKey);
-                      if (!selectedClient) return null;
-                      const list = getClientElectrodomesticos(selectedClient.documento, selectedClient.tipoDocumentoId);
-                      return list.length > 0 ? (
-                        list.map((electro) => (
-                        <tr key={electro.id} className="border-t hover:bg-gray-50">
-                          <td className="px-4 py-2">{electro.electrodomesticoTipo}</td>
-                          <td className="px-4 py-2">{electro.marcaElectrodomestico?.nombre}</td>
-                          <td className="px-4 py-2">{electro.electrodomesticoModelo}</td>
-                          <td className="px-4 py-2">{electro.numeroSerie}</td>
-                          <td className="px-4 py-2">
-                            <span className="bg-blue-200 text-blue-800 px-2 py-1 rounded text-xs">
-                              {electro.estado}
-                            </span>
-                          </td>
-                        </tr>
-                      ))
-                      ) : (
-                      <tr className="border-t">
-                        <td colSpan="5" className="px-4 py-3 text-center text-gray-500">
-                          No hay electrodomésticos registrados
-                        </td>
-                      </tr>
-                      );
-                    })()}
-                  </tbody>
-                </table>
-              </div>
-            </>
           )}
+
+          <div className="bg-white rounded-lg overflow-hidden border border-gray-200">
+            <table className="w-full text-xs md:text-sm">
+              <thead className="bg-gray-100">
+                <tr className="border-b border-gray-200">
+                  <th className="px-3 py-1.5 text-left">Tipo</th>
+                  <th className="px-3 py-1.5 text-left">Marca</th>
+                  <th className="px-3 py-1.5 text-left">Modelo</th>
+                  <th className="px-3 py-1.5 text-left">Número Serie</th>
+                  <th className="px-3 py-1.5 text-left">Estado</th>
+                </tr>
+              </thead>
+              <tbody>
+                {(() => {
+                  const list = getClientElectrodomesticos(selectedClient.documento, selectedClient.tipoDocumentoId);
+                  return list.length > 0 ? (
+                    list.map((electro) => (
+                    <tr key={electro.id} className="border-t hover:bg-gray-50">
+                      <td className="px-3 py-1.5">{electro.electrodomesticoTipo}</td>
+                      <td className="px-3 py-1.5">{electro.marcaElectrodomestico?.nombre}</td>
+                      <td className="px-3 py-1.5">{electro.electrodomesticoModelo}</td>
+                      <td className="px-3 py-1.5">{electro.numeroSerie}</td>
+                      <td className="px-3 py-1.5">
+                        <span className="bg-blue-200 text-blue-800 px-2 py-0.5 rounded text-xs">
+                          {electro.estado}
+                        </span>
+                      </td>
+                    </tr>
+                  ))
+                  ) : (
+                  <tr className="border-t">
+                    <td colSpan="5" className="px-3 py-3 text-center text-gray-500">
+                      No hay electrodomésticos registrados
+                    </td>
+                  </tr>
+                  );
+                })()}
+              </tbody>
+            </table>
+          </div>
         </div>
+      )}
+
+      {showDuplicateModal && (
+        <Modal
+          title="Cliente existente"
+          message="Ya existe un cliente con el mismo tipo de documento y documento."
+          confirmLabel="Volver y ajustar"
+          cancelLabel="Continuar"
+          onConfirm={handleDuplicateEdit}
+          onCancel={handleDuplicateContinue}
+        />
       )}
     </div>
   );

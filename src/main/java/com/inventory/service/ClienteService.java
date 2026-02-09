@@ -29,8 +29,17 @@ public class ClienteService {
     private DocumentoTipoRepository documentoTipoRepository;
 
     public ClienteDto crearCliente(ClienteDto clienteDto){
+        String documento = clienteDto.getDocumento() != null ? clienteDto.getDocumento().trim() : null;
+        String tipoDocumentoId = clienteDto.getTipoDocumentoId() != null ? clienteDto.getTipoDocumentoId().trim() : null;
+        if (documento == null || documento.isEmpty() || tipoDocumentoId == null || tipoDocumentoId.isEmpty()) {
+            throw new IllegalArgumentException("Documento y tipo de documento son obligatorios");
+        }
+        if (clienteRepository.existsByIdAndTipoDocumentoId(documento, tipoDocumentoId)) {
+            throw new IllegalStateException("Cliente ya existe con el mismo documento y tipo de documento");
+        }
+
         Cliente cliente = convertirDtoAEntidad(clienteDto);
-        cliente.setId(clienteDto.getDocumento()); // El documento es parte de la PK
+        cliente.setId(documento); // El documento es parte de la PK
         Cliente clienteGuardado = clienteRepository.save(cliente);
         return new ClienteDto(clienteGuardado);
     }
@@ -67,6 +76,7 @@ public class ClienteService {
         
         // Actualizar campos
         clienteExistente.setNombre(clienteDto.getNombre());
+        clienteExistente.setApellido(clienteDto.getApellido());
         clienteExistente.setTelefono(clienteDto.getTelefono());
         clienteExistente.setDireccion(clienteDto.getDireccion());
         clienteExistente.setActivo(clienteDto.getActivo());
@@ -105,14 +115,22 @@ public class ClienteService {
         cliente.setId(clienteDto.getDocumento());
         cliente.setNit(clienteDto.getNit() != null ? clienteDto.getNit() : clienteDto.getDocumento());
         cliente.setNombre(clienteDto.getNombre());
+        cliente.setApellido(clienteDto.getApellido());
         cliente.setTelefono(clienteDto.getTelefono());
         cliente.setDireccion(clienteDto.getDireccion());
         cliente.setActivo(true); // Por defecto activo al crear
         
-        // Buscar y asignar la categoría por defecto "General" o la primera disponible
-        CategoryClient category = categoryClientRepository.findAll().stream()
-                .findFirst()
-                .orElseThrow(() -> new RuntimeException("No hay categorías de cliente disponibles"));
+        // Buscar y asignar la categoría desde el formulario o la primera disponible
+        CategoryClient category;
+        if (clienteDto.getCategoryId() != null && !clienteDto.getCategoryId().trim().isEmpty()) {
+            String categoryId = Objects.requireNonNull(clienteDto.getCategoryId(), "categoryId");
+            category = categoryClientRepository.findById(categoryId)
+            .orElseThrow(() -> new RuntimeException("Categoría de cliente no encontrada"));
+        } else {
+            category = categoryClientRepository.findAll().stream()
+            .findFirst()
+            .orElseThrow(() -> new RuntimeException("No hay categorías de cliente disponibles"));
+        }
         cliente.setCategory(category);
         
         // Buscar y asignar tipo documento por defecto "CC" o el primero disponible

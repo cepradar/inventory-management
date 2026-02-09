@@ -1,8 +1,9 @@
 import React from 'react';
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import Login from './components/auth/Login';
 import Dashboard from './components/Dashboard';
 import ProtectedRoute from './components/ProtectedRoute';
+import LandingPage from './components/LandingPage';
 
 function App() {
   return (
@@ -24,8 +25,7 @@ function App() {
           }
         />
 
-        {/* Redirige a /dashboard si está autenticado, de lo contrario al login */}
-        <Route path="/" element={<Navigate to="/dashboard" />} />
+        <Route path="/" element={<LandingPage />} />
         
         {/* Manejo de rutas no encontradas */}
         <Route path="*" element={<h1>404: Página no encontrada</h1>} />

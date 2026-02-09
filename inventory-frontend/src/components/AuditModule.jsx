@@ -118,7 +118,7 @@ const AuditModule = () => {
             ))}
             <button
               onClick={cargarMovimientos}
-              className="ml-auto px-3 md:px-6 py-3 md:py-4 text-gray-700 hover:bg-gray-50 font-medium flex items-center gap-2 flex-shrink-0 text-sm md:text-base"
+              className="ml-auto h-9 px-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-all font-medium flex items-center gap-2 flex-shrink-0 text-xs md:text-sm"
               title="Recargar datos"
             >
               🔄 <span className="hidden sm:inline">Recargar</span>

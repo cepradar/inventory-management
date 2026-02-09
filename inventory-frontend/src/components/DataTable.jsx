@@ -255,7 +255,10 @@ export default function DataTable({
               </tr>
             ) : (
               paginatedData.map((item, index) => {
-                const key = item?.id || item?.documento || item?.username || `row-${index}`;
+                const compositeKey = item?.documento && item?.tipoDocumentoId
+                  ? `${item.documento}::${item.tipoDocumentoId}`
+                  : null;
+                const key = compositeKey || item?.id || item?.documento || item?.username || `row-${index}`;
                 return (
                     <tr key={key} className="border-b border-gray-200 hover:bg-gray-50 transition-colors even:bg-gray-50/50">
                     {columns.map(col => {
@@ -286,7 +289,10 @@ export default function DataTable({
           </div>
         ) : (
           paginatedData.map((item, index) => {
-            const key = item?.id || item?.documento || item?.username || `card-${index}`;
+            const compositeKey = item?.documento && item?.tipoDocumentoId
+              ? `${item.documento}::${item.tipoDocumentoId}`
+              : null;
+            const key = compositeKey || item?.id || item?.documento || item?.username || `card-${index}`;
             return (
               <div key={key} className="bg-white rounded-lg border border-gray-200 shadow-sm p-4 space-y-2">
                 {columns.map(col => {

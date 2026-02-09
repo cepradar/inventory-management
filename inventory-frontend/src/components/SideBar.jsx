@@ -11,14 +11,9 @@ import {
   ClipboardDocumentListIcon,
 } from '@heroicons/react/24/outline';
 
-function Sidebar({ onModuleChange, activeModule, isExpanded, toggleSidebar, sidebarRef, userRole, permissions = [] }) {
-  const isAdmin = userRole && (userRole === 'ADMIN' || userRole.trim().toUpperCase() === 'ADMIN');
-  const hasPermission = (permName) => isAdmin || permissions.includes(permName);
-  
-  // Debug: mostrar rol en consola
-  React.useEffect(() => {
-    console.log('userRole en SideBar:', userRole, 'isAdmin:', isAdmin);
-  }, [userRole, isAdmin]);
+function Sidebar({ onModuleChange, activeModule, isExpanded, toggleSidebar, sidebarRef, userName, permissions = [] }) {
+  const isSuperAdmin = userName && userName.trim().toUpperCase() === 'ADMIN';
+  const hasPermission = (permName) => isSuperAdmin || permissions.includes(permName);
 
   return (
     <div 

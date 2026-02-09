@@ -16,12 +16,12 @@ import axios from './utils/axiosConfig';
 function Dashboard() {
   const [activeModule, setActiveModule] = useState('home');
   const [activeInventoryView, setActiveInventoryView] = useState(null);
-  const [showUserForm, setShowUserForm] = useState(false);
   const [showModal, setShowModal] = useState(false);
   const [modalMessage, setModalMessage] = useState('');
   const [modalAction, setModalAction] = useState(() => { });
   const [isSidebarExpanded, setIsSidebarExpanded] = useState(true);
   const [userRole, setUserRole] = useState(null);
+  const [userName, setUserName] = useState(null);
   const [companyInfo, setCompanyInfo] = useState(null);
   const [companyLogoUrl, setCompanyLogoUrl] = useState(null);
   const [hasActiveForm, setHasActiveForm] = useState(false); // 🔔 Estado para saber si hay formulario activo
@@ -35,7 +35,9 @@ function Dashboard() {
 
   useEffect(() => {
     const role = localStorage.getItem('userRole');
+    const username = localStorage.getItem('username');
     if (role) setUserRole(role);
+    if (username) setUserName(username);
     else navigate('/login');
   }, [navigate]);
 
@@ -156,53 +158,6 @@ function Dashboard() {
     }
   };
 
-  const handleInventoryOptionClick = (type) => setActiveInventoryView(type === 'products' ? 'products' : 'categories');
-
-  const handleProductsClick = () => {
-    // 🔔 Si hay formulario activo y estamos en otra vista, confirmar
-    if (hasActiveForm && activeInventoryView !== 'products') {
-      setShowModal(true);
-      setModalMessage('Tienes cambios sin guardar. ¿Estás seguro de que quieres cambiar de vista?');
-      setModalAction(() => () => {
-        setActiveModule('inventory');
-        setActiveInventoryView('products');
-        setHasActiveForm(false);
-        setShowModal(false);
-      });
-      return;
-    }
-    
-    setActiveModule('inventory');
-    setActiveInventoryView('products');
-  };
-
-  const handleCategoriesClick = () => {
-    // 🔔 Si hay formulario activo y estamos en otra vista, confirmar
-    if (hasActiveForm && activeInventoryView !== 'categories') {
-      setShowModal(true);
-      setModalMessage('Tienes cambios sin guardar. ¿Estás seguro de que quieres cambiar de vista?');
-      setModalAction(() => () => {
-        setActiveModule('inventory');
-        setActiveInventoryView('categories');
-        setHasActiveForm(false);
-        setShowModal(false);
-      });
-      return;
-    }
-    
-    setActiveModule('inventory');
-    setActiveInventoryView('categories');
-  };
-
-  const handleCreateUserClick = () => {
-    setActiveModule('users');
-    setShowUserForm(true);
-  };
-
-  const handleEditUserClick = () => {
-    setActiveModule('users');
-    setShowUserForm(false);
-  };
 
   const renderContent = () => {
     switch (activeModule) {
@@ -237,17 +192,13 @@ function Dashboard() {
           />
         );
       case 'users':
-        return <UserManager forceShowForm={showUserForm} />;
+        return <UserManager />;
       case 'audit':
         return <AuditModule />;
       case 'sales':
         return <SalesModule />;
       case 'clients':
-        return (
-          <div className="bg-white rounded-lg shadow-md p-6">
-            <ClientManager />
-          </div>
-        );
+        return <ClientManager />;
       case 'settings':
         return <ConfigDashboard />;
       case 'ordenes-servicio':
@@ -269,6 +220,7 @@ function Dashboard() {
         toggleSidebar={toggleSidebar}
         activeModule={activeModule}
         userRole={userRole}
+        userName={userName}
         permissions={permissions}
       />
 
@@ -287,10 +239,8 @@ function Dashboard() {
         <AdminNavbar
           navRef={navRef}
           activeModule={activeModule}
-          onProductsClick={handleProductsClick}
-          onCategoriesClick={handleCategoriesClick}
-          onCreateUserClick={handleCreateUserClick}
-          onEditUserClick={handleEditUserClick}
+          onHomeClick={() => handleModuleChange('home')}
+          companyName={companyInfo?.razonSocial}
           userRole={userRole}
         />
       </div>

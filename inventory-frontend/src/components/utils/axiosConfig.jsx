@@ -2,7 +2,7 @@
 import axios from 'axios';
 
 const api = axios.create({
-    baseURL: 'http://localhost:8080',
+    baseURL: 'https://cooked-appears-instrument-ourselves.trycloudflare.com',
     timeout: 30000, // 30 segundos para permitir carga de imágenes
 });
 

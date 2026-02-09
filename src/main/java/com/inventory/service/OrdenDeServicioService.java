@@ -94,22 +94,33 @@ public class OrdenDeServicioService {
             servicio.setTecnicoAsignado(tecnico);
         }
 
-        // Procesar productos si se proporcionan
-        if (dto.getProductos() != null && !dto.getProductos().isEmpty()) {
-            int regProd = 1;
-            for (OrdenServicioProductoDto productoDto : dto.getProductos()) {
-                Product producto = productRepository.findById(Objects.requireNonNull(productoDto.getProductId(), "productId"))
-                        .orElseThrow(() -> new RuntimeException("Producto no encontrado: " + productoDto.getProductId()));
-                
-                OrdenServicioProducto srp = new OrdenServicioProducto();
-                srp.setProducto(producto);
-                srp.setCantidad(productoDto.getCantidad() != null ? productoDto.getCantidad() : 1);
-                srp.setPrecioUnitario(productoDto.getPrecioUnitario() != null ? productoDto.getPrecioUnitario() : BigDecimal.valueOf(producto.getPrice()));
-                srp.setSubtotal(srp.getPrecioUnitario().multiply(new BigDecimal(srp.getCantidad())));
-                srp.setRegProd(regProd++);
-                
-                servicio.agregarProducto(srp);
+        // Procesar productos
+        if (dto.getProductos() == null || dto.getProductos().isEmpty()) {
+            throw new RuntimeException("Debe agregar al menos un producto");
+        }
+
+        boolean tieneServicio = false;
+        int regProd = 1;
+        for (OrdenServicioProductoDto productoDto : dto.getProductos()) {
+            Product producto = productRepository.findById(Objects.requireNonNull(productoDto.getProductId(), "productId"))
+                    .orElseThrow(() -> new RuntimeException("Producto no encontrado: " + productoDto.getProductId()));
+
+            if (producto.getCategory() != null && "S".equalsIgnoreCase(producto.getCategory().getId())) {
+                tieneServicio = true;
             }
+
+            OrdenServicioProducto srp = new OrdenServicioProducto();
+            srp.setProducto(producto);
+            srp.setCantidad(productoDto.getCantidad() != null ? productoDto.getCantidad() : 1);
+            srp.setPrecioUnitario(productoDto.getPrecioUnitario() != null ? productoDto.getPrecioUnitario() : BigDecimal.valueOf(producto.getPrice()));
+            srp.setSubtotal(srp.getPrecioUnitario().multiply(new BigDecimal(srp.getCantidad())));
+            srp.setRegProd(regProd++);
+
+            servicio.agregarProducto(srp);
+        }
+
+        if (!tieneServicio) {
+            throw new RuntimeException("Debe agregar al menos un producto de tipo SERVICIO (S)");
         }
 
         OrdenDeServicio guardado = servicioRepository.save(servicio);
@@ -120,18 +131,57 @@ public class OrdenDeServicioService {
         OrdenDeServicio servicio = servicioRepository.findById(Objects.requireNonNull(id, "id"))
                 .orElseThrow(() -> new RuntimeException("Servicio de reparación no encontrado: " + id));
 
-        servicio.setTipoServicio(dto.getTipoServicio());
-        servicio.setDescripcionProblema(dto.getDescripcionProblema());
-        servicio.setDiagnostico(dto.getDiagnostico());
-        servicio.setSolucion(dto.getSolucion());
-        servicio.setPartesCambiadas(dto.getPartesCambiadas());
-        servicio.setCostoServicio(dto.getCostoServicio() != null ? dto.getCostoServicio() : BigDecimal.ZERO);
-        servicio.setCostoRepuestos(dto.getCostoRepuestos() != null ? dto.getCostoRepuestos() : BigDecimal.ZERO);
-        servicio.setTotalCosto(servicio.getCostoServicio().add(servicio.getCostoRepuestos()));
-        servicio.setGarantiaServicio(dto.getGarantiaServicio());
-        servicio.setFechaSalida(dto.getFechaSalida());
-        servicio.setVencimientoGarantia(dto.getVencimientoGarantia());
-        servicio.setObservaciones(dto.getObservaciones());
+        if (dto.getTipoServicio() != null) {
+            servicio.setTipoServicio(dto.getTipoServicio());
+        }
+        if (dto.getDescripcionProblema() != null) {
+            servicio.setDescripcionProblema(dto.getDescripcionProblema());
+        }
+        if (dto.getDiagnostico() != null) {
+            servicio.setDiagnostico(dto.getDiagnostico());
+        }
+        if (dto.getSolucion() != null) {
+            servicio.setSolucion(dto.getSolucion());
+        }
+        if (dto.getPartesCambiadas() != null) {
+            servicio.setPartesCambiadas(dto.getPartesCambiadas());
+        }
+        if (dto.getCostoServicio() != null || dto.getCostoRepuestos() != null) {
+            BigDecimal costoServicio = dto.getCostoServicio() != null
+                    ? dto.getCostoServicio()
+                    : servicio.getCostoServicio();
+            BigDecimal costoRepuestos = dto.getCostoRepuestos() != null
+                    ? dto.getCostoRepuestos()
+                    : servicio.getCostoRepuestos();
+            servicio.setCostoServicio(costoServicio != null ? costoServicio : BigDecimal.ZERO);
+            servicio.setCostoRepuestos(costoRepuestos != null ? costoRepuestos : BigDecimal.ZERO);
+            servicio.setTotalCosto(servicio.getCostoServicio().add(servicio.getCostoRepuestos()));
+        }
+        if (dto.getGarantiaServicio() != null) {
+            servicio.setGarantiaServicio(dto.getGarantiaServicio());
+        }
+        if (dto.getFechaSalida() != null) {
+            servicio.setFechaSalida(dto.getFechaSalida());
+        }
+        if (dto.getVencimientoGarantia() != null) {
+            servicio.setVencimientoGarantia(dto.getVencimientoGarantia());
+        }
+        if (dto.getObservaciones() != null) {
+            servicio.setObservaciones(dto.getObservaciones());
+        }
+        if (dto.getEstado() != null) {
+            servicio.setEstado(dto.getEstado());
+        }
+        if (dto.getTecnicoAsignadoUsername() != null) {
+            String tecnicoUsername = dto.getTecnicoAsignadoUsername().trim();
+            if (tecnicoUsername.isEmpty()) {
+                servicio.setTecnicoAsignado(null);
+            } else {
+                User tecnico = userRepository.findById(Objects.requireNonNull(tecnicoUsername, "tecnicoAsignadoUsername"))
+                        .orElseThrow(() -> new RuntimeException("Técnico no encontrado: " + tecnicoUsername));
+                servicio.setTecnicoAsignado(tecnico);
+            }
+        }
 
         OrdenDeServicio actualizado = servicioRepository.save(servicio);
         return convertirADto(actualizado);

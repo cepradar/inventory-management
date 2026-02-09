@@ -4,6 +4,7 @@ import java.util.List;
 import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -19,7 +20,13 @@ public class ClienteController {
 
     @PostMapping("/crear")
     public ResponseEntity<ClienteDto> crearCliente(@RequestBody ClienteDto clienteDto) {
-        return ResponseEntity.ok(clienteService.crearCliente(clienteDto));
+        try {
+            return ResponseEntity.ok(clienteService.crearCliente(clienteDto));
+        } catch (IllegalStateException ex) {
+            return ResponseEntity.status(HttpStatus.CONFLICT).body(null);
+        } catch (IllegalArgumentException ex) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(null);
+        }
     }
 
     @GetMapping("/listar")

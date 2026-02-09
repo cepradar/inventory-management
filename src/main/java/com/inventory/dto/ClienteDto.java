@@ -15,12 +15,12 @@ public class ClienteDto {
     private String tipoDocumentoId;
     private String tipoDocumentoName;
     private String nombre;
+    private String apellido;
     private String telefono;
     private String direccion;
     private Boolean activo;
     
     // Campos adicionales del frontend
-    private String apellido;
     private String email;
     private String ciudad;
 
@@ -40,6 +40,7 @@ public class ClienteDto {
         }
         
         this.nombre = cliente.getNombre();
+        this.apellido = cliente.getApellido();
         this.telefono = cliente.getTelefono();
         this.direccion = cliente.getDireccion();
         this.activo = cliente.getActivo();

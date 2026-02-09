@@ -16,6 +16,8 @@ public interface ClienteRepository extends JpaRepository<Cliente, ClienteId> {
     @NonNull
     Optional<Cliente> findByIdAndTipoDocumentoId(@NonNull String id, @NonNull String tipoDocumentoId);
 
+    boolean existsByIdAndTipoDocumentoId(@NonNull String id, @NonNull String tipoDocumentoId);
+
     @NonNull
     @Query("SELECT c FROM Cliente c WHERE c.id = ?1")
     List<Cliente> findByDocumento(@NonNull String documento);

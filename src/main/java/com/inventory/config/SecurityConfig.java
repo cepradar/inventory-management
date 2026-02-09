@@ -49,7 +49,10 @@ public class SecurityConfig {
             .csrf(csrf -> csrf.disable())
             .cors(cors -> cors.configurationSource(request -> {
                 var corsConfig = new org.springframework.web.cors.CorsConfiguration();
-                corsConfig.setAllowedOrigins(java.util.List.of("http://localhost:5173"));
+                corsConfig.setAllowedOriginPatterns(java.util.List.of(
+                    "http://localhost:5173",
+                    "https://*.trycloudflare.com"
+                ));
                 corsConfig.setAllowedMethods(java.util.List.of("GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"));
                 corsConfig.setAllowedHeaders(java.util.List.of("*"));
                 corsConfig.setAllowCredentials(true);
@@ -76,6 +79,7 @@ public class SecurityConfig {
     
     // Permite usuarios autenticados para gestión de clientes y servicios
     .requestMatchers("/api/clientes/**").authenticated()
+    .requestMatchers(HttpMethod.GET, "/api/client-categories/listar").authenticated()
     .requestMatchers("/api/cliente-electrodomesticos/**").authenticated()
     .requestMatchers("/api/servicios-reparacion/**").authenticated()
     .requestMatchers("/api/marcas-electrodomestico/**").authenticated()

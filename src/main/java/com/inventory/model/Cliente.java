@@ -29,6 +29,7 @@ public class Cliente {
     private DocumentoTipo tipoDocumento;
 
     private String nombre;
+    private String apellido;
 
     private String telefono;
     private String direccion;
@@ -37,14 +38,15 @@ public class Cliente {
     public Cliente() {
     }
 
-    public Cliente(String id, String nit, CategoryClient category, DocumentoTipo tipoDocumento, String nombre, String telefono,
-            String direccion, Boolean activo) {
+    public Cliente(String id, String nit, CategoryClient category, DocumentoTipo tipoDocumento, String nombre, String apellido,
+            String telefono, String direccion, Boolean activo) {
         this.id = id;
         this.nit = nit;
         this.category = category;
         this.tipoDocumento = tipoDocumento;
         this.tipoDocumentoId = tipoDocumento != null ? tipoDocumento.getId() : null;
         this.nombre = nombre;
+        this.apellido = apellido;
         this.telefono = telefono;
         this.direccion = direccion;
         this.activo = activo;
@@ -97,6 +99,14 @@ public class Cliente {
 
     public void setNombre(String nombre) {
         this.nombre = nombre;
+    }
+
+    public String getApellido() {
+        return apellido;
+    }
+
+    public void setApellido(String apellido) {
+        this.apellido = apellido;
     }
 
     public String getTelefono() {

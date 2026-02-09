@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useMemo } from "react";
 import api from "./utils/axiosConfig";
+import DataTable from "./DataTable";
 
 const SalesModule = () => {
   const [ventas, setVentas] = useState([]);
@@ -13,6 +14,9 @@ const SalesModule = () => {
   const [showClientMatches, setShowClientMatches] = useState(false);
   const [productCodeInput, setProductCodeInput] = useState("");
   const [showProductSearch, setShowProductSearch] = useState(false);
+  const [showPriceConfirm, setShowPriceConfirm] = useState(false);
+  const [pendingPriceItemId, setPendingPriceItemId] = useState(null);
+  const [priceEditItemId, setPriceEditItemId] = useState(null);
   const [productFilters, setProductFilters] = useState({
     codigo: "",
     nombre: "",
@@ -64,6 +68,12 @@ const SalesModule = () => {
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
+    if (name === "documento") {
+      setClienteEncontrado(null);
+      setPriceEditItemId(null);
+      setPendingPriceItemId(null);
+      setShowPriceConfirm(false);
+    }
     setFormulario({ ...formulario, [name]: value });
   };
 
@@ -114,7 +124,9 @@ const SalesModule = () => {
     setFormulario((prev) => ({
       ...prev,
       documento: cliente?.documento || prev.documento,
-      nombreComprador: cliente?.nombre || prev.nombreComprador
+      nombreComprador: cliente?.nombre || prev.nombreComprador,
+      telefonoComprador: cliente?.telefono || "",
+      emailComprador: cliente?.email || ""
     }));
     setClientMatches([]);
     setShowClientMatches(false);
@@ -152,7 +164,16 @@ const SalesModule = () => {
     });
   };
 
+  const getCategoryId = (producto) =>
+    producto?.categoryId || producto?.category?.id || "";
+
+  const clienteValido = Boolean(clienteEncontrado?.documento);
+
   const handleAddItemByCode = () => {
+    if (!clienteValido) {
+      setError("Debes cargar un cliente valido antes de agregar productos");
+      return;
+    }
     const code = productCodeInput.trim();
     if (!code) {
       setError("Ingresa un codigo de producto");
@@ -170,12 +191,22 @@ const SalesModule = () => {
       return;
     }
 
+    if (getCategoryId(producto) === "S") {
+      setError("Los productos de tipo SERVICIO no se pueden vender aqui");
+      return;
+    }
+
     addProductoToItems(producto);
     setProductCodeInput("");
     setError("");
   };
 
   const handleProductCodeKeyDown = (e) => {
+    if (!clienteValido) {
+      e.preventDefault();
+      setError("Debes cargar un cliente valido antes de buscar productos");
+      return;
+    }
     if (e.key === "F2") {
       e.preventDefault();
       setShowProductSearch(true);
@@ -189,12 +220,22 @@ const SalesModule = () => {
   };
 
   const handleSelectProducto = (producto) => {
+    if (!clienteValido) {
+      setShowProductSearch(false);
+      setError("Debes cargar un cliente valido antes de agregar productos");
+      return;
+    }
     if (!producto) {
       return;
     }
 
     if (producto.activo === false) {
       setError("El producto seleccionado esta inactivo");
+      return;
+    }
+
+    if (getCategoryId(producto) === "S") {
+      setError("Los productos de tipo SERVICIO no se pueden vender aqui");
       return;
     }
 
@@ -212,6 +253,17 @@ const SalesModule = () => {
   };
 
   const handleRemoveItem = (itemId) => {
+    if (!clienteValido) {
+      setError("Debes cargar un cliente valido antes de editar productos");
+      return;
+    }
+    if (priceEditItemId === itemId) {
+      setPriceEditItemId(null);
+    }
+    if (pendingPriceItemId === itemId) {
+      setPendingPriceItemId(null);
+      setShowPriceConfirm(false);
+    }
     setFormulario((prev) => ({
       ...prev,
       items: prev.items.filter((item) => item.id !== itemId)
@@ -219,12 +271,39 @@ const SalesModule = () => {
   };
 
   const handleItemChange = (itemId, field, value) => {
+    if (!clienteValido) {
+      setError("Debes cargar un cliente valido antes de editar productos");
+      return;
+    }
     setFormulario((prev) => ({
       ...prev,
       items: prev.items.map((item) =>
         item.id === itemId ? { ...item, [field]: value } : item
       )
     }));
+  };
+
+  const requestPriceEdit = (itemId) => {
+    if (priceEditItemId === itemId) {
+      return;
+    }
+    setPendingPriceItemId(itemId);
+    setShowPriceConfirm(true);
+  };
+
+  const confirmPriceEdit = () => {
+    if (!pendingPriceItemId) {
+      setShowPriceConfirm(false);
+      return;
+    }
+    setPriceEditItemId(pendingPriceItemId);
+    setPendingPriceItemId(null);
+    setShowPriceConfirm(false);
+  };
+
+  const cancelPriceEdit = () => {
+    setPendingPriceItemId(null);
+    setShowPriceConfirm(false);
   };
 
   const handleSubmit = async (e) => {
@@ -309,6 +388,9 @@ const SalesModule = () => {
       });
       setClienteEncontrado(null);
       setProductCodeInput("");
+      setPriceEditItemId(null);
+      setPendingPriceItemId(null);
+      setShowPriceConfirm(false);
 
       // Recargar ventas y productos
       cargarVentas();
@@ -383,7 +465,7 @@ const SalesModule = () => {
     if (categoria) {
       const value = categoria.toLowerCase();
       result = result.filter((p) =>
-        String(p.categoryId || "").toLowerCase().includes(value)
+        String(getCategoryId(p)).toLowerCase().includes(value)
       );
     }
 
@@ -409,21 +491,27 @@ const SalesModule = () => {
       result = result.filter((p) => parseInt(p.quantity || 0, 10) >= minStockValue);
     }
 
+    result = result.filter((p) => getCategoryId(p) !== "S");
+
     return result;
   }, [productos, productFilters]);
 
   return (
     <div className="p-6 bg-gray-50 min-h-screen">
       <div className="max-w-7xl mx-auto">
-        <div className="flex justify-between items-center mb-6">
-          <h1 className="text-3xl font-bold text-gray-900">Ventas de Productos</h1>
-          <button
-            onClick={() => setMostrarFormulario(!mostrarFormulario)}
-            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-all font-medium"
-          >
-            {mostrarFormulario ? "Cancelar" : "+ Nueva Venta"}
-          </button>
-        </div>
+        {!mostrarFormulario && (
+          <div className="flex justify-between items-center mb-4 flex-wrap gap-2">
+            <h3 className="text-sm md:text-base font-bold">
+              Historial de ventas ({ventas.length})
+            </h3>
+            <button
+              onClick={() => setMostrarFormulario(true)}
+              className="h-9 px-4 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-all text-sm font-medium"
+            >
+              + Nueva Venta
+            </button>
+          </div>
+        )}
 
         {error && (
           <div className="mb-4 p-4 bg-red-100 border border-red-400 text-red-700 rounded">
@@ -487,21 +575,13 @@ const SalesModule = () => {
                   value={productCodeInput}
                   onChange={(e) => setProductCodeInput(e.target.value)}
                   onKeyDown={handleProductCodeKeyDown}
-                  className="w-full h-9 px-3 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-600"
+                  className="w-full h-9 px-3 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-600 disabled:bg-gray-100 disabled:text-gray-500"
                   placeholder="Codigo del producto"
+                  disabled={!clienteValido}
                 />
-                <p className="text-[11px] text-gray-500 mt-1">Enter agrega, F2 busca</p>
-              </div>
-
-              {/* Agregar producto */}
-              <div className="flex items-end md:col-span-1">
-                <button
-                  type="button"
-                  onClick={handleAddItemByCode}
-                  className="w-full h-9 px-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-all text-sm font-semibold"
-                >
-                  Agregar Producto
-                </button>
+                <p className="text-[11px] text-gray-500 mt-1">
+                  {clienteValido ? "Enter agrega, F2 busca" : "Primero carga un cliente valido"}
+                </p>
               </div>
 
               {/* Lista de productos */}
@@ -530,7 +610,8 @@ const SalesModule = () => {
                                 min="1"
                                 value={item.cantidad}
                                 onChange={(e) => handleItemChange(item.id, 'cantidad', parseInt(e.target.value || 0))}
-                                className="w-20 px-2 py-1 border border-gray-300 rounded text-sm"
+                                className="w-20 px-2 py-1 border border-gray-300 rounded text-sm disabled:bg-gray-100 disabled:text-gray-500"
+                                disabled={!clienteValido}
                               />
                             </td>
                             <td className="px-3 py-2 text-sm text-gray-900">
@@ -539,8 +620,11 @@ const SalesModule = () => {
                                 min="0"
                                 step="0.01"
                                 value={item.precioUnitario}
+                                readOnly={priceEditItemId !== item.id}
                                 onChange={(e) => handleItemChange(item.id, 'precioUnitario', parseFloat(e.target.value || 0))}
-                                className="w-24 px-2 py-1 border border-gray-300 rounded text-sm"
+                                onClick={() => requestPriceEdit(item.id)}
+                                className="w-24 px-2 py-1 border border-gray-300 rounded text-sm read-only:bg-gray-100 read-only:text-gray-500 disabled:bg-gray-100 disabled:text-gray-500"
+                                disabled={!clienteValido}
                               />
                             </td>
                             <td className="px-3 py-2 text-sm text-gray-900">
@@ -550,7 +634,8 @@ const SalesModule = () => {
                               <button
                                 type="button"
                                 onClick={() => handleRemoveItem(item.id)}
-                                className="text-red-600 hover:text-red-700 text-xs"
+                                className="text-red-600 hover:text-red-700 text-xs disabled:text-gray-400"
+                                disabled={!clienteValido}
                               >
                                 Quitar
                               </button>
@@ -564,7 +649,7 @@ const SalesModule = () => {
               </div>
 
               {/* Total */}
-              <div>
+              <div className="md:col-span-1">
                 <label className="block text-xs font-semibold text-gray-700 mb-1">
                   Total
                 </label>
@@ -573,38 +658,8 @@ const SalesModule = () => {
                 </div>
               </div>
 
-              {/* Teléfono */}
-              <div>
-                <label className="block text-xs font-semibold text-gray-700 mb-1">
-                  Teléfono
-                </label>
-                <input
-                  type="tel"
-                  name="telefonoComprador"
-                  value={formulario.telefonoComprador}
-                  onChange={handleInputChange}
-                  className="w-full h-9 px-3 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-600"
-                  placeholder="Teléfono (opcional)"
-                />
-              </div>
-
-              {/* Email */}
-              <div>
-                <label className="block text-xs font-semibold text-gray-700 mb-1">
-                  Email
-                </label>
-                <input
-                  type="email"
-                  name="emailComprador"
-                  value={formulario.emailComprador}
-                  onChange={handleInputChange}
-                  className="w-full h-9 px-3 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-600"
-                  placeholder="Email (opcional)"
-                />
-              </div>
-
               {/* Observaciones */}
-              <div className="md:col-span-3">
+              <div className="md:col-span-2">
                 <label className="block text-xs font-semibold text-gray-700 mb-1">
                   Observaciones
                 </label>
@@ -642,75 +697,68 @@ const SalesModule = () => {
         {!mostrarFormulario && (
           <>
             {/* Tabla de ventas */}
-            <div className="bg-white rounded-lg shadow overflow-hidden">
-              <div className="px-6 py-4 border-b border-gray-200 bg-gray-50">
-                <h2 className="text-lg font-semibold text-gray-900">
-                  Historial de Ventas ({ventas.length})
-                </h2>
+            <div className="overflow-x-auto">
+              <div className="min-w-[1000px]">
+                <DataTable
+                  data={ventas}
+                  columns={[
+                    {
+                      key: "fecha",
+                      label: "Fecha",
+                      sortable: true,
+                      filterable: true,
+                      render: (venta) => formatearFecha(venta.fecha)
+                    },
+                    {
+                      key: "productNombre",
+                      label: "Producto",
+                      sortable: true,
+                      filterable: true,
+                      render: (venta) => venta.productNombre || "-"
+                    },
+                    {
+                      key: "nombreComprador",
+                      label: "Comprador",
+                      sortable: true,
+                      filterable: true,
+                      render: (venta) => venta.nombreComprador || "-"
+                    },
+                    {
+                      key: "cantidad",
+                      label: "Cantidad",
+                      sortable: true,
+                      filterable: false,
+                      render: (venta) => venta.cantidad ?? "-"
+                    },
+                    {
+                      key: "precioUnitario",
+                      label: "Precio Unit.",
+                      sortable: true,
+                      filterable: false,
+                      render: (venta) =>
+                        venta.precioUnitario != null ? `$${venta.precioUnitario}` : "-"
+                    },
+                    {
+                      key: "totalVenta",
+                      label: "Total",
+                      sortable: true,
+                      filterable: false,
+                      render: (venta) => (
+                        <span className="font-semibold text-green-600">
+                          {venta.totalVenta != null ? `$${venta.totalVenta}` : "-"}
+                        </span>
+                      )
+                    },
+                    {
+                      key: "usuarioNombre",
+                      label: "Usuario",
+                      sortable: true,
+                      filterable: true,
+                      render: (venta) => venta.usuarioNombre || "-"
+                    }
+                  ]}
+                />
               </div>
-
-              {ventas.length === 0 ? (
-                <div className="p-8 text-center">
-                  <p className="text-gray-500 text-lg">No hay ventas registradas</p>
-                </div>
-              ) : (
-                <div className="overflow-x-auto">
-                  <table className="w-full">
-                    <thead className="bg-gray-100 border-b border-gray-200">
-                      <tr>
-                        <th className="px-6 py-3 text-left text-sm font-semibold text-gray-900">
-                          Fecha
-                        </th>
-                        <th className="px-6 py-3 text-left text-sm font-semibold text-gray-900">
-                          Producto
-                        </th>
-                        <th className="px-6 py-3 text-left text-sm font-semibold text-gray-900">
-                          Comprador
-                        </th>
-                        <th className="px-6 py-3 text-left text-sm font-semibold text-gray-900">
-                          Cantidad
-                        </th>
-                        <th className="px-6 py-3 text-left text-sm font-semibold text-gray-900">
-                          Precio Unit.
-                        </th>
-                        <th className="px-6 py-3 text-left text-sm font-semibold text-gray-900">
-                          Total
-                        </th>
-                        <th className="px-6 py-3 text-left text-sm font-semibold text-gray-900">
-                          Usuario
-                        </th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-gray-200">
-                      {ventas.map((venta) => (
-                        <tr key={venta.id} className="hover:bg-gray-50 transition-colors">
-                          <td className="px-6 py-4 text-sm text-gray-900">
-                            {formatearFecha(venta.fecha)}
-                          </td>
-                          <td className="px-6 py-4 text-sm text-gray-900 font-medium">
-                            {venta.productNombre}
-                          </td>
-                          <td className="px-6 py-4 text-sm text-gray-900">
-                            {venta.nombreComprador}
-                          </td>
-                          <td className="px-6 py-4 text-sm text-gray-900">
-                            {venta.cantidad}
-                          </td>
-                          <td className="px-6 py-4 text-sm text-gray-900">
-                            ${venta.precioUnitario}
-                          </td>
-                          <td className="px-6 py-4 text-sm font-semibold text-green-600">
-                            ${venta.totalVenta}
-                          </td>
-                          <td className="px-6 py-4 text-sm text-gray-600">
-                            {venta.usuarioNombre}
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              )}
             </div>
 
             {/* Resumen */}
@@ -740,6 +788,39 @@ const SalesModule = () => {
               </div>
             )}
           </>
+        )}
+
+        {showPriceConfirm && (
+          <div className="fixed inset-0 bg-gray-900 bg-opacity-40 flex items-center justify-center z-50 p-4">
+            <div className="bg-white rounded-lg shadow-xl w-full max-w-md">
+              <div className="px-5 py-4 border-b border-gray-200">
+                <h3 className="text-lg font-semibold text-gray-900">
+                  Confirmar cambio de precio
+                </h3>
+              </div>
+              <div className="p-5">
+                <p className="text-sm text-gray-700">
+                  ¿Deseas cambiar el precio del producto seleccionado?
+                </p>
+              </div>
+              <div className="px-5 py-4 border-t border-gray-200 flex gap-3">
+                <button
+                  type="button"
+                  onClick={confirmPriceEdit}
+                  className="flex-1 h-9 px-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-all font-medium text-sm"
+                >
+                  Si, cambiar
+                </button>
+                <button
+                  type="button"
+                  onClick={cancelPriceEdit}
+                  className="flex-1 h-9 px-3 bg-gray-300 text-gray-700 rounded-lg hover:bg-gray-400 transition-all font-medium text-sm"
+                >
+                  Cancelar
+                </button>
+              </div>
+            </div>
+          </div>
         )}
 
         {showClientMatches && (
@@ -920,7 +1001,9 @@ const SalesModule = () => {
                           <td className="px-2 py-2 text-xs text-slate-900">{producto.description || "-"}</td>
                           <td className="px-2 py-2 text-xs text-slate-900">${producto.price}</td>
                           <td className="px-2 py-2 text-xs text-slate-900">{producto.quantity}</td>
-                          <td className="px-2 py-2 text-xs text-slate-900">{producto.categoryId || "-"}</td>
+                          <td className="px-2 py-2 text-xs text-slate-900">
+                            {getCategoryId(producto) || "-"}
+                          </td>
                           <td className="px-2 py-2 text-xs text-slate-900">
                             {producto.categoriaElectrodomesticoId || "-"}
                           </td>

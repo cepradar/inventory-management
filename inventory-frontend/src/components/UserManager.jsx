@@ -6,111 +6,140 @@ import DataTable from './DataTable';
 
 const UserForm = ({ formData, handleInputChange, handleFormSubmit, editingId, handleCancelEdit, roles, handleDelete }) => {
   return (
-    <form onSubmit={handleFormSubmit} className="p-4 border rounded shadow-sm">
-      <h3 className="text-xl font-bold mb-4">{editingId ? 'Editar Usuario' : 'Crear Usuario'}</h3>
-      
-      <input
-        type="text"
-        name="username"
-        placeholder="Nombre de usuario"
-        value={formData.username || ''}
-        onChange={handleInputChange}
-        className="w-full p-2 mb-2 border rounded"
-        required
-        readOnly={!!editingId}
-      />
-      
-      <input
-        type="email"
-        name="email"
-        placeholder="Correo electrónico"
-        value={formData.email || ''}
-        onChange={handleInputChange}
-        className="w-full p-2 mb-2 border rounded"
-        required
-      />
-      
-      <input
-        type="tel"
-        name="telefono"
-        placeholder="Teléfono"
-        value={formData.telefono || ''}
-        onChange={handleInputChange}
-        className="w-full p-2 mb-2 border rounded"
-      />
-      
-      {!editingId && (
-        <input
-          type="password"
-          name="password"
-          placeholder="Contraseña"
-          value={formData.password || ''}
-          onChange={handleInputChange}
-          className="w-full p-2 mb-2 border rounded"
-          required
-        />
-      )}
-      
-      <select
-        name="role"
-        value={formData.role || ''}
-        onChange={handleInputChange}
-        className="w-full p-2 mb-2 border rounded"
-        required
-      >
-        <option value="">Seleccionar rol</option>
-        {roles.map(role => (
-          <option key={role.name} value={role.name}>
-            {role.name}
-          </option>
-        ))}
-      </select>
+    <form onSubmit={handleFormSubmit} className="border rounded shadow-sm p-3 md:p-4 bg-white">
+      <h3 className="font-bold text-base md:text-lg mb-2">
+        {editingId ? 'Editar Usuario' : 'Crear Usuario'}
+      </h3>
 
-      <input
-        type="text"
-        name="firstName"
-        placeholder="Nombre"
-        value={formData.firstName || ''}
-        onChange={handleInputChange}
-        className="w-full p-2 mb-2 border rounded"
-      />
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+        <div>
+          <label className="block text-xs font-medium mb-1">Usuario *</label>
+          <input
+            type="text"
+            name="username"
+            placeholder="Nombre de usuario"
+            value={formData.username || ''}
+            onChange={handleInputChange}
+            className="w-full px-2 py-1 text-xs border rounded"
+            required
+            readOnly={!!editingId}
+          />
+        </div>
 
-      <input
-        type="text"
-        name="lastName"
-        placeholder="Apellido"
-        value={formData.lastName || ''}
-        onChange={handleInputChange}
-        className="w-full p-2 mb-2 border rounded"
-      />
+        <div>
+          <label className="block text-xs font-medium mb-1">Email *</label>
+          <input
+            type="email"
+            name="email"
+            placeholder="Correo electrónico"
+            value={formData.email || ''}
+            onChange={handleInputChange}
+            className="w-full px-2 py-1 text-xs border rounded"
+            required
+          />
+        </div>
 
-      <button type="submit" className="bg-blue-500 text-white p-2 rounded mr-2">
-        {editingId ? 'Actualizar' : 'Crear'}
-      </button>
-      {editingId && (
-        <button type="button" onClick={() => handleDelete(editingId)} className="bg-red-500 text-white p-2 rounded mr-2">
-          Eliminar
+        <div>
+          <label className="block text-xs font-medium mb-1">Teléfono</label>
+          <input
+            type="tel"
+            name="telefono"
+            placeholder="Teléfono"
+            value={formData.telefono || ''}
+            onChange={handleInputChange}
+            className="w-full px-2 py-1 text-xs border rounded"
+          />
+        </div>
+
+        {!editingId && (
+          <div>
+            <label className="block text-xs font-medium mb-1">Contraseña *</label>
+            <input
+              type="password"
+              name="password"
+              placeholder="Contraseña"
+              value={formData.password || ''}
+              onChange={handleInputChange}
+              className="w-full px-2 py-1 text-xs border rounded"
+              required
+            />
+          </div>
+        )}
+
+        <div>
+          <label className="block text-xs font-medium mb-1">Rol *</label>
+          <select
+            name="role"
+            value={formData.role || ''}
+            onChange={handleInputChange}
+            className="w-full px-2 py-1 text-xs border rounded"
+            required
+          >
+            <option value="">Seleccionar rol</option>
+            {roles.map(role => (
+              <option key={role.name} value={role.name}>
+                {role.name}
+              </option>
+            ))}
+          </select>
+        </div>
+
+        <div>
+          <label className="block text-xs font-medium mb-1">Nombre</label>
+          <input
+            type="text"
+            name="firstName"
+            placeholder="Nombre"
+            value={formData.firstName || ''}
+            onChange={handleInputChange}
+            className="w-full px-2 py-1 text-xs border rounded"
+          />
+        </div>
+
+        <div>
+          <label className="block text-xs font-medium mb-1">Apellido</label>
+          <input
+            type="text"
+            name="lastName"
+            placeholder="Apellido"
+            value={formData.lastName || ''}
+            onChange={handleInputChange}
+            className="w-full px-2 py-1 text-xs border rounded"
+          />
+        </div>
+      </div>
+
+      <div className="flex flex-col sm:flex-row gap-2 mt-2">
+        <button type="submit" className="h-9 px-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-all text-sm font-medium">
+          {editingId ? 'Actualizar' : 'Crear'}
         </button>
-      )}
-      <button type="button" onClick={handleCancelEdit} className="bg-gray-500 text-white p-2 rounded">
-        Cancelar
-      </button>
+        {editingId && (
+          <button type="button" onClick={() => handleDelete(editingId)} className="h-9 px-3 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-all text-sm font-medium">
+            Eliminar
+          </button>
+        )}
+        <button type="button" onClick={handleCancelEdit} className="h-9 px-3 bg-gray-300 text-gray-700 rounded-lg hover:bg-gray-400 transition-all text-sm font-medium">
+          Cancelar
+        </button>
+      </div>
     </form>
   );
 };
 
 const UserList = ({ data, onEdit, onDelete, onAdd }) => {
   return (
-    <div className="p-4">
-      <div className="flex justify-between items-center mb-4 flex-wrap gap-2">
-        <h3 className="text-lg md:text-xl font-bold">Listado de Usuarios</h3>
-        <button onClick={onAdd} className="bg-green-500 text-white p-2 rounded text-sm md:text-base">
+    <div className="p-1 md:p-2">
+      <div className="flex justify-between items-center mb-2 flex-wrap gap-2">
+        <h3 className="text-sm md:text-base font-bold">Listado de Usuarios</h3>
+        <button
+          onClick={onAdd}
+          className="h-9 px-4 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm font-medium transition-all"
+        >
           Crear Usuario
         </button>
       </div>
 
       <DataTable
-        title="Usuarios"
         data={data}
         columns={[
           { key: 'id', label: 'ID', sortable: true, filterable: true },

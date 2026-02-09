@@ -13,7 +13,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 public class AdminUserInitializer {
 
     private static final String ADMIN_USERNAME = "ADMIN";
-    private static final String ADMIN_PASSWORD = "ADMIN";
+    private static final String ADMIN_PASSWORD = "CANEYA";
 
     @Bean
     CommandLineRunner initAdminUser(UserRepository userRepository,
