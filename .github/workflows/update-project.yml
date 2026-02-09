@@ -11,8 +11,8 @@ jobs:
     runs-on: self-hosted
     steps:
       - name: Update repository on server
-        shell: powershell
+        shell: cmd
         run: |
-          Set-ExecutionPolicy -ExecutionPolicy Bypass -Scope Process -Force
-          Write-Host "Actualizando proyecto en el servidor..."
+          echo Actualizando proyecto en el servidor...
+          cd /d C:\SERVI-APP\inventory-management
           git pull origin main
