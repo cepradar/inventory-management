@@ -11,24 +11,33 @@ function Get-ConfigValue {
         return $DefaultValue
     }
 
-    $line = Get-Content $ConfigPath | Where-Object { $_ -match "^${Key}=" } | Select-Object -First 1
+    $line = Get-Content $ConfigPath | ForEach-Object {
+        $current = $_.Trim()
+        $current = $current.Trim([char]0xFEFF)
+        if (-not $current) { return $null }
+        if ($current.StartsWith('#') -or $current.StartsWith(';')) { return $null }
+        return $current
+    } | Where-Object { $_ -match "^${Key}\s*=" } | Select-Object -First 1
     if (-not $line) {
         return $DefaultValue
     }
 
-    return $line.Substring($Key.Length + 1).Trim()
+    return ($line -replace "^${Key}\s*=", '').Trim()
 }
 
 $configPath = Join-Path $PSScriptRoot '..\config\deploy.env.properties'
 
-$repoPath = Get-ConfigValue -ConfigPath $configPath -Key 'REPO_PATH'
+$repoPath = Get-ConfigValue -ConfigPath $configPath -Key 'REPO_PATH' -DefaultValue $env:REPO_PATH
 $backendService = Get-ConfigValue -ConfigPath $configPath -Key 'BACKEND_SERVICE_NAME' -DefaultValue 'inventory-backend'
 $backendJarPattern = Get-ConfigValue -ConfigPath $configPath -Key 'BACKEND_JAR_PATTERN' -DefaultValue 'target\inventory-management-*.jar'
 $frontendDistPath = Get-ConfigValue -ConfigPath $configPath -Key 'FRONTEND_DIST_PATH' -DefaultValue 'inventory-frontend\dist'
 $iisPath = Get-ConfigValue -ConfigPath $configPath -Key 'IIS_SITE_PATH' -DefaultValue 'C:\inetpub\wwwroot\inventory-frontend'
 
 if (-not $repoPath) {
-    throw 'REPO_PATH no esta configurado en config\deploy.env.properties.'
+    if (-not (Test-Path $configPath)) {
+        throw "No se encontro el archivo de configuracion: $configPath"
+    }
+    throw 'REPO_PATH no esta configurado en config\deploy.env.properties o en la variable de entorno REPO_PATH.'
 }
 
 Set-Location $repoPath
