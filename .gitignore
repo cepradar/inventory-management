@@ -39,3 +39,18 @@ target/
 .project
 .settings/
 
+# ============================================
+# CONFIGURACION SENSIBLE - NO VERSIONAR
+# ============================================
+config/*.properties
+config/app.env.properties
+config/*.env
+config/*.secrets
+config/*.secret
+config/*.secrets.properties
+config/*.local
+config/*.local.properties
+
+# Plantillas permitidas
+!config/*.example.properties
+
