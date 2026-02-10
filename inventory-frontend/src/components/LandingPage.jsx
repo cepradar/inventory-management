@@ -252,26 +252,26 @@ function LandingPage() {
                 </div>
               </div>
 
-              <div className="flex h-full w-full flex-shrink-0 flex-col justify-between px-8 py-10 md:px-14">
+              <div className="flex h-full w-full flex-shrink-0 flex-col justify-between px-8 py-8 md:px-12">
                 <div>
                   <p className="text-xs uppercase tracking-[0.4em] text-slate-400">Categorias</p>
-                  <h3 className="mt-4 text-3xl font-semibold text-slate-900">Equipos que cubrimos</h3>
+                  <h3 className="mt-3 text-3xl font-semibold text-slate-900">Equipos que cubrimos</h3>
                   <p className="mt-2 text-sm text-slate-600">
                     Tecnicos especializados por linea y disponibilidad inmediata.
                   </p>
                 </div>
-                <div className="grid gap-4 md:grid-cols-4">
+                <div className="grid gap-3 md:grid-cols-4">
                   {categories.map((category) => (
                     <div
                       key={category.name}
-                      className={`group rounded-3xl border border-slate-200 bg-gradient-to-br ${category.tone} p-5 shadow-sm transition hover:-translate-y-1 hover:shadow-lg`}
+                      className={`group rounded-3xl border border-slate-200 bg-gradient-to-br ${category.tone} p-4 shadow-sm transition hover:-translate-y-1 hover:shadow-lg`}
                     >
-                      <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-white/80 text-lg font-semibold text-slate-700">
+                      <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-white/80 text-base font-semibold text-slate-700">
                         {category.name.charAt(0)}
                       </div>
-                      <h4 className="mt-4 text-lg font-semibold text-slate-900">{category.name}</h4>
-                      <p className="mt-1 text-sm text-slate-600">{category.tag}</p>
-                      <div className="mt-5 text-xs font-semibold uppercase tracking-[0.25em] text-slate-500">
+                      <h4 className="mt-3 text-base font-semibold text-slate-900">{category.name}</h4>
+                      <p className="mt-1 text-xs text-slate-600">{category.tag}</p>
+                      <div className="mt-3 text-[10px] font-semibold uppercase tracking-[0.25em] text-slate-500">
                         Ver detalle
                       </div>
                     </div>
@@ -279,111 +279,111 @@ function LandingPage() {
                 </div>
               </div>
 
-              <div className="flex h-full w-full flex-shrink-0 flex-col gap-6 px-8 py-10 md:px-14">
-                <div className="flex flex-1 flex-col gap-6 md:flex-row">
-                  <div className="flex h-full flex-1 flex-col justify-between rounded-[2.5rem] bg-white p-7 shadow-xl shadow-slate-200/60">
+              <div className="flex h-full w-full flex-shrink-0 flex-col gap-3 px-6 py-5 md:px-8">
+                <div className="flex flex-1 flex-col gap-3 md:flex-row">
+                  <div className="flex h-full flex-1 flex-col justify-between rounded-[2.5rem] bg-white p-4 shadow-xl shadow-slate-200/60">
                     <div>
                       <p className="text-xs uppercase tracking-[0.35em] text-slate-400">Servicios</p>
-                      <h3 className="mt-3 text-3xl font-semibold text-slate-900">Especialistas en linea blanca</h3>
-                      <p className="mt-4 text-base text-slate-600">
+                      <h3 className="mt-2 text-base font-semibold text-slate-900">Especialistas en linea blanca</h3>
+                      <p className="mt-2 text-[10px] text-slate-600">
                         Nuestro equipo combina diagnostico tecnico, repuestos garantizados y seguimiento en tiempo real.
                       </p>
                     </div>
-                    <div className="mt-6 space-y-3">
+                    <div className="mt-2 space-y-1.5">
                       {serviceHighlights.map((item) => (
                         <div key={item} className="flex items-start gap-3">
                           <span className="mt-1 h-2 w-2 rounded-full bg-emerald-400" />
-                          <p className="text-sm font-medium text-slate-700">{item}</p>
+                          <p className="text-[10px] font-medium text-slate-700">{item}</p>
                         </div>
                       ))}
                     </div>
-                    <div className="mt-6 flex flex-wrap gap-3">
+                    <div className="mt-3 flex flex-wrap gap-2">
                       <Link
                         to="/login"
-                        className="rounded-full bg-emerald-500 px-6 py-2.5 text-sm font-semibold text-white shadow-lg transition hover:-translate-y-0.5 hover:bg-emerald-400"
+                        className="rounded-full bg-emerald-500 px-4 py-2 text-[10px] font-semibold text-white shadow-lg transition hover:-translate-y-0.5 hover:bg-emerald-400"
                       >
                         Solicitar atencion
                       </Link>
                       <a
                         href={companyInfo?.sitioWeb || '#'}
-                        className="rounded-full border border-slate-300 px-6 py-2.5 text-sm font-semibold text-slate-700 transition hover:border-slate-400"
+                        className="rounded-full border border-slate-300 px-4 py-2 text-[10px] font-semibold text-slate-700 transition hover:border-slate-400"
                       >
                         {companyInfo?.sitioWeb ? 'Ver cobertura' : 'Cobertura nacional'}
                       </a>
                     </div>
                   </div>
 
-                  <div className="flex h-full w-full max-w-sm flex-col justify-between rounded-[2.5rem] bg-slate-900 p-7 text-white shadow-xl shadow-slate-200/60">
+                  <div className="flex h-full w-full max-w-xs flex-col justify-between rounded-[2.5rem] bg-slate-900 p-4 text-white shadow-xl shadow-slate-200/60">
                     <div>
                       <p className="text-xs uppercase tracking-[0.35em] text-slate-400">Contacto rapido</p>
-                      <h3 className="mt-3 text-2xl font-semibold">Solicita presupuesto</h3>
-                      <p className="mt-3 text-sm text-slate-300">
+                      <h3 className="mt-2 text-base font-semibold">Solicita presupuesto</h3>
+                      <p className="mt-2 text-[10px] text-slate-300">
                         Completa el formulario y te llamamos en minutos.
                       </p>
                     </div>
-                    <form className="mt-6 space-y-3">
+                    <form className="mt-2 space-y-1.5">
                       <input
                         type="text"
                         placeholder="Nombre completo"
-                        className="w-full rounded-2xl border border-white/10 bg-white/10 px-4 py-3 text-sm text-white placeholder:text-slate-400 focus:border-white/30 focus:outline-none"
+                        className="w-full rounded-2xl border border-white/10 bg-white/10 px-3 py-2 text-[10px] text-white placeholder:text-slate-400 focus:border-white/30 focus:outline-none"
                       />
                       <input
                         type="text"
                         placeholder="Telefono"
-                        className="w-full rounded-2xl border border-white/10 bg-white/10 px-4 py-3 text-sm text-white placeholder:text-slate-400 focus:border-white/30 focus:outline-none"
+                        className="w-full rounded-2xl border border-white/10 bg-white/10 px-3 py-2 text-[10px] text-white placeholder:text-slate-400 focus:border-white/30 focus:outline-none"
                       />
                       <input
                         type="text"
                         placeholder="Tipo de equipo"
-                        className="w-full rounded-2xl border border-white/10 bg-white/10 px-4 py-3 text-sm text-white placeholder:text-slate-400 focus:border-white/30 focus:outline-none"
+                        className="w-full rounded-2xl border border-white/10 bg-white/10 px-3 py-2 text-[10px] text-white placeholder:text-slate-400 focus:border-white/30 focus:outline-none"
                       />
                       <button
                         type="button"
-                        className="w-full rounded-2xl bg-amber-400 px-4 py-3 text-sm font-semibold text-slate-900 transition hover:bg-amber-300"
+                        className="w-full rounded-2xl bg-amber-400 px-4 py-2 text-[10px] font-semibold text-slate-900 transition hover:bg-amber-300"
                       >
                         Enviar solicitud
                       </button>
                     </form>
-                    <div className="mt-5 text-xs text-slate-400">
+                    <div className="mt-2 text-[9px] text-slate-400">
                       {companyInfo?.correo ? `Correo: ${companyInfo.correo}` : 'Responderemos el mismo dia.'}
                     </div>
                   </div>
                 </div>
               </div>
 
-              <div className="flex h-full w-full flex-shrink-0 flex-col justify-between px-8 py-10 md:px-14">
-                <div className="rounded-[2.5rem] border border-slate-200 bg-white p-8 shadow-lg shadow-slate-200/60">
+              <div className="flex h-full w-full flex-shrink-0 flex-col justify-between px-6 py-6 md:px-9">
+                <div className="rounded-[2.5rem] border border-slate-200 bg-white p-5 shadow-lg shadow-slate-200/60">
                   <div className="flex flex-wrap items-center justify-between gap-4">
                     <div>
                       <p className="text-xs uppercase tracking-[0.35em] text-slate-400">Datos corporativos</p>
-                      <h3 className="mt-3 text-2xl font-semibold text-slate-900">{title}</h3>
+                      <h3 className="mt-2 text-lg font-semibold text-slate-900">{title}</h3>
                     </div>
-                    <div className="rounded-full bg-slate-900 px-5 py-2.5 text-xs font-semibold uppercase tracking-[0.3em] text-white">
+                    <div className="rounded-full bg-slate-900 px-4 py-2 text-[10px] font-semibold uppercase tracking-[0.3em] text-white">
                       {status === 'loading' ? 'Cargando' : 'Disponible'}
                     </div>
                   </div>
                   {status === 'error' ? (
                     <p className="mt-6 text-sm text-rose-600">No se pudo cargar la informacion.</p>
                   ) : (
-                    <div className="mt-6 grid gap-4 md:grid-cols-3">
+                    <div className="mt-3 grid gap-3 md:grid-cols-3">
                       {infoItems.length === 0 ? (
                         <div className="rounded-2xl border border-dashed border-slate-200 p-4 text-sm text-slate-500">
                           Agrega informacion de la empresa desde el panel de configuracion.
                         </div>
                       ) : (
                         infoItems.map((item) => (
-                          <div key={item.label} className="rounded-2xl border border-slate-200/70 bg-slate-50/80 p-4">
-                            <p className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-400">
+                          <div key={item.label} className="rounded-2xl border border-slate-200/70 bg-slate-50/80 p-3">
+                            <p className="text-[9px] font-semibold uppercase tracking-[0.2em] text-slate-400">
                               {item.label}
                             </p>
-                            <p className="mt-1 text-sm font-semibold text-slate-800">{item.value}</p>
+                            <p className="mt-1 text-[11px] font-semibold text-slate-800">{item.value}</p>
                           </div>
                         ))
                       )}
                     </div>
                   )}
                 </div>
-                <div className="mt-6 flex flex-wrap items-center justify-between gap-4 text-sm text-slate-500">
+                <div className="mt-3 flex flex-wrap items-center justify-between gap-4 text-[11px] text-slate-500">
                   <span>{title} · Servicio tecnico especializado</span>
                   <span>&copy; {new Date().getFullYear()} {title}. Todos los derechos reservados.</span>
                 </div>
