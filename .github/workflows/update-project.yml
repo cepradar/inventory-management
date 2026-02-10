@@ -10,9 +10,12 @@ jobs:
   update:
     runs-on: self-hosted
     steps:
-      - name: Update repository on server
-        shell: cmd
+      - name: Deploy on server
+        shell: powershell
         run: |
-          echo Actualizando proyecto en el servidor...
-          cd /d C:\SERVI-APP\inventory-management
-          git pull origin main
+          $script = "C:\SERVI-APP\inventory-management\scripts\deploy.ps1"
+          if (-not (Test-Path $script)) {
+            Write-Host "No se encontro $script. Revisa la ruta en config\\deploy.env.properties" -ForegroundColor Red
+            exit 1
+          }
+          & $script
