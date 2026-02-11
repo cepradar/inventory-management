@@ -405,13 +405,11 @@ function LandingPage() {
               ))}
             </div>
             <div className="flex items-center justify-end">
-              <div className="flex items-center justify-center rounded-full bg-white/90 px-4 py-2 shadow-sm">
-                <img
-                  src="/cepr-logo.png"
-                  alt="CEPR"
-                  className="h-9 w-auto opacity-100"
-                />
-              </div>
+              <img
+                src="/cepr-logo.png"
+                alt="CEPR"
+                className="h-9 w-auto opacity-30 grayscale hover:opacity-50 hover:grayscale-0 transition-all duration-300"
+              />
             </div>
           </div>
         </section>
