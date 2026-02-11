@@ -19,16 +19,6 @@ Plantilla con valores de ejemplo. Copiar a `application.properties` y completar 
 
 ### `deploy.env.properties` ⚠️ NO VERSIONAR
 Configuración para el script de deploy (`scripts/deploy.ps1`). Contiene:
-- `REPO_PATH`: Ruta del repositorio en el servidor
-- `BACKEND_SERVICE_NAME`: Nombre del servicio Windows
-- `BACKEND_JAR_PATTERN`: Patrón del JAR compilado
-- `IIS_SITE_PATH`: Ruta del sitio IIS para el frontend
-
-### `app.env.properties` 🗑️ DEPRECADO
-**⚠️ Este archivo está deprecado.** Usar `application.properties` en su lugar.
-Solo se mantiene por compatibilidad temporal.
-
-## Cómo Configurar en Servidor
 
 ### Configuración Inicial (Primera Vez)
 

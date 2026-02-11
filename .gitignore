@@ -42,8 +42,8 @@ target/
 # ============================================
 # CONFIGURACION SENSIBLE - NO VERSIONAR
 # ============================================
-config/*.properties
-config/app.env.properties
+config/application.properties
+config/deploy.env.properties
 config/*.env
 config/*.secrets
 config/*.secret
