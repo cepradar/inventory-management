@@ -1,5 +1,13 @@
 $ErrorActionPreference = 'Stop'
 
+Write-Host "=== VERIFICACION PRE-DEPLOY ===" -ForegroundColor Cyan
+& "$PSScriptRoot\verify-config.ps1"
+if ($LASTEXITCODE -ne 0) {
+    Write-Host "Verificacion fallo. Corrige los errores antes de continuar." -ForegroundColor Red
+    exit 1
+}
+Write-Host ""
+
 function Get-ConfigValue {
     param(
         [string]$ConfigPath,

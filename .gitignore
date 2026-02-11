@@ -51,6 +51,8 @@ config/*.secrets.properties
 config/*.local
 config/*.local.properties
 
-# Plantillas permitidas
+# Plantillas y documentación SÍ se versionan
 !config/*.example.properties
+!config/README.md
+!config/.gitkeep
 

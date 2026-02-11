@@ -1,0 +1,2 @@
+# Este archivo mantiene la carpeta config/ en el repositorio Git
+# Los archivos de configuración sensibles están en .gitignore
