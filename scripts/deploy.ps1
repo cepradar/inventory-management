@@ -80,10 +80,25 @@ robocopy $distFullPath $iisPath /E | Out-Null
 Write-Host 'Reiniciando servicio backend...'
 try {
     $service = Get-Service -Name $backendService -ErrorAction Stop
+    
+    # Detener si está corriendo o pausado
+    if ($service.Status -eq 'Running' -or $service.Status -eq 'Paused') {
+        Write-Host "Deteniendo servicio (estado: $($service.Status))..."
+        nssm stop $backendService
+        Start-Sleep -Seconds 2
+    }
+    
+    # Iniciar el servicio
+    Write-Host "Iniciando servicio..."
+    nssm start $backendService
+    Start-Sleep -Seconds 3
+    
+    # Verificar estado final
+    $service.Refresh()
     if ($service.Status -eq 'Running') {
-        nssm restart $backendService
+        Write-Host "[OK] Servicio iniciado correctamente" -ForegroundColor Green
     } else {
-        nssm start $backendService
+        Write-Host "[WARN] Servicio en estado: $($service.Status)" -ForegroundColor Yellow
     }
 } catch {
     Write-Host "Servicio $backendService no encontrado. Configuralo con NSSM." -ForegroundColor Yellow

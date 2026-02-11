@@ -211,12 +211,11 @@ function LandingPage() {
               onMouseDown={(event) => handleDragStart(event.clientX)}
               onMouseMove={(event) => handleDragMove(event.clientX)}
               onMouseUp={handleDragEnd}
-              onMouseLeave={handleDragEnd}
+              onMouseLeave={() => { handleDragEnd(); setIsPaused(false); }}
               onTouchStart={(event) => handleDragStart(event.touches[0].clientX)}
               onTouchMove={(event) => handleDragMove(event.touches[0].clientX)}
               onTouchEnd={handleDragEnd}
               onMouseEnter={() => setIsPaused(true)}
-              onMouseLeave={() => setIsPaused(false)}
               onTouchStartCapture={() => setIsPaused(true)}
               onTouchEndCapture={() => setIsPaused(false)}
             >
