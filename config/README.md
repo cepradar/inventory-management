@@ -30,31 +30,53 @@ Solo se mantiene por compatibilidad temporal.
 
 ## Cómo Configurar en Servidor
 
+### Configuración Inicial (Primera Vez)
+
 1. **Clonar repositorio:**
    ```powershell
-   git clone <repo-url> C:\SERVI-APP\inventory-management
+   git clone https://github.com/cepradar/inventory-management.git C:\SERVI-APP\inventory-management
    cd C:\SERVI-APP\inventory-management
    ```
 
-2. **Copiar plantilla de configuración:**
+2. **Ejecutar script de configuración inicial:**
    ```powershell
-   Copy-Item config\application.example.properties config\application.properties
+   .\scripts\setup-server.ps1
    ```
+   
+   El script te pedirá:
+   - Contraseña de PostgreSQL
+   - JWT secret (o generará uno automático)
+   
+   Y automáticamente:
+   - Crea `config\application.properties`
+   - Valida conexión a PostgreSQL
+   - Te indica los próximos pasos
 
-3. **Editar credenciales:**
-   Abrir `config\application.properties` y completar:
-   - `spring.datasource.password=<tu_password_postgresql>`
-   - `jwt.secret=<secreto_largo_y_seguro>`
-
-4. **Configurar servicio NSSM:**
+3. **Configurar servicio NSSM:**
    ```powershell
    nssm set servi-backend AppDirectory "C:\SERVI-APP\inventory-management"
    ```
 
-5. **Iniciar servicio:**
+4. **Desplegar aplicación:**
    ```powershell
-   sc start servi-backend
+   .\scripts\deploy.ps1
    ```
+
+### Configuración Manual (Alternativa)
+
+Si prefieres configurar manualmente:
+
+1. **Copiar plantilla:**
+   ```powershell
+   Copy-Item config\application.example.properties config\application.properties
+   ```
+
+2. **Editar credenciales:**
+   Abrir `config\application.properties` y completar:
+   - `spring.datasource.password=<tu_password_postgresql>`
+   - `jwt.secret=<secreto_largo_y_seguro>`
+
+3. **Continuar con paso 3 de Configuración Inicial**
 
 ## Verificación
 

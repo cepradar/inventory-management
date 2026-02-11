@@ -8,6 +8,18 @@ if ($LASTEXITCODE -ne 0) {
 }
 Write-Host ""
 
+Write-Host "=== REINICIANDO ANYDESK ===" -ForegroundColor Cyan
+try {
+    & "$PSScriptRoot\restart-anydesk.ps1"
+    if ($LASTEXITCODE -ne 0) {
+        Write-Host "[WARN] Error al reiniciar AnyDesk, continuando con deploy..." -ForegroundColor Yellow
+    }
+} catch {
+    Write-Host "[WARN] No se pudo reiniciar AnyDesk: $_" -ForegroundColor Yellow
+    Write-Host "Continuando con deploy..." -ForegroundColor Gray
+}
+Write-Host ""
+
 function Get-ConfigValue {
     param(
         [string]$ConfigPath,
