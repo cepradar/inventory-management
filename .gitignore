@@ -1,3 +1,12 @@
+# Ignorar todo dentro de config/
+config/*
+
+# Pero sí versionar plantillas y documentación dentro de config/
+!config/*.example.properties
+!config/README.md
+!config/.gitkeep
+
+# El resto igual...
 HELP.md
 target/
 !.mvn/wrapper/maven-wrapper.jar
@@ -38,23 +47,3 @@ target/
 .classpath
 .project
 .settings/
-
-# ============================================
-# CONFIGURACION SENSIBLE - NO VERSIONAR
-# ============================================
-config/application.properties
-config/deploy.env.properties
-config/*.env
-config/*.secrets
-config/*.secret
-config/*.secrets.properties
-config/*.local
-config/*.local.properties
-scripts/deploy.ps1
-
-
-# Plantillas y documentación SÍ se versionan
-!config/*.example.properties
-!config/README.md
-!config/.gitkeep
-
