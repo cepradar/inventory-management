@@ -16,7 +16,7 @@ $repoPath = "C:\SERVI-APP\inventory-management"
 $backendService = "servi-backend"
 $frontendPath = Join-Path $repoPath "inventory-frontend"
 $frontendDistPath = Join-Path $frontendPath "dist"
-$iisPath = "C:\inetpub\wwwroot\SERVI-FRONT"
+$iisPath = "C:\inetpub\wwwroot\SERVI-FRONT\dist"
 
 Set-Location $repoPath
 
