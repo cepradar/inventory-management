@@ -66,7 +66,7 @@ public class SecurityConfig {
             }))
             .authorizeHttpRequests(auth -> auth
     .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
-    .requestMatchers("/auth/register", "/auth/login", "/api/public/**").permitAll()
+    .requestMatchers("/auth/register", "/auth/register-client", "/auth/login", "/api/public/**").permitAll()
     .requestMatchers("/api/company/info", "/api/company/*/logo", "/api/company/*/logo2").permitAll()
     .requestMatchers("/auth/update-profile-picture", "/auth/update-password", "/auth/logout").authenticated()
 

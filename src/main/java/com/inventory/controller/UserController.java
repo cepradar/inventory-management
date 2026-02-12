@@ -1,5 +1,6 @@
 package com.inventory.controller;
 
+import com.inventory.dto.ClientRegisterRequest;
 import com.inventory.dto.UpdatePswUserDto;
 import com.inventory.dto.UserDto;
 import com.inventory.dto.LoginRequest;
@@ -44,6 +45,60 @@ public class UserController {
         UpdatePswUserDto actualizarPSWUsuarioDto = new UpdatePswUserDto(registerRequest.getUsername(), registerRequest.getPassword(), registerRequest.getRole());
         // Registrar un nuevo usuario con nombre de usuario, contraseña y rol
         return userService.registerUser(actualizarPSWUsuarioDto);
+    }
+
+    /**
+     * Endpoint público para registrar clientes desde el landing page
+     * El email se usa como username y automáticamente se asigna el rol CLIENTE
+     */
+    @PostMapping("/register-client")
+    public ResponseEntity<?> registerClient(@RequestBody ClientRegisterRequest request) {
+        try {
+            // Validaciones manuales
+            if (request.getEmail() == null || request.getEmail().trim().isEmpty()) {
+                return ResponseEntity.badRequest().body(Map.of("error", "El correo electrónico es obligatorio"));
+            }
+            if (!request.getEmail().matches("^[A-Za-z0-9+_.-]+@(.+)$")) {
+                return ResponseEntity.badRequest().body(Map.of("error", "El correo electrónico no es válido"));
+            }
+            if (request.getPassword() == null || request.getPassword().length() < 6) {
+                return ResponseEntity.badRequest().body(Map.of("error", "La contraseña debe tener al menos 6 caracteres"));
+            }
+            if (request.getFirstName() == null || request.getFirstName().trim().isEmpty()) {
+                return ResponseEntity.badRequest().body(Map.of("error", "El nombre es obligatorio"));
+            }
+            if (request.getLastName() == null || request.getLastName().trim().isEmpty()) {
+                return ResponseEntity.badRequest().body(Map.of("error", "El apellido es obligatorio"));
+            }
+
+            User newClient = userService.registerClient(
+                request.getEmail().trim().toLowerCase(), // Normalizar email
+                request.getPassword(),
+                request.getFirstName().trim(),
+                request.getLastName().trim(),
+                request.getTelefono()
+            );
+
+            Map<String, String> response = new HashMap<>();
+            response.put("message", "Cliente registrado exitosamente");
+            response.put("username", newClient.getUsername());
+            response.put("email", newClient.getEmail());
+            response.put("fullName", newClient.getFirstName() + " " + newClient.getLastName());
+
+            logger.info("Nuevo cliente registrado: {}", newClient.getEmail());
+            
+            return ResponseEntity.ok(response);
+        } catch (IllegalArgumentException e) {
+            logger.error("Error al registrar cliente: {}", e.getMessage());
+            Map<String, String> error = new HashMap<>();
+            error.put("error", e.getMessage());
+            return ResponseEntity.badRequest().body(error);
+        } catch (Exception e) {
+            logger.error("Error inesperado al registrar cliente: {}", e.getMessage(), e);
+            Map<String, String> error = new HashMap<>();
+            error.put("error", "Error al procesar el registro. Intente nuevamente.");
+            return ResponseEntity.internalServerError().body(error);
+        }
     }
 
     @PostMapping("/login")

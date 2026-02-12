@@ -9,6 +9,7 @@ export default function OrdenServicio() {
   const [clienteElectrodomesticos, setClienteElectrodomesticos] = useState([]);
   const [selectedElectrodomestico, setSelectedElectrodomestico] = useState(null);
   const [activeView, setActiveView] = useState("LISTA");
+  const [selectedOrdenEntrega, setSelectedOrdenEntrega] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [successMessage, setSuccessMessage] = useState("");
@@ -237,6 +238,11 @@ export default function OrdenServicio() {
   const isCrear = activeView === "CREAR";
   const isAsignar = activeView === "ASIGNAR";
   const isCierre = activeView === "CIERRE";
+  const isEntrega = activeView === "ENTREGA";
+
+  const ordenesListas = useMemo(() => {
+    return ordenes.filter(orden => orden.estado === "LISTO");
+  }, [ordenes]);
 
   const changeView = (view) => {
     setActiveView(view);
@@ -584,13 +590,13 @@ export default function OrdenServicio() {
     }
   };
 
-  const handleCerrarOrden = async () => {
+  const handleReportarDiagnostico = async () => {
     if (!selectedOrdenCierre) {
-      setError("Selecciona una orden para cerrar");
+      setError("Selecciona una orden para reportar diagnostico");
       return;
     }
-    if (!cierreForm.diagnostico.trim() || !cierreForm.solucion.trim()) {
-      setError("Completa diagnostico y solucion");
+    if (!cierreForm.diagnostico.trim()) {
+      setError("Debes completar el diagnostico");
       return;
     }
 
@@ -600,21 +606,100 @@ export default function OrdenServicio() {
     try {
       const payload = {
         diagnostico: cierreForm.diagnostico.trim(),
+        solucion: cierreForm.solucion.trim() || null,
+        partesCambiadas: cierreForm.partesCambiadas.trim() || null,
+        costoServicio: cierreForm.costoServicio ? parseFloat(cierreForm.costoServicio) : null,
+        costoRepuestos: cierreForm.costoRepuestos ? parseFloat(cierreForm.costoRepuestos) : null,
+        garantiaServicio: cierreForm.garantiaServicio ? parseInt(cierreForm.garantiaServicio, 10) : null,
+        observaciones: cierreForm.observaciones.trim() || null,
+        estado: "EN_PROCESO"
+      };
+      await api.put(`/api/servicios-reparacion/${selectedOrdenCierre}`, payload);
+      setSuccessMessage("Diagnostico reportado correctamente. Estado: EN PROCESO");
+      setSelectedOrdenCierre("");
+      setCierreForm({
+        diagnostico: "",
+        solucion: "",
+        partesCambiadas: "",
+        costoServicio: "",
+        costoRepuestos: "",
+        garantiaServicio: "",
+        observaciones: "",
+        estado: "ENTREGADO"
+      });
+      cargarOrdenes();
+    } catch (err) {
+      setError(
+        "Error al reportar diagnostico: " + (err.response?.data?.message || err.message)
+      );
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleReparacionRealizada = async () => {
+    if (!selectedOrdenCierre) {
+      setError("Selecciona una orden");
+      return;
+    }
+    if (!cierreForm.solucion.trim()) {
+      setError("Debes completar la solucion");
+      return;
+    }
+
+    setLoading(true);
+    setError("");
+    setSuccessMessage("");
+    try {
+      const payload = {
+        diagnostico: cierreForm.diagnostico.trim() || null,
         solucion: cierreForm.solucion.trim(),
         partesCambiadas: cierreForm.partesCambiadas.trim() || null,
         costoServicio: cierreForm.costoServicio ? parseFloat(cierreForm.costoServicio) : null,
         costoRepuestos: cierreForm.costoRepuestos ? parseFloat(cierreForm.costoRepuestos) : null,
         garantiaServicio: cierreForm.garantiaServicio ? parseInt(cierreForm.garantiaServicio, 10) : null,
         observaciones: cierreForm.observaciones.trim() || null,
-        estado: cierreForm.estado || "ENTREGADO"
+        estado: "LISTO"
       };
       await api.put(`/api/servicios-reparacion/${selectedOrdenCierre}`, payload);
-      setSuccessMessage("Orden cerrada correctamente");
+      setSuccessMessage("Reparacion completada. Estado: LISTO");
       setSelectedOrdenCierre("");
+      setCierreForm({
+        diagnostico: "",
+        solucion: "",
+        partesCambiadas: "",
+        costoServicio: "",
+        costoRepuestos: "",
+        garantiaServicio: "",
+        observaciones: "",
+        estado: "ENTREGADO"
+      });
       cargarOrdenes();
     } catch (err) {
       setError(
-        "Error al cerrar orden: " + (err.response?.data?.message || err.message)
+        "Error al confirmar reparacion: " + (err.response?.data?.message || err.message)
+      );
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleConfirmarEntrega = async (ordenId) => {
+    if (!ordenId) return;
+    
+    setLoading(true);
+    setError("");
+    setSuccessMessage("");
+    try {
+      await api.put(`/api/servicios-reparacion/${ordenId}`, {
+        estado: "ENTREGADO"
+      });
+      setSuccessMessage(`Orden ${ordenId} entregada al cliente`);
+      cargarOrdenes();
+      setTimeout(() => setSuccessMessage(""), 3000);
+    } catch (err) {
+      setError(
+        "Error al confirmar entrega: " + (err.response?.data?.message || err.message)
       );
     } finally {
       setLoading(false);
@@ -818,6 +903,17 @@ export default function OrdenServicio() {
             }`}
           >
             Responder servicio
+          </button>
+          <button
+            type="button"
+            onClick={() => changeView("ENTREGA")}
+            className={`h-9 px-3 rounded-lg text-sm font-medium transition-all ${
+              isEntrega
+                ? "bg-blue-600 text-white"
+                : "bg-white text-gray-700 border border-gray-300 hover:bg-gray-50"
+            }`}
+          >
+            Confirmar entrega ({ordenesListas.length})
           </button>
         </div>
 
@@ -1239,7 +1335,7 @@ export default function OrdenServicio() {
               </div>
               <div>
                 <label className="block text-xs font-semibold text-gray-700 mb-1">
-                  Diagnostico *
+                  Diagnostico
                 </label>
                 <textarea
                   name="diagnostico"
@@ -1247,11 +1343,12 @@ export default function OrdenServicio() {
                   onChange={handleCierreChange}
                   className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-600"
                   rows="2"
+                  placeholder="Descripcion del problema encontrado"
                 ></textarea>
               </div>
               <div>
                 <label className="block text-xs font-semibold text-gray-700 mb-1">
-                  Solucion *
+                  Solucion
                 </label>
                 <textarea
                   name="solucion"
@@ -1259,6 +1356,7 @@ export default function OrdenServicio() {
                   onChange={handleCierreChange}
                   className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-600"
                   rows="2"
+                  placeholder="Accion realizada o reparacion aplicada"
                 ></textarea>
               </div>
               <div>
@@ -1314,22 +1412,7 @@ export default function OrdenServicio() {
                   className="w-full h-9 px-3 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-600"
                 />
               </div>
-              <div>
-                <label className="block text-xs font-semibold text-gray-700 mb-1">
-                  Estado
-                </label>
-                <select
-                  name="estado"
-                  value={cierreForm.estado}
-                  onChange={handleCierreChange}
-                  className="w-full h-9 px-3 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-600"
-                >
-                  <option value="RECIBIDO">RECIBIDO</option>
-                  <option value="EN_PROCESO">EN_PROCESO</option>
-                  <option value="LISTO">LISTO</option>
-                  <option value="ENTREGADO">ENTREGADO</option>
-                </select>
-              </div>
+
               <div className="md:col-span-2">
                 <label className="block text-xs font-semibold text-gray-700 mb-1">
                   Observaciones
@@ -1343,16 +1426,90 @@ export default function OrdenServicio() {
                 ></textarea>
               </div>
             </div>
-            <div className="mt-4 flex gap-3">
+            <div className="mt-4 flex flex-col md:flex-row gap-3">
               <button
                 type="button"
-                onClick={handleCerrarOrden}
-                disabled={loading}
-                className="flex-1 h-9 px-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-all font-medium disabled:bg-gray-400 text-sm"
+                onClick={handleReportarDiagnostico}
+                disabled={loading || (!cierreForm.diagnostico.trim() && !cierreForm.solucion.trim())}
+                className="flex-1 h-9 px-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-all font-medium disabled:bg-gray-400 disabled:cursor-not-allowed text-sm"
               >
-                {loading ? "Guardando..." : "Guardar y cerrar"}
+                {loading ? "Guardando..." : "📋 Reportar diagnostico"}
+              </button>
+              <button
+                type="button"
+                onClick={handleReparacionRealizada}
+                disabled={loading || (!cierreForm.diagnostico.trim() && !cierreForm.solucion.trim())}
+                className="flex-1 h-9 px-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-all font-medium disabled:bg-gray-400 disabled:cursor-not-allowed text-sm"
+              >
+                {loading ? "Guardando..." : "✓ Reparacion realizada"}
               </button>
             </div>
+          </div>
+        )}
+
+        {isEntrega && (
+          <div className="mb-6 bg-white p-4 md:p-5 rounded-lg shadow">
+            <h2 className="text-xl font-semibold mb-3 text-gray-900">
+              Confirmar entrega al cliente
+            </h2>
+            <p className="text-sm text-gray-600 mb-4">
+              Ordenes listas para entregar ({ordenesListas.length})
+            </p>
+            {ordenesListas.length === 0 ? (
+              <div className="py-8 text-center">
+                <p className="text-gray-500">No hay ordenes listas para entregar</p>
+              </div>
+            ) : (
+              <div className="space-y-3">
+                {ordenesListas.map((orden) => (
+                  <div 
+                    key={orden.id} 
+                    className="border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow"
+                  >
+                    <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
+                      <div>
+                        <p className="text-xs font-semibold text-gray-500">Orden</p>
+                        <p className="text-sm font-bold text-gray-900">{orden.id}</p>
+                      </div>
+                      <div>
+                        <p className="text-xs font-semibold text-gray-500">Cliente</p>
+                        <p className="text-sm text-gray-900">{orden.clienteNombre || 'N/A'}</p>
+                      </div>
+                      <div>
+                        <p className="text-xs font-semibold text-gray-500">Electrodomestico</p>
+                        <p className="text-sm text-gray-900">{orden.electrodomesticoTipo || 'N/A'}</p>
+                        <p className="text-xs text-gray-500">{orden.electrodomesticoModelo || ''}</p>
+                      </div>
+                      <div className="flex items-center justify-end">
+                        <button
+                          onClick={() => handleConfirmarEntrega(orden.id)}
+                          disabled={loading}
+                          className="h-9 px-4 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-all font-medium disabled:bg-gray-400 text-sm"
+                        >
+                          {loading ? 'Procesando...' : '✓ Confirmar entrega'}
+                        </button>
+                      </div>
+                    </div>
+                    {(orden.diagnostico || orden.solucion) && (
+                      <div className="mt-3 pt-3 border-t border-gray-100 grid grid-cols-1 md:grid-cols-2 gap-3">
+                        {orden.diagnostico && (
+                          <div>
+                            <p className="text-xs font-semibold text-gray-500">Diagnostico</p>
+                            <p className="text-xs text-gray-700">{orden.diagnostico}</p>
+                          </div>
+                        )}
+                        {orden.solucion && (
+                          <div>
+                            <p className="text-xs font-semibold text-gray-500">Solucion</p>
+                            <p className="text-xs text-gray-700">{orden.solucion}</p>
+                          </div>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
         )}
 

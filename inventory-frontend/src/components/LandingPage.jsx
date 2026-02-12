@@ -11,6 +11,17 @@ function LandingPage() {
   const [isDragging, setIsDragging] = useState(false);
   const [isPaused, setIsPaused] = useState(false);
   const [showMascot, setShowMascot] = useState(false);
+  const [showRegisterModal, setShowRegisterModal] = useState(false);
+  const [registerForm, setRegisterForm] = useState({ 
+    email: '', 
+    password: '', 
+    firstName: '', 
+    lastName: '', 
+    telefono: '' 
+  });
+  const [registerError, setRegisterError] = useState('');
+  const [registerSuccess, setRegisterSuccess] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const dragStartX = useRef(0);
   const mascotTimeoutRef = useRef(null);
 
@@ -185,12 +196,12 @@ function LandingPage() {
             >
               Iniciar sesion
             </Link>
-            <Link
-              to="/login"
+            <button
+              onClick={() => setShowRegisterModal(true)}
               className="rounded-full bg-slate-900 px-5 py-2.5 text-sm font-semibold text-white shadow-lg transition hover:-translate-y-0.5 hover:bg-slate-800"
             >
               Crear cuenta
-            </Link>
+            </button>
           </div>
         </header>
         <section className="relative mx-auto flex h-[calc(100%-96px)] w-full max-w-6xl flex-col px-6 pb-8 md:px-10">
@@ -227,14 +238,6 @@ function LandingPage() {
                   <p className="text-sm font-semibold uppercase tracking-[0.35em] text-slate-500">
                     {heroSubtitle}
                   </p>
-                  <div className="flex flex-wrap items-center gap-4">
-                    <Link
-                      to="/login"
-                      className="rounded-full border border-slate-300 px-5 py-2.5 text-sm font-semibold text-slate-700 transition hover:border-slate-400"
-                    >
-                      Crear cuenta
-                    </Link>
-                  </div>
                 </div>
                 <div className="grid gap-5 md:grid-cols-2">
                   <div className="rounded-3xl border border-slate-200 bg-white/80 p-4 text-sm text-slate-700">
@@ -414,6 +417,129 @@ function LandingPage() {
           </div>
         </section>
       </div>
+
+      {showRegisterModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
+          <div className="relative mx-4 w-full max-w-md rounded-3xl bg-white p-8 shadow-2xl">
+            <button
+              onClick={() => {
+                setShowRegisterModal(false);
+                setRegisterError('');
+                setRegisterSuccess(false);
+                setRegisterForm({ email: '', password: '', firstName: '', lastName: '', telefono: '' });
+              }}
+              className="absolute right-4 top-4 text-2xl text-slate-400 hover:text-slate-600"
+            >
+              ×
+            </button>
+            
+            <h2 className="text-2xl font-bold text-slate-900">Crear cuenta</h2>
+            <p className="mt-2 text-sm text-slate-600">Regístrate como cliente para acceder a nuestros servicios</p>
+            
+            {registerSuccess ? (
+              <div className="mt-6 space-y-4">
+                <div className="rounded-2xl bg-emerald-50 border border-emerald-200 p-4">
+                  <p className="text-sm font-semibold text-emerald-900">✓ Cuenta creada exitosamente</p>
+                  <p className="mt-1 text-xs text-emerald-700">Ya puedes iniciar sesión con tu correo electrónico</p>
+                </div>
+                <Link
+                  to="/login"
+                  className="block w-full rounded-full bg-slate-900 px-5 py-3 text-center text-sm font-semibold text-white transition hover:bg-slate-800"
+                >
+                  Ir a iniciar sesión
+                </Link>
+              </div>
+            ) : (
+              <form
+                onSubmit={async (e) => {
+                  e.preventDefault();
+                  setRegisterError('');
+                  setIsSubmitting(true);
+                  
+                  try {
+                    const response = await axios.post('/auth/register-client', registerForm);
+                    setRegisterSuccess(true);
+                  } catch (error) {
+                    setRegisterError(
+                      error.response?.data?.error || 
+                      'Error al crear la cuenta. Intenta nuevamente.'
+                    );
+                  } finally {
+                    setIsSubmitting(false);
+                  }
+                }}
+                className="mt-6 space-y-4"
+              >
+                {registerError && (
+                  <div className="rounded-2xl bg-red-50 border border-red-200 p-3">
+                    <p className="text-xs font-semibold text-red-900">{registerError}</p>
+                  </div>
+                )}
+                
+                <div className="space-y-3">
+                  <input
+                    type="email"
+                    placeholder="Correo electrónico"
+                    required
+                    value={registerForm.email}
+                    onChange={(e) => setRegisterForm({ ...registerForm, email: e.target.value })}
+                    className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-900 placeholder:text-slate-400 focus:border-slate-400 focus:outline-none focus:ring-2 focus:ring-slate-200"
+                  />
+                  <input
+                    type="password"
+                    placeholder="Contraseña (mínimo 6 caracteres)"
+                    required
+                    minLength={6}
+                    value={registerForm.password}
+                    onChange={(e) => setRegisterForm({ ...registerForm, password: e.target.value })}
+                    className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-900 placeholder:text-slate-400 focus:border-slate-400 focus:outline-none focus:ring-2 focus:ring-slate-200"
+                  />
+                  <div className="grid grid-cols-2 gap-3">
+                    <input
+                      type="text"
+                      placeholder="Nombre"
+                      required
+                      value={registerForm.firstName}
+                      onChange={(e) => setRegisterForm({ ...registerForm, firstName: e.target.value })}
+                      className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-900 placeholder:text-slate-400 focus:border-slate-400 focus:outline-none focus:ring-2 focus:ring-slate-200"
+                    />
+                    <input
+                      type="text"
+                      placeholder="Apellido"
+                      required
+                      value={registerForm.lastName}
+                      onChange={(e) => setRegisterForm({ ...registerForm, lastName: e.target.value })}
+                      className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-900 placeholder:text-slate-400 focus:border-slate-400 focus:outline-none focus:ring-2 focus:ring-slate-200"
+                    />
+                  </div>
+                  <input
+                    type="tel"
+                    placeholder="Teléfono (opcional)"
+                    value={registerForm.telefono}
+                    onChange={(e) => setRegisterForm({ ...registerForm, telefono: e.target.value })}
+                    className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-900 placeholder:text-slate-400 focus:border-slate-400 focus:outline-none focus:ring-2 focus:ring-slate-200"
+                  />
+                </div>
+                
+                <button
+                  type="submit"
+                  disabled={isSubmitting}
+                  className="w-full rounded-full bg-slate-900 px-5 py-3 text-sm font-semibold text-white transition hover:bg-slate-800 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {isSubmitting ? 'Creando cuenta...' : 'Crear cuenta'}
+                </button>
+                
+                <p className="text-center text-xs text-slate-500">
+                  ¿Ya tienes cuenta?{' '}
+                  <Link to="/login" className="font-semibold text-slate-900 hover:underline">
+                    Inicia sesión
+                  </Link>
+                </p>
+              </form>
+            )}
+          </div>
+        </div>
+      )}
 
       {whatsappLink && (
         <div className="fixed bottom-16 right-6 z-50 flex items-end gap-3">

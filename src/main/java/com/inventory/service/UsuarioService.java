@@ -233,4 +233,33 @@ public class UsuarioService implements UserDetailsService {
 
         return out.toByteArray();
     }
+
+    /**
+     * Registra un nuevo cliente desde el landing page
+     * El email se usa como username y automáticamente se asigna el rol CLIENTE
+     */
+    public User registerClient(String email, String password, String firstName, String lastName, String telefono) {
+        // Validar que el email no exista como username
+        if (userRepository.findByUsername(email).isPresent()) {
+            throw new IllegalArgumentException("Ya existe un usuario registrado con este correo electrónico");
+        }
+
+        // Buscar el rol CLIENTE
+        Rol clientRole = roleRepository.findByName("CLIENTE");
+        if (clientRole == null) {
+            throw new IllegalStateException("El rol CLIENTE no existe en el sistema. Contacte al administrador.");
+        }
+
+        // Crear el nuevo usuario
+        User newUser = new User();
+        newUser.setUsername(email); // El email es el username
+        newUser.setEmail(email); // También guardamos en el campo email
+        newUser.setPassword(passwordEncoder.encode(password)); // Cifrar la contraseña
+        newUser.setFirstName(firstName);
+        newUser.setLastName(lastName);
+        newUser.setTelefono(telefono);
+        newUser.setRole(clientRole);
+
+        return userRepository.save(newUser);
+    }
 }
