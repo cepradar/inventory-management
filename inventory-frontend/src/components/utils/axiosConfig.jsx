@@ -1,5 +1,12 @@
 // src/api/axiosConfig.js
 import axios from 'axios';
+const getBaseUrl = () => {
+  // Si el frontend y backend están en el mismo host pero distinto puerto
+  const protocol = window.location.protocol; // http: o https:
+  const host = window.location.hostname; // ej: 192.168.1.10 o localhost
+  const port = import.meta.env.VITE_API_PORT || '8080'; // puerto del backend
+  return `${protocol}//${host}:${port}`;
+};
 
 const api = axios.create({
     baseURL: import.meta.env.VITE_API_BASE_URL /*|| 'http://localhost:8080'*/,
