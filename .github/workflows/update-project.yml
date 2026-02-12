@@ -1,0 +1,21 @@
+name: Update Project on Server
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+jobs:
+  update:
+    runs-on: self-hosted
+    steps:
+      - name: Deploy on server
+        shell: powershell
+        run: |
+          $script = "C:\SERVI-APP\inventory-management\scripts\deploy.ps1"
+          if (-not (Test-Path $script)) {
+            Write-Host "No se encontro $script. Revisa la ruta en config\\deploy.env.properties" -ForegroundColor Red
+            exit 1
+          }
+          & $script

@@ -1,0 +1,7 @@
+# Ignorar todo dentro de config/
+config/*
+
+# Pero sí versionar plantillas y documentación dentro de config/
+!config/*.example.properties
+!config/README.md
+!config/.gitkeep
