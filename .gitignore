@@ -50,6 +50,8 @@ config/*.secret
 config/*.secrets.properties
 config/*.local
 config/*.local.properties
+scripts/deploy.ps1
+
 
 # Plantillas y documentación SÍ se versionan
 !config/*.example.properties
