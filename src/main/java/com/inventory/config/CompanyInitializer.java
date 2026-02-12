@@ -34,16 +34,16 @@ public class CompanyInitializer implements CommandLineRunner {
         // Crear empresa con información por defecto
         Company company = new Company();
         company.setNit("900123456-7");
-        company.setRazonSocial("WASHO - Servicio Técnico de Electrodomésticos");
+        company.setRazonSocial("SERVIPRADA");
         company.setDireccion("Calle 123 #45-67");
-        company.setCiudad("Bogotá D.C.");
-        company.setDepartamento("Cundinamarca");
-        company.setCodigoPostal("110111");
-        company.setTelefono("+57 301 234 5678");
+        company.setCiudad("Santa Marta");
+        company.setDepartamento("Magdalena");
+        company.setCodigoPostal("470001");
+        company.setTelefono("+57 350 234 4185");
         company.setCorreo("contacto@washo.com.co");
-        company.setSitioWeb("https://washo.com.co");
+        company.setSitioWeb("https://serviprada.com");
         company.setRepresentanteLegal("Administrador Principal");
-        company.setNumeroRegimen("Régimen Simplificado");
+        company.setNumeroRegimen("Régimen Simplificado 12345");
 
         companyRepository.save(company);
         
