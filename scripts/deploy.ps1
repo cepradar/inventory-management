@@ -1,107 +1,118 @@
+# =============================================
+# DEPLOY COMPLETO BACKEND + FRONTEND
+# Ejecutar SOLO en el servidor
+# =============================================
+
 $ErrorActionPreference = 'Stop'
 
-Write-Host "=== VERIFICACION PRE-DEPLOY ===" -ForegroundColor Cyan
-& "$PSScriptRoot\verify-config.ps1"
-if ($LASTEXITCODE -ne 0) {
-    Write-Host "Verificacion fallo. Corrige los errores antes de continuar." -ForegroundColor Red
-    exit 1
-}
+Write-Host "=== INICIANDO DEPLOY ===" -ForegroundColor Cyan
 Write-Host ""
 
-function Get-ConfigValue {
-    param(
-        [string]$ConfigPath,
-        [string]$Key,
-        [string]$DefaultValue = ''
-    )
+# -------------------------------------------------
+# CONFIG
+# -------------------------------------------------
 
-    if (-not (Test-Path $ConfigPath)) {
-        return $DefaultValue
-    }
-
-    $line = Get-Content $ConfigPath | ForEach-Object {
-        $current = $_.Trim()
-        $current = $current.Trim([char]0xFEFF)
-        if (-not $current) { return $null }
-        if ($current.StartsWith('#') -or $current.StartsWith(';')) { return $null }
-        return $current
-    } | Where-Object { $_ -match "^${Key}\s*=" } | Select-Object -First 1
-    if (-not $line) {
-        return $DefaultValue
-    }
-
-    return ($line -replace "^${Key}\s*=", '').Trim()
-}
-
-$configPath = Join-Path $PSScriptRoot '..\config\deploy.env.properties'
-
-$repoPath = Get-ConfigValue -ConfigPath $configPath -Key 'REPO_PATH' -DefaultValue $env:REPO_PATH
-$backendService = Get-ConfigValue -ConfigPath $configPath -Key 'BACKEND_SERVICE_NAME' -DefaultValue 'inventory-backend'
-$backendJarPattern = Get-ConfigValue -ConfigPath $configPath -Key 'BACKEND_JAR_PATTERN' -DefaultValue 'target\inventory-management-*.jar'
-$frontendDistPath = Get-ConfigValue -ConfigPath $configPath -Key 'FRONTEND_DIST_PATH' -DefaultValue 'inventory-frontend\dist'
-$iisPath = Get-ConfigValue -ConfigPath $configPath -Key 'IIS_SITE_PATH' -DefaultValue 'C:\inetpub\wwwroot\inventory-frontend'
-
-if (-not $repoPath) {
-    if (-not (Test-Path $configPath)) {
-        throw "No se encontro el archivo de configuracion: $configPath"
-    }
-    throw 'REPO_PATH no esta configurado en config\deploy.env.properties o en la variable de entorno REPO_PATH.'
-}
+$repoPath = "C:\SERVI-APP\inventory-management"
+$backendService = "servi-backend"
+$frontendPath = Join-Path $repoPath "inventory-frontend"
+$frontendDistPath = Join-Path $frontendPath "dist"
+$iisPath = "C:\inetpub\wwwroot\SERVI-FRONT"
 
 Set-Location $repoPath
 
+# -------------------------------------------------
+# VERIFICAR CONFIG
+# -------------------------------------------------
+
+$configPath = Join-Path $repoPath "config\application.properties"
+
+if (-not (Test-Path $configPath)) {
+    throw "No existe config\application.properties"
+}
+
+$dbPassword = Get-Content $configPath | Where-Object { $_ -match 'spring\.datasource\.password=' }
+if (-not $dbPassword -or $dbPassword -match 'spring\.datasource\.password=\s*$') {
+    throw "No hay password de PostgreSQL configurada"
+}
+
+$jwtSecret = Get-Content $configPath | Where-Object { $_ -match 'jwt\.secret=' }
+if (-not $jwtSecret -or $jwtSecret -match 'jwt\.secret=\s*$') {
+    throw "No hay JWT secret configurado"
+}
+
+Write-Host "[OK] Configuracion validada" -ForegroundColor Green
+
+# -------------------------------------------------
+# ACTUALIZAR CODIGO
+# -------------------------------------------------
+
+Write-Host "Actualizando repositorio..."
 git pull origin main
 
-Write-Host 'Construyendo backend...'
+# -------------------------------------------------
+# BACKEND
+# -------------------------------------------------
+
+Write-Host "Construyendo backend..."
 .\mvnw.cmd -DskipTests package
 
-Write-Host 'Construyendo frontend...'
-Set-Location (Join-Path $repoPath 'inventory-frontend')
-if (-not (Test-Path 'node_modules')) {
-    npm install
-} else {
-    npm install
+if ($LASTEXITCODE -ne 0) {
+    throw "Error construyendo backend"
 }
 
+Write-Host "[OK] Backend compilado" -ForegroundColor Green
+
+# -------------------------------------------------
+# FRONTEND
+# -------------------------------------------------
+
+Write-Host "Construyendo frontend..."
+Set-Location $frontendPath
+
+npm install
 npm run build
 
-Write-Host 'Publicando frontend en IIS...'
-$distFullPath = Join-Path $repoPath $frontendDistPath
-if (-not (Test-Path $distFullPath)) {
-    throw "No se encontro el build en $distFullPath"
+if (-not (Test-Path $frontendDistPath)) {
+    throw "No se genero el dist del frontend"
 }
+
+Write-Host "[OK] Frontend compilado" -ForegroundColor Green
+
+# -------------------------------------------------
+# PUBLICAR EN IIS
+# -------------------------------------------------
+
+Write-Host "Publicando frontend en IIS..."
 
 if (-not (Test-Path $iisPath)) {
     New-Item -ItemType Directory -Force -Path $iisPath | Out-Null
 }
 
-robocopy $distFullPath $iisPath /E | Out-Null
+robocopy $frontendDistPath $iisPath /E /NFL /NDL /NJH /NJS /NC /NS | Out-Null
 
-Write-Host 'Reiniciando servicio backend...'
+Write-Host "[OK] Frontend publicado en IIS" -ForegroundColor Green
+
+# -------------------------------------------------
+# REINICIAR SERVICIO
+# -------------------------------------------------
+
+Write-Host "Reiniciando servicio backend..."
+
 try {
     $service = Get-Service -Name $backendService -ErrorAction Stop
-    
-    # Detener si está corriendo o pausado
-    if ($service.Status -eq 'Running' -or $service.Status -eq 'Paused') {
-        Write-Host "Deteniendo servicio (estado: $($service.Status))..."
-        nssm stop $backendService
-        Start-Sleep -Seconds 2
-    }
-    
-    # Iniciar el servicio
-    Write-Host "Iniciando servicio..."
-    nssm start $backendService
-    Start-Sleep -Seconds 3
-    
-    # Verificar estado final
-    $service.Refresh()
-    if ($service.Status -eq 'Running') {
-        Write-Host "[OK] Servicio iniciado correctamente" -ForegroundColor Green
+
+    if ($service.Status -eq "Running") {
+        nssm restart $backendService
     } else {
-        Write-Host "[WARN] Servicio en estado: $($service.Status)" -ForegroundColor Yellow
+        nssm start $backendService
     }
-} catch {
-    Write-Host "Servicio $backendService no encontrado. Configuralo con NSSM." -ForegroundColor Yellow
+
+    Write-Host "[OK] Servicio reiniciado" -ForegroundColor Green
+}
+catch {
+    Write-Host "[ERROR] Servicio no encontrado. Configuralo con NSSM." -ForegroundColor Red
+    exit 1
 }
 
-Write-Host 'Deploy finalizado.'
+Write-Host ""
+Write-Host "=== DEPLOY FINALIZADO CORRECTAMENTE ===" -ForegroundColor Cyan
