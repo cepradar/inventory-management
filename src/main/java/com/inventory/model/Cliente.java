@@ -33,6 +33,7 @@ public class Cliente {
 
     private String telefono;
     private String direccion;
+    private String email;
     private Boolean activo;
 
     public Cliente() {
@@ -131,6 +132,14 @@ public class Cliente {
 
     public void setActivo(Boolean activo) {
         this.activo = activo;
+    }
+
+    public String getEmail() {
+        return email;
+    }
+
+    public void setEmail(String email) {
+        this.email = email;
     }
 
 }

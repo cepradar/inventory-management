@@ -1,6 +1,7 @@
 package com.inventory.service;
 
 import com.inventory.dto.VentaDto;
+import com.inventory.dto.VentaDetalleDto;
 import com.inventory.model.Product;
 import com.inventory.model.User;
 import com.inventory.model.Venta;
@@ -51,8 +52,7 @@ public class VentasService {
         }
 
         // Crear la venta
-        Venta venta = new Venta(producto, cantidad, precioUnitario, nombreComprador, 
-                               telefonoComprador, emailComprador, usuario, observaciones);
+        Venta venta = new Venta();
         Venta ventaGuardada = ventaRepository.save(venta);
 
         // Reducir la cantidad del producto
@@ -156,20 +156,27 @@ public class VentasService {
      * Convierte una entidad Venta a DTO
      */
     private VentaDto convertirADto(Venta venta) {
+        List<VentaDetalleDto> detallesDto = venta.getDetalles().stream()
+            .map(detalle -> new VentaDetalleDto(
+                detalle.getProduct().getId(),
+                detalle.getProduct().getName(),
+                detalle.getCantidad(),
+                detalle.getPrecioUnitario(),
+                detalle.getSubtotal()
+            ))
+            .collect(Collectors.toList());
+
         return new VentaDto(
-                venta.getId(),
-                venta.getProduct().getId(),
-                venta.getProduct().getName(),
-                venta.getCantidad(),
-                venta.getPrecioUnitario(),
-                venta.getTotalVenta(),
-                venta.getNombreComprador(),
-                venta.getTelefonoComprador(),
-                venta.getEmailComprador(),
-                venta.getUsuario().getUsername(),
-                venta.getUsuario().getFirstName() + " " + venta.getUsuario().getLastName(),
-                venta.getFecha(),
-                venta.getObservaciones()
+            venta.getId(),
+            venta.getTotalVenta(),
+            venta.getNombreComprador(),
+            venta.getTelefonoComprador(),
+            venta.getEmailComprador(),
+            venta.getUsuario().getUsername(),
+            venta.getUsuario().getFirstName() + " " + venta.getUsuario().getLastName(),
+            venta.getFecha(),
+            venta.getObservaciones(),
+            detallesDto
         );
     }
 }

@@ -3,6 +3,7 @@ package com.inventory.model;
 import jakarta.persistence.*;
 import java.time.LocalDateTime;
 import java.math.BigDecimal;
+import java.util.List;
 
 @Entity
 @Table(name = "venta")
@@ -12,15 +13,9 @@ public class Venta {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @ManyToOne
-    @JoinColumn(name = "product_id", nullable = false)
-    private Product product;
-
-    @Column(nullable = false)
-    private Integer cantidad;
-
-    @Column(nullable = false)
-    private BigDecimal precioUnitario;
+    // Cambia de Product a lista de VentaDetalle
+    @OneToMany(mappedBy = "venta", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
+    private List<VentaDetalle> detalles;
 
     @Column(nullable = false)
     private BigDecimal totalVenta;
@@ -48,18 +43,23 @@ public class Venta {
     public Venta() {
     }
 
-    public Venta(Product product, Integer cantidad, BigDecimal precioUnitario, String nombreComprador, 
+    public Venta(List<VentaDetalle> detalles, String nombreComprador, 
                  String telefonoComprador, String emailComprador, User usuario, String observaciones) {
-        this.product = product;
-        this.cantidad = cantidad;
-        this.precioUnitario = precioUnitario;
-        this.totalVenta = precioUnitario.multiply(new BigDecimal(cantidad));
+        this.detalles = detalles;
+        this.totalVenta = calcularTotalVenta();
         this.nombreComprador = nombreComprador;
         this.telefonoComprador = telefonoComprador;
         this.emailComprador = emailComprador;
         this.usuario = usuario;
         this.observaciones = observaciones;
         this.fecha = LocalDateTime.now();
+    }
+
+    private BigDecimal calcularTotalVenta() {
+        if (detalles == null) return BigDecimal.ZERO;
+        return detalles.stream()
+                .map(VentaDetalle::getSubtotal)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
     }
 
     // Getters y Setters
@@ -71,28 +71,13 @@ public class Venta {
         this.id = id;
     }
 
-    public Product getProduct() {
-        return product;
+    public List<VentaDetalle> getDetalles() {
+        return detalles;
     }
 
-    public void setProduct(Product product) {
-        this.product = product;
-    }
-
-    public Integer getCantidad() {
-        return cantidad;
-    }
-
-    public void setCantidad(Integer cantidad) {
-        this.cantidad = cantidad;
-    }
-
-    public BigDecimal getPrecioUnitario() {
-        return precioUnitario;
-    }
-
-    public void setPrecioUnitario(BigDecimal precioUnitario) {
-        this.precioUnitario = precioUnitario;
+    public void setDetalles(List<VentaDetalle> detalles) {
+        this.detalles = detalles;
+        this.totalVenta = calcularTotalVenta();
     }
 
     public BigDecimal getTotalVenta() {
@@ -155,9 +140,7 @@ public class Venta {
     public String toString() {
         return "Venta{" +
                 "id=" + id +
-                ", product=" + product +
-                ", cantidad=" + cantidad +
-                ", precioUnitario=" + precioUnitario +
+                ", detalles=" + detalles +
                 ", totalVenta=" + totalVenta +
                 ", nombreComprador='" + nombreComprador + '\'' +
                 ", telefonoComprador='" + telefonoComprador + '\'' +
