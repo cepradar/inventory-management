@@ -2,10 +2,14 @@ package com.inventory.service;
 
 import com.inventory.dto.VentaDto;
 import com.inventory.dto.VentaDetalleDto;
+import com.inventory.dto.VentaDetalleRegistroDto;
+import com.inventory.dto.VentaRegistroDto;
 import com.inventory.model.Product;
 import com.inventory.model.User;
 import com.inventory.model.Venta;
+import com.inventory.model.VentaDetalle;
 import com.inventory.repository.VentaRepository;
+import com.inventory.repository.VentaDetalleRepository;
 import com.inventory.repository.ProductRepository;
 import com.inventory.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -35,45 +39,77 @@ public class VentasService {
     @Autowired
     private AuditoriaService auditoriaService;
 
+    @Autowired
+    private VentaDetalleRepository ventaDetalleRepository;
+
     /**
      * Registra una nueva venta y crea automáticamente un movimiento SALIDA
      */
-    public VentaDto registrarVenta(String productId, Integer cantidad, BigDecimal precioUnitario, 
-                                    String nombreComprador, String telefonoComprador, String emailComprador,
-                                    String usuarioUsername, String observaciones) {
-        Product producto = productRepository.findById(Objects.requireNonNull(productId, "productId"))
-                .orElseThrow(() -> new RuntimeException("Producto no encontrado"));
-        User usuario = userRepository.findById(Objects.requireNonNull(usuarioUsername, "usuarioUsername"))
-                .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
+        public VentaDto registrarVenta(VentaRegistroDto registroDto) {
+        User usuario = userRepository.findById(Objects.requireNonNull(registroDto.getUsuarioUsername(), "usuarioUsername"))
+            .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
 
-        // Validar que haya suficiente cantidad
-        if (producto.getQuantity() < cantidad) {
-            throw new RuntimeException("Cantidad insuficiente. Disponible: " + producto.getQuantity());
+        Venta venta = new Venta();
+        venta.setNombreComprador(registroDto.getNombreComprador());
+        venta.setTelefonoComprador(registroDto.getTelefonoComprador());
+        venta.setEmailComprador(registroDto.getEmailComprador());
+        venta.setUsuario(usuario);
+        venta.setFecha(LocalDateTime.now());
+        venta.setObservaciones(registroDto.getObservaciones());
+        venta.setTotalVenta(BigDecimal.ZERO);
+
+        if (registroDto.getDetalles() == null || registroDto.getDetalles().isEmpty()) {
+            throw new RuntimeException("La venta debe incluir al menos un detalle");
         }
 
-        // Crear la venta
-        Venta venta = new Venta();
+        VentaDetalleRegistroDto primerDetalle = registroDto.getDetalles().get(0);
+        Product primerProducto = productRepository.findById(primerDetalle.getProductId())
+            .orElseThrow(() -> new RuntimeException("Producto no encontrado: " + primerDetalle.getProductId()));
+        venta.setLegacyProduct(primerProducto);
+        venta.setLegacyCantidad(primerDetalle.getCantidad());
+        venta.setLegacyPrecioUnitario(primerDetalle.getPrecioUnitario());
+
+        // Guardar la venta para obtener el ID
         Venta ventaGuardada = ventaRepository.save(venta);
 
-        // Reducir la cantidad del producto
-        producto.setQuantity(producto.getQuantity() - cantidad);
-        productRepository.save(producto);
+        BigDecimal totalVenta = BigDecimal.ZERO;
+        List<VentaDetalle> detalles = new java.util.ArrayList<>();
 
-        // Crear evento de auditoría de VENTA (categoria VENTA)
-        BigDecimal precioBase = precioUnitario != null ? precioUnitario : BigDecimal.valueOf(producto.getPrice());
-        Integer cantidadInicial = producto.getQuantity() + cantidad;
-        Integer cantidadFinal = producto.getQuantity();
-        auditoriaService.registrarMovimiento(
-                productId,
+        for (VentaDetalleRegistroDto detalleDto : registroDto.getDetalles()) {
+            Product producto = productRepository.findById(detalleDto.getProductId())
+                .orElseThrow(() -> new RuntimeException("Producto no encontrado: " + detalleDto.getProductId()));
+            if (producto.getQuantity() < detalleDto.getCantidad()) {
+            throw new RuntimeException("Cantidad insuficiente para producto " + producto.getName() + ". Disponible: " + producto.getQuantity());
+            }
+            // Crear detalle
+            VentaDetalle detalle = new VentaDetalle(ventaGuardada, producto, detalleDto.getCantidad(), detalleDto.getPrecioUnitario());
+            detalles.add(detalle);
+            totalVenta = totalVenta.add(detalle.getSubtotal());
+
+            // Actualizar inventario
+            producto.setQuantity(producto.getQuantity() - detalleDto.getCantidad());
+            productRepository.save(producto);
+
+            // Registrar auditoría
+            Integer cantidadInicial = producto.getQuantity() + detalleDto.getCantidad();
+            Integer cantidadFinal = producto.getQuantity();
+            auditoriaService.registrarMovimiento(
+                producto.getId(),
                 cantidadInicial,
                 cantidadFinal,
-                precioBase,
-                precioBase,
+                detalleDto.getPrecioUnitario(),
+                detalleDto.getPrecioUnitario(),
                 "VC",
-                "Venta a cliente: " + nombreComprador,
-                usuarioUsername,
+                "Venta a cliente: " + registroDto.getNombreComprador(),
+                registroDto.getUsuarioUsername(),
                 "VENTA-" + ventaGuardada.getId()
-        );
+            );
+        }
+
+        // Asociar los detalles y actualizar el total
+        ventaGuardada.setDetalles(detalles);
+        ventaGuardada.setTotalVenta(totalVenta);
+        ventaRepository.save(ventaGuardada);
 
         return convertirADto(ventaGuardada);
     }
@@ -93,10 +129,16 @@ public class VentasService {
      * Obtiene ventas de un producto específico
      */
     public List<VentaDto> obtenerVentasProducto(String productId) {
-                Product producto = productRepository.findById(Objects.requireNonNull(productId, "productId"))
+            Product producto = productRepository.findById(Objects.requireNonNull(productId, "productId"))
                 .orElseThrow(() -> new RuntimeException("Producto no encontrado"));
-        List<Venta> ventas = ventaRepository.findByProduct(producto);
-        return ventas.stream()
+            // Buscar los detalles de venta que contienen el producto
+            List<VentaDetalle> detalles = ventaDetalleRepository.findByProduct(producto);
+            // Obtener las ventas únicas asociadas a esos detalles
+            List<Venta> ventas = detalles.stream()
+                .map(VentaDetalle::getVenta)
+                .distinct()
+                .collect(Collectors.toList());
+            return ventas.stream()
                 .map(this::convertirADto)
                 .collect(Collectors.toList());
     }

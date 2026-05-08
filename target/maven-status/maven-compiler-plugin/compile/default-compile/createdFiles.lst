@@ -1,3 +1,4 @@
+com\inventory\controller\FacturaController.class
 com\inventory\model\Rol.class
 com\inventory\model\ClienteElectrodomestico.class
 com\inventory\model\Permisos.class
@@ -10,6 +11,7 @@ com\inventory\config\CategoryProductInitializer.class
 com\inventory\dto\ErrorResponse.class
 com\inventory\dto\ProductDto.class
 com\inventory\repository\DocumentoTipoRepository.class
+com\inventory\repository\VentaDetalleRepository.class
 com\inventory\dto\EventoProductoDto.class
 com\inventory\controller\ClienteController.class
 com\inventory\model\DocumentoTipo.class
@@ -28,6 +30,7 @@ com\inventory\repository\CategoriaTipoEventoRepository.class
 com\inventory\model\Company.class
 com\inventory\service\ClienteElectrodomesticoService.class
 com\inventory\repository\OrdenServicioProductoRepository.class
+com\inventory\dto\VentaDetalleDto.class
 com\inventory\config\CategoriaElectrodomesticoInitializer.class
 com\inventory\dto\UpdatePswUserDto.class
 com\inventory\model\TipoEvento.class
@@ -41,6 +44,7 @@ com\inventory\controller\OrdenDeServicioController.class
 com\inventory\util\JwtUtil.class
 com\inventory\service\MarcaElectrodomesticoService.class
 com\inventory\config\DocumentoTipoInitializer.class
+com\inventory\dto\VentaRegistroDto.class
 com\inventory\exception\UserNotFoundException.class
 com\inventory\model\Product.class
 com\inventory\repository\PermisosUsuarioRepository.class
@@ -48,6 +52,7 @@ com\inventory\model\CategoryClient.class
 com\inventory\dto\ClienteDto.class
 com\inventory\controller\CategoryController.class
 com\inventory\service\ClienteService.class
+com\inventory\dto\VentaDetalleRegistroDto.class
 com\inventory\repository\PermisosRepository.class
 com\inventory\service\UsuarioService.class
 com\inventory\dto\AuditoriaDto.class
@@ -59,6 +64,7 @@ com\inventory\controller\CompanyController.class
 com\inventory\repository\TipoEventoRepository.class
 com\inventory\controller\CategoryClientController.class
 com\inventory\model\CategoriaTipoEvento.class
+com\inventory\service\FacturaService.class
 com\inventory\controller\ProductController.class
 com\inventory\dto\CompanyDto.class
 com\inventory\config\PermisosInitializer.class
@@ -88,6 +94,7 @@ com\inventory\controller\PermisosController.class
 com\inventory\model\CategoriaElectrodomestico.class
 com\inventory\controller\VentasController.class
 com\inventory\model\User.class
+com\inventory\model\VentaDetalle.class
 com\inventory\dto\UserDto.class
 com\inventory\repository\EventoProductoRepository.class
 com\inventory\controller\RolesController.class

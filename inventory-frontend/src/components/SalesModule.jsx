@@ -356,22 +356,20 @@ const SalesModule = () => {
         }
       }
 
-      let totalVenta = 0;
-      for (const item of formulario.items) {
-        const response = await api.post("/api/ventas/registrar", null, {
-          params: {
-            productId: item.productId,
-            cantidad: item.cantidad,
-            precioUnitario: item.precioUnitario,
-            nombreComprador: formulario.nombreComprador,
-            telefonoComprador: formulario.telefonoComprador,
-            emailComprador: formulario.emailComprador,
-            usuarioUsername: localStorage.getItem("username") || "admin",
-            observaciones: formulario.observaciones,
-          },
-        });
-        totalVenta += parseFloat(response.data?.totalVenta || 0);
-      }
+      const payload = {
+        nombreComprador: formulario.nombreComprador,
+        telefonoComprador: formulario.telefonoComprador,
+        emailComprador: formulario.emailComprador,
+        usuarioUsername: localStorage.getItem("username") || "admin",
+        observaciones: formulario.observaciones,
+        detalles: formulario.items.map((item) => ({
+          productId: item.productId,
+          cantidad: item.cantidad,
+          precioUnitario: item.precioUnitario,
+        })),
+      };
+      const response = await api.post("/api/ventas/registrar", payload);
+      const totalVenta = parseFloat(response.data?.totalVenta || 0);
 
       setSuccessMessage(
         `¡Venta registrada exitosamente! Total: $${totalVenta.toFixed(2)}`

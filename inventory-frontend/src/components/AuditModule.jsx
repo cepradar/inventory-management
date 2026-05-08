@@ -23,6 +23,8 @@ const AuditModule = () => {
       let response;
       if (categoriaActiva === "TODOS") {
         response = await axios.get("/api/auditoria/movimientos");
+      } else if (categoriaActiva === "ORDEN") {
+        response = await axios.get("/api/auditoria/ordenes");
       } else {
         response = await axios.get(`/api/auditoria/categoria/${categoriaActiva}`);
       }

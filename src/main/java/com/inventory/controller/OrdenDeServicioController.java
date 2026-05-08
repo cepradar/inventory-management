@@ -93,9 +93,9 @@ public class OrdenDeServicioController {
 
     @PutMapping("/{id}/estado/{estado}")
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<?> cambiarEstado(@PathVariable String id, @PathVariable String estado) {
+    public ResponseEntity<?> cambiarEstado(@PathVariable String id, @PathVariable String estado, Authentication auth) {
         try {
-            OrdenDeServicioDto updated = service.cambiarEstado(id, estado);
+            OrdenDeServicioDto updated = service.cambiarEstado(id, estado, auth.getName());
             return ResponseEntity.ok(updated);
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Error: " + e.getMessage());

@@ -7,11 +7,13 @@ import com.inventory.model.ClienteElectrodomestico;
 import com.inventory.model.Product;
 import com.inventory.model.OrdenDeServicio;
 import com.inventory.model.OrdenServicioProducto;
+import com.inventory.model.TipoEvento;
 import com.inventory.model.User;
 import com.inventory.repository.ClienteElectrodomesticoRepository;
 import com.inventory.repository.ClienteRepository;
 import com.inventory.repository.ProductRepository;
 import com.inventory.repository.OrdenDeServicioRepository;
+import com.inventory.repository.TipoEventoRepository;
 import com.inventory.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -29,6 +31,8 @@ import java.util.stream.Collectors;
 @Transactional
 public class OrdenDeServicioService {
 
+    private static final Long CATEGORIA_ORDEN_SERVICIO_ID = 2L;
+
     @Autowired
     private OrdenDeServicioRepository servicioRepository;
 
@@ -43,6 +47,12 @@ public class OrdenDeServicioService {
 
     @Autowired
     private ProductRepository productRepository;
+
+    @Autowired
+    private TipoEventoRepository tipoEventoRepository;
+
+    @Autowired
+    private AuditoriaService auditoriaService;
 
     public OrdenDeServicioDto registrarServicio(OrdenDeServicioDto dto, String usernameLogeado) {
         if (dto.getClienteId() == null || dto.getClienteTipoDocumentoId() == null) {
@@ -84,6 +94,8 @@ public class OrdenDeServicioService {
         servicio.setCostoRepuestos(dto.getCostoRepuestos() != null ? dto.getCostoRepuestos() : BigDecimal.ZERO);
         servicio.setTotalCosto(servicio.getCostoServicio().add(servicio.getCostoRepuestos()));
         servicio.setGarantiaServicio(dto.getGarantiaServicio() != null ? dto.getGarantiaServicio() : 30);
+        TipoEvento eventoCreacion = resolverTipoEventoEstado("RECIBIDO");
+        servicio.setEstado(eventoCreacion.getId());
         servicio.setUsuario(usuario);
         servicio.setObservaciones(dto.getObservaciones());
 
@@ -94,36 +106,18 @@ public class OrdenDeServicioService {
             servicio.setTecnicoAsignado(tecnico);
         }
 
-        // Procesar productos
-        if (dto.getProductos() == null || dto.getProductos().isEmpty()) {
-            throw new RuntimeException("Debe agregar al menos un producto");
-        }
-
-        boolean tieneServicio = false;
-        int regProd = 1;
-        for (OrdenServicioProductoDto productoDto : dto.getProductos()) {
-            Product producto = productRepository.findById(Objects.requireNonNull(productoDto.getProductId(), "productId"))
-                    .orElseThrow(() -> new RuntimeException("Producto no encontrado: " + productoDto.getProductId()));
-
-            if (producto.getCategory() != null && "S".equalsIgnoreCase(producto.getCategory().getId())) {
-                tieneServicio = true;
-            }
-
-            OrdenServicioProducto srp = new OrdenServicioProducto();
-            srp.setProducto(producto);
-            srp.setCantidad(productoDto.getCantidad() != null ? productoDto.getCantidad() : 1);
-            srp.setPrecioUnitario(productoDto.getPrecioUnitario() != null ? productoDto.getPrecioUnitario() : BigDecimal.valueOf(producto.getPrice()));
-            srp.setSubtotal(srp.getPrecioUnitario().multiply(new BigDecimal(srp.getCantidad())));
-            srp.setRegProd(regProd++);
-
-            servicio.agregarProducto(srp);
-        }
-
-        if (!tieneServicio) {
-            throw new RuntimeException("Debe agregar al menos un producto de tipo SERVICIO (S)");
-        }
+        // NOTA: Los productos ahora se manejan a través del módulo de Ventas
+        // Una orden de servicio puede tener múltiples ventas asociadas
+        // ver VentasService.registrarVentaDesdeOrdenServicio()
 
         OrdenDeServicio guardado = servicioRepository.save(servicio);
+        registrarAuditoriaEstado(
+            guardado,
+            null,
+            "RECIBIDO",
+            eventoCreacion.getId(),
+            usernameLogeado
+        );
         return convertirADto(guardado);
     }
 
@@ -170,7 +164,7 @@ public class OrdenDeServicioService {
             servicio.setObservaciones(dto.getObservaciones());
         }
         if (dto.getEstado() != null) {
-            servicio.setEstado(dto.getEstado());
+            servicio.setEstado(resolverTipoEventoEstado(dto.getEstado()).getId());
         }
         if (dto.getTecnicoAsignadoUsername() != null) {
             String tecnicoUsername = dto.getTecnicoAsignadoUsername().trim();
@@ -218,21 +212,35 @@ public class OrdenDeServicioService {
                 .collect(Collectors.toList());
     }
 
-    public OrdenDeServicioDto cambiarEstado(String id, String nuevoEstado) {
+    public OrdenDeServicioDto cambiarEstado(String id, String nuevoEstado, String usernameLogeado) {
         OrdenDeServicio servicio = servicioRepository.findById(Objects.requireNonNull(id, "id"))
                 .orElseThrow(() -> new RuntimeException("Servicio de reparación no encontrado: " + id));
 
-        servicio.setEstado(nuevoEstado);
+        String estadoAnterior = estadoVisualDesdeCodigo(servicio.getEstado());
+        String estadoNormalizado = normalizarEstado(nuevoEstado);
+        TipoEvento tipoEvento = resolverTipoEventoEstado(estadoNormalizado);
 
-        if ("LISTO".equalsIgnoreCase(nuevoEstado) && servicio.getGarantiaServicio() != null) {
+        servicio.setEstado(tipoEvento.getId());
+
+        if (("LISTO".equalsIgnoreCase(estadoNormalizado) || "REPARADO".equalsIgnoreCase(estadoNormalizado))
+                && servicio.getGarantiaServicio() != null) {
             servicio.setVencimientoGarantia(LocalDate.now().plusDays(servicio.getGarantiaServicio()));
         }
 
-        if ("ENTREGADO".equalsIgnoreCase(nuevoEstado)) {
+        if ("ENTREGADO".equalsIgnoreCase(estadoNormalizado)) {
             servicio.setFechaSalida(LocalDateTime.now());
         }
 
         OrdenDeServicio actualizado = servicioRepository.save(servicio);
+
+        registrarAuditoriaEstado(
+            actualizado,
+            estadoAnterior,
+            estadoNormalizado,
+            tipoEvento.getId(),
+            usernameLogeado
+        );
+
         return convertirADto(actualizado);
     }
 
@@ -273,7 +281,7 @@ public class OrdenDeServicioService {
         dto.setCostoServicio(servicio.getCostoServicio());
         dto.setCostoRepuestos(servicio.getCostoRepuestos());
         dto.setTotalCosto(servicio.getTotalCosto());
-        dto.setEstado(servicio.getEstado());
+        dto.setEstado(estadoVisualDesdeCodigo(servicio.getEstado()));
         dto.setFechaIngreso(servicio.getFechaIngreso());
         dto.setFechaSalida(servicio.getFechaSalida());
         dto.setGarantiaServicio(servicio.getGarantiaServicio());
@@ -284,32 +292,8 @@ public class OrdenDeServicioService {
         dto.setTecnicoAsignadoNombre(servicio.getTecnicoAsignado() != null ? servicio.getTecnicoAsignado().getFirstName() + " " + servicio.getTecnicoAsignado().getLastName() : null);
         dto.setObservaciones(servicio.getObservaciones());
         
-        // Convertir productos
-        List<OrdenServicioProductoDto> productosDto = servicio.getProductos().stream()
-                .map(srp -> {
-                    String claveCompuesta = generarClaveCompuesta(
-                        servicio.getId(),
-                        servicio.getFechaIngreso(),
-                        servicio.getCliente().getId(),
-                        servicio.getCliente().getTipoDocumentoId(),
-                        srp.getRegProd()
-                    );
-                    Product producto = srp.getProducto();
-                    String productId = producto != null ? producto.getId() : null;
-                    String productName = producto != null ? producto.getName() : "[Producto eliminado]";
-                    return new OrdenServicioProductoDto(
-                        servicio.getId(),
-                        productId,
-                        productName,
-                        srp.getCantidad(),
-                        srp.getRegProd(),
-                        srp.getPrecioUnitario(),
-                        srp.getSubtotal(),
-                        claveCompuesta
-                    );
-                })
-                .collect(Collectors.toList());
-        dto.setProductos(productosDto);
+        // NOTA: Los productos se manejan ahora en el módulo de Ventas
+        // Para obtener ventas asociadas a esta orden, usar VentasService.obtenerVentasPorOrdenServicio()
         
         return dto;
     }
@@ -337,5 +321,97 @@ public class OrdenDeServicioService {
         String hora = fechaOrden.format(timeFormatter);
         
         return String.format("%s-%s-%s-%s-%s-%03d", ordenId, fecha, hora, clienteId, clienteTipoDocumentoId, regProd);
+    }
+
+    private String normalizarEstado(String estado) {
+        String estadoNormalizado = Objects.requireNonNull(estado, "estado").trim().toUpperCase();
+        if ("REPARADD".equals(estadoNormalizado)) {
+            return "REPARADO";
+        }
+        return estadoNormalizado;
+    }
+
+    private String nombreEventoPorEstado(String estado) {
+        switch (estado) {
+            case "RECIBIDO":
+                return "ORDEN_SERVICIO_CREADA";
+            case "EN_PROCESO":
+                return "ORDEN_SERVICIO_EN_PROCESO";
+            case "EN_DIAGNOSTICO":
+                return "ORDEN_SERVICIO_DIAGNOSTICADA";
+            case "REPARADO":
+                return "ORDEN_SERVICIO_REPARADA";
+            case "LISTO":
+                return "ORDEN_SERVICIO_LISTA";
+            case "ENTREGADO":
+                return "ORDEN_SERVICIO_ENTREGADA";
+            case "CANCELADO":
+                return "ORDEN_SERVICIO_CANCELADA";
+            default:
+                throw new RuntimeException("Estado de orden no soportado para auditoria: " + estado);
+        }
+    }
+
+    private TipoEvento resolverTipoEventoEstado(String estadoEntrada) {
+        String estadoNormalizado = normalizarEstado(estadoEntrada);
+        String nombreEvento = nombreEventoPorEstado(estadoNormalizado);
+        return tipoEventoRepository.findByNombreAndCategoriaId(nombreEvento, CATEGORIA_ORDEN_SERVICIO_ID)
+                .orElseThrow(() -> new RuntimeException(
+                        "No existe tipo_evento para estado " + estadoNormalizado + " en categoria_id=2"));
+    }
+
+    private String estadoVisualDesdeCodigo(String codigoEstado) {
+        if (codigoEstado == null || codigoEstado.isBlank()) {
+            return "-";
+        }
+        TipoEvento tipoEvento = tipoEventoRepository.findById(codigoEstado).orElse(null);
+        if (tipoEvento == null || tipoEvento.getNombre() == null) {
+            return codigoEstado;
+        }
+
+        switch (tipoEvento.getNombre()) {
+            case "ORDEN_SERVICIO_CREADA":
+                return "RECIBIDO";
+            case "ORDEN_SERVICIO_EN_PROCESO":
+                return "EN_PROCESO";
+            case "ORDEN_SERVICIO_DIAGNOSTICADA":
+                return "EN_DIAGNOSTICO";
+            case "ORDEN_SERVICIO_REPARADA":
+                return "REPARADO";
+            case "ORDEN_SERVICIO_LISTA":
+                return "LISTO";
+            case "ORDEN_SERVICIO_ENTREGADA":
+                return "ENTREGADO";
+            case "ORDEN_SERVICIO_CANCELADA":
+                return "CANCELADO";
+            default:
+                return tipoEvento.getNombre();
+        }
+    }
+
+    private void registrarAuditoriaEstado(OrdenDeServicio orden, String estadoAnterior, String estadoNuevo,
+                                          String tipoEventoId, String usernameLogeado) {
+        String activoId = orden.getClienteElectrodomestico() != null
+                ? "CE-" + orden.getClienteElectrodomestico().getId()
+                : "OS-" + orden.getId();
+
+        String descripcion = estadoAnterior == null
+                ? "Orden creada en estado " + estadoNuevo
+                : "Cambio de estado de orden: " + estadoAnterior + " -> " + estadoNuevo;
+
+        String referencia = "ORDEN-" + orden.getId();
+        BigDecimal costo = orden.getTotalCosto() != null ? orden.getTotalCosto() : BigDecimal.ZERO;
+
+        auditoriaService.registrarMovimiento(
+                activoId,
+                0,
+                0,
+                costo,
+                costo,
+                tipoEventoId,
+                descripcion,
+                usernameLogeado,
+                referencia
+        );
     }
 }

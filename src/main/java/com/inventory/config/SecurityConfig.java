@@ -94,6 +94,13 @@ public class SecurityConfig {
     .anyRequest().authenticated()
             )
             .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+            .exceptionHandling(ex -> ex
+                .authenticationEntryPoint((request, response, authException) -> {
+                    response.setStatus(jakarta.servlet.http.HttpServletResponse.SC_UNAUTHORIZED);
+                    response.setContentType("application/json");
+                    response.getWriter().write("{\"error\":\"No autenticado\",\"status\":401}");
+                })
+            )
             .authenticationProvider(authenticationProvider(usuarioService)) // Pasamos el bean UsuarioService
             .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);
 

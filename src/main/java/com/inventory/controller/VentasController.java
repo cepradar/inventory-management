@@ -1,6 +1,7 @@
 package com.inventory.controller;
 
 import com.inventory.dto.VentaDto;
+import com.inventory.dto.VentaRegistroDto;
 import com.inventory.service.VentasService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.format.annotation.DateTimeFormat;
@@ -26,18 +27,8 @@ public class VentasController {
      * Registra una nueva venta
      */
     @PostMapping("/registrar")
-    public ResponseEntity<VentaDto> registrarVenta(
-            @RequestParam String productId,
-            @RequestParam Integer cantidad,
-            @RequestParam BigDecimal precioUnitario,
-            @RequestParam String nombreComprador,
-            @RequestParam(required = false) String telefonoComprador,
-            @RequestParam(required = false) String emailComprador,
-            @RequestParam String usuarioUsername,
-            @RequestParam(required = false) String observaciones) {
-        VentaDto venta = ventasService.registrarVenta(
-                productId, cantidad, precioUnitario, nombreComprador,
-                telefonoComprador, emailComprador, usuarioUsername, observaciones);
+    public ResponseEntity<VentaDto> registrarVenta(@RequestBody VentaRegistroDto registroDto) {
+        VentaDto venta = ventasService.registrarVenta(registroDto);
         return ResponseEntity.ok(venta);
     }
 

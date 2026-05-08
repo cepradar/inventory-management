@@ -1,7 +1,6 @@
 package com.inventory.repository;
 
 import com.inventory.model.Venta;
-import com.inventory.model.Product;
 import com.inventory.model.User;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
@@ -14,11 +13,11 @@ import java.util.List;
 @Repository
 public interface VentaRepository extends JpaRepository<Venta, Long> {
     
-    List<Venta> findByProduct(Product product);
+
     
     List<Venta> findByUsuario(User usuario);
     
-    @Query("SELECT v FROM Venta v WHERE v.product.id = :productId ORDER BY v.fecha DESC")
+    @Query("SELECT DISTINCT v FROM Venta v JOIN v.detalles vd WHERE vd.product.id = :productId ORDER BY v.fecha DESC")
     List<Venta> findVentasByProductId(@Param("productId") String productId);
     
     @Query("SELECT v FROM Venta v WHERE v.usuario.username = :username ORDER BY v.fecha DESC")

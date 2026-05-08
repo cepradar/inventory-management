@@ -92,10 +92,18 @@ public class TipoEventoInitializer {
                 eventoRepository.save(nuevoEvento);
                 logger.debug("✅ Tipo de evento creado: {} - {} [{}]", codigo, nombre, categoria.getNombre());
             } else {
-                if (evento.getCategoria() == null) {
+                boolean cambios = false;
+                if (evento.getCategoria() == null || !evento.getCategoria().getId().equals(categoria.getId())) {
                     evento.setCategoria(categoria);
+                    cambios = true;
+                }
+                if (!nombre.equals(evento.getNombre())) {
+                    evento.setNombre(nombre);
+                    cambios = true;
+                }
+                if (cambios) {
                     eventoRepository.save(evento);
-                    logger.debug("🛠️ Tipo de evento actualizado: {} - {} [{}]", codigo, nombre, categoria.getNombre());
+                    logger.debug("🛠️ Tipo de evento sincronizado: {} - {} [{}]", codigo, nombre, categoria.getNombre());
                 } else {
                     logger.debug("ℹ️ Tipo de evento ya existe: {} - {} [{}]", codigo, nombre, categoria.getNombre());
                 }

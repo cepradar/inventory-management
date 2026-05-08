@@ -26,8 +26,9 @@ public class OrdenDeServicio {
     @JoinColumn(name = "cliente_electrodomestico_id", nullable = false)
     private ClienteElectrodomestico clienteElectrodomestico;
     
-    @OneToMany(mappedBy = "servicioReparacion", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
-    private List<OrdenServicioProducto> productos = new ArrayList<>();
+    // REFACTOR: Productos ahora se manejan en el módulo de Ventas
+    // Una orden de servicio puede tener múltiples ventas asociadas
+    // No guardar relación directa con productos aquí
     
     @Column(nullable = false)
     private String tipoServicio; // REPARACION, MANTENIMIENTO, DIAGNOSTICO
@@ -54,7 +55,7 @@ public class OrdenDeServicio {
     private BigDecimal totalCosto = BigDecimal.ZERO;
     
     @Column(nullable = false)
-    private String estado = "RECIBIDO"; // RECIBIDO, EN_DIAGNOSTICO, EN_REPARACION, LISTO, ENTREGADO, CANCELADO
+    private String estado = "SOC"; // Código de tipo_evento (categoria ORDEN)
     
     @Column(name = "fecha_ingreso", nullable = false, updatable = false)
     private LocalDateTime fechaIngreso;
@@ -82,7 +83,7 @@ public class OrdenDeServicio {
     // Constructores
     public OrdenDeServicio() {
         this.fechaIngreso = LocalDateTime.now();
-        this.estado = "RECIBIDO";
+        this.estado = "SOC";
         this.garantiaServicio = 30;
         this.costoServicio = BigDecimal.ZERO;
         this.costoRepuestos = BigDecimal.ZERO;
@@ -257,24 +258,6 @@ public class OrdenDeServicio {
     
     public void setObservaciones(String observaciones) {
         this.observaciones = observaciones;
-    }
-
-    public List<OrdenServicioProducto> getProductos() {
-        return productos;
-    }
-
-    public void setProductos(List<OrdenServicioProducto> productos) {
-        this.productos = productos;
-    }
-
-    public void agregarProducto(OrdenServicioProducto producto) {
-        productos.add(producto);
-        producto.setServicioReparacion(this);
-    }
-
-    public void removerProducto(OrdenServicioProducto producto) {
-        productos.remove(producto);
-        producto.setServicioReparacion(null);
     }
     
     @Override

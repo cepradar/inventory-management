@@ -32,4 +32,18 @@ public interface AuditoriaRepository extends JpaRepository<Auditoria, Long> {
     // Buscar por categoría de evento
     @Query("SELECT a FROM Auditoria a WHERE a.tipoEvento.categoria.nombre = ?1 ORDER BY a.fecha DESC")
     List<Auditoria> findByTipoEventoCategoria(String categoria);
+
+    // Buscar por categoria de evento usando id para evitar dependencia del nombre.
+    @Query("SELECT a FROM Auditoria a WHERE a.tipoEvento.categoria.id = ?1 ORDER BY a.fecha DESC")
+    List<Auditoria> findByTipoEventoCategoriaId(Long categoriaId);
+
+    // Todo lo relacionado con ordenes: categoria ORDEN, codigos SO* o referencia ORDEN-*
+    @Query("""
+        SELECT a FROM Auditoria a
+        WHERE a.tipoEvento.categoria.id = 2
+           OR a.tipoEvento.id LIKE 'SO%'
+           OR UPPER(COALESCE(a.referencia, '')) LIKE 'ORDEN-%'
+        ORDER BY a.fecha DESC
+        """)
+    List<Auditoria> findMovimientosOrdenes();
 }

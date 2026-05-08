@@ -33,7 +33,9 @@ public class OrdenDeServicioDto {
     private String tecnicoAsignadoUsername;
     private String tecnicoAsignadoNombre;
     private String observaciones;
-    private List<OrdenServicioProductoDto> productos;
+
+    // REFACTOR: productos ahora se manejan en el módulo de Ventas
+    // Usar VentasService.obtenerVentasPorOrdenServicio() para obtener ventas asociadas
 
     // Getters y Setters
     public String getId() { return id; }
@@ -116,7 +118,4 @@ public class OrdenDeServicioDto {
 
     public String getObservaciones() { return observaciones; }
     public void setObservaciones(String observaciones) { this.observaciones = observaciones; }
-
-    public List<OrdenServicioProductoDto> getProductos() { return productos; }
-    public void setProductos(List<OrdenServicioProductoDto> productos) { this.productos = productos; }
 }

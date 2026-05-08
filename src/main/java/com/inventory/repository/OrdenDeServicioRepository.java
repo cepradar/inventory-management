@@ -35,7 +35,7 @@ public interface OrdenDeServicioRepository extends JpaRepository<OrdenDeServicio
     @Query("SELECT s FROM OrdenDeServicio s WHERE s.fechaIngreso >= :fechaInicio AND s.fechaIngreso <= :fechaFin ORDER BY s.fechaIngreso DESC")
     List<OrdenDeServicio> findByFechaIngresoRango(java.time.LocalDateTime fechaInicio, java.time.LocalDateTime fechaFin);
     
-    @Query("SELECT s FROM OrdenDeServicio s WHERE s.estado != 'ENTREGADO' AND s.estado != 'CANCELADO' ORDER BY s.fechaIngreso ASC")
+    @Query("SELECT s FROM OrdenDeServicio s WHERE s.estado != 'SOENT' AND s.estado != 'SOCAN' ORDER BY s.fechaIngreso ASC")
     List<OrdenDeServicio> findServiciosPendientes();
     
     @Query("SELECT s FROM OrdenDeServicio s WHERE s.vencimientoGarantia IS NOT NULL AND s.vencimientoGarantia >= :hoy AND s.vencimientoGarantia <= :proximosDias ORDER BY s.vencimientoGarantia ASC")

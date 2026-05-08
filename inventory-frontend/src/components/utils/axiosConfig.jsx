@@ -46,15 +46,15 @@ api.interceptors.response.use(
             console.error('[Axios] Headers:', error.response.headers);
         }
         
-        if (error.response && (error.response.status === 401 || error.response.status === 403)) {
-            console.error('[Axios] Token inválido o permiso denegado');
-            const errorMsg = error.response.data?.message || 'Token inválido o permiso denegado';
-            alert(`❌ ERROR DE AUTENTICACIÓN:\n\n${errorMsg}\n\nStatus: ${error.response.status}\n\nSerás redirigido al login.`);
+        if (error.response && error.response.status === 401) {
+            console.error('[Axios] Token expirado o inválido');
             localStorage.removeItem('authToken');
             localStorage.removeItem('userRole');
             setTimeout(() => {
                 window.location.href = '/login';
             }, 1000);
+        } else if (error.response && error.response.status === 403) {
+            console.error('[Axios] Permiso denegado (403) - sin permisos suficientes');
         } else if (error.response) {
             console.error(`[Axios] Error ${error.response.status}:`, error.response.data);
         }

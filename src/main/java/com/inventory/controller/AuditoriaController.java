@@ -91,6 +91,16 @@ public class AuditoriaController {
     }
 
     /**
+     * Obtiene todo lo relacionado con órdenes de servicio.
+     */
+    @GetMapping("/ordenes")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<List<AuditoriaDto>> obtenerMovimientosOrdenes() {
+        List<AuditoriaDto> movimientos = auditoriaService.obtenerMovimientosOrdenes();
+        return ResponseEntity.ok(movimientos);
+    }
+
+    /**
      * Registra un nuevo movimiento de producto (uso interno)
      * Permite a usuarios autenticados registrar sus propias acciones
      */

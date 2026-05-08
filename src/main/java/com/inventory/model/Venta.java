@@ -20,6 +20,17 @@ public class Venta {
     @Column(nullable = false)
     private BigDecimal totalVenta;
 
+    // Campos legacy para compatibilidad con esquemas antiguos de la tabla venta.
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "product_id")
+    private Product legacyProduct;
+
+    @Column(name = "cantidad", nullable = false)
+    private Integer legacyCantidad = 0;
+
+    @Column(name = "precio_unitario", nullable = false)
+    private BigDecimal legacyPrecioUnitario = BigDecimal.ZERO;
+
     @Column(nullable = false)
     private String nombreComprador;
 
@@ -86,6 +97,18 @@ public class Venta {
 
     public void setTotalVenta(BigDecimal totalVenta) {
         this.totalVenta = totalVenta;
+    }
+
+    public void setLegacyProduct(Product legacyProduct) {
+        this.legacyProduct = legacyProduct;
+    }
+
+    public void setLegacyCantidad(Integer legacyCantidad) {
+        this.legacyCantidad = legacyCantidad;
+    }
+
+    public void setLegacyPrecioUnitario(BigDecimal legacyPrecioUnitario) {
+        this.legacyPrecioUnitario = legacyPrecioUnitario;
     }
 
     public String getNombreComprador() {

@@ -64,7 +64,14 @@ public class AuditoriaService {
         // Buscar producto para capturar nombre (sin FK)
         String safeProductId = Objects.requireNonNull(productId, "productId");
         Product producto = productRepository.findById(safeProductId).orElse(null);
-        String productName = producto != null ? producto.getName() : "[Producto eliminado]";
+        String productName;
+        if (producto != null) {
+            productName = producto.getName();
+        } else if (safeProductId.startsWith("CE-") || safeProductId.startsWith("OS-")) {
+            productName = "Orden de servicio";
+        } else {
+            productName = "[Producto eliminado]";
+        }
         
         User usuario = userRepository.findByUsernameIgnoreCase(Objects.requireNonNull(usuarioUsername, "usuarioUsername"))
                 .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
@@ -119,6 +126,18 @@ public class AuditoriaService {
                 return "V"; // VENTA
             case "VC":
                 return "VC"; // VENTA_CREADA
+            case "SOC":
+            case "SOA":
+            case "SOE":
+            case "SOP":
+            case "SOD":
+            case "SOR":
+            case "SOT":
+            case "SOL":
+            case "SOENT":
+            case "SOCAN":
+            case "SOREC":
+                return tipoUpper; // EVENTOS DE ORDEN DE SERVICIO
             // Códigos legados (compatibilidad hacia atrás)
             case "INGRESO":
                 logger.info("ℹ️ Usando código legacy 'INGRESO', mapeando a 'ME'");
@@ -204,7 +223,23 @@ public class AuditoriaService {
      * Obtiene eventos por categoría (INVENTARIO, VENTA, SERVICIO, GARANTIA, SISTEMA)
      */
     public List<AuditoriaDto> obtenerMovimientosEnCategoria(String categoria) {
+        if (categoria == null || categoria.isBlank()) {
+            return List.of();
+        }
+
+        String categoriaNormalizada = categoria.toUpperCase();
+        if ("ORDEN".equals(categoriaNormalizada) || "ORDENES".equals(categoriaNormalizada)
+                || "SERVICIO".equals(categoriaNormalizada) || "SERVICIOS".equals(categoriaNormalizada)) {
+            return obtenerMovimientosOrdenes();
+        }
+
         return auditoriaRepository.findByTipoEventoCategoria(categoria.toUpperCase()).stream()
+                .map(AuditoriaDto::new)
+                .collect(Collectors.toList());
+    }
+
+    public List<AuditoriaDto> obtenerMovimientosOrdenes() {
+        return auditoriaRepository.findMovimientosOrdenes().stream()
                 .map(AuditoriaDto::new)
                 .collect(Collectors.toList());
     }
