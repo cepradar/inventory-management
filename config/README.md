@@ -14,8 +14,11 @@ Archivo principal de configuración de Spring Boot. Contiene:
 
 **Ubicación en producción:** `C:\SERVI-APP\inventory-management\config\application.properties`
 
+### `application-example.properties` ✅ SÍ VERSIONAR
+Plantilla segura con valores de ejemplo. Copiar a `application.properties` y completar con valores reales.
+
 ### `application.example.properties` ✅ SÍ VERSIONAR
-Plantilla con valores de ejemplo. Copiar a `application.properties` y completar con valores reales.
+Plantilla legacy mantenida por compatibilidad.
 
 ### `deploy.env.properties` ⚠️ NO VERSIONAR
 Configuración para el script de deploy (`scripts/deploy.ps1`). Contiene:
@@ -44,7 +47,7 @@ Configuración para el script de deploy (`scripts/deploy.ps1`). Contiene:
 
 3. **Configurar servicio NSSM:**
    ```powershell
-   nssm set servi-backend AppDirectory "C:\SERVI-APP\inventory-management"
+   nssm set servi-backend AppDirectory "C:\SERVI-APP\inventory-management\backend"
    ```
 
 4. **Desplegar aplicación:**
@@ -58,7 +61,7 @@ Si prefieres configurar manualmente:
 
 1. **Copiar plantilla:**
    ```powershell
-   Copy-Item config\application.example.properties config\application.properties
+   Copy-Item config\application-example.properties config\application.properties
    ```
 
 2. **Editar credenciales:**
@@ -73,6 +76,10 @@ Si prefieres configurar manualmente:
 Para verificar que el backend está leyendo correctamente la configuración:
 
 ```powershell
+# Ejecutar backend desde su nueva carpeta
+cd C:\SERVI-APP\inventory-management\backend
+.\mvnw.cmd spring-boot:run
+
 # Ver logs del servicio
 Get-Content C:\SERVI-APP\inventory-management\logs\application.log -Tail 50
 
@@ -84,6 +91,7 @@ psql -h localhost -U postgres -d SERVI -c "SELECT version();"
 
 Los siguientes archivos están ignorados en Git:
 - `config/*.properties` (excepto `*.example.properties`)
+- `config/application.properties`
 - `config/*.env`
 - `config/*.secrets`
 - `config/*.local`

@@ -5,7 +5,14 @@
       "label": "mvnw: compile",
       "type": "shell",
       "command": ".\\mvnw.cmd",
-      "args": ["-q", "-DskipTests", "compile"],
+      "args": [
+        "-q",
+        "-DskipTests",
+        "compile"
+      ],
+      "options": {
+        "cwd": "${workspaceFolder}/backend"
+      },
       "group": "build",
       "problemMatcher": []
     }

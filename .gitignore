@@ -1,7 +1,26 @@
 # Ignorar todo dentro de config/
 config/*
 
+# Configuracion externa sensible
+/config/application.properties
+
 # Pero sí versionar plantillas y documentación dentro de config/
 !config/*.example.properties
+!/config/application-example.properties
 !config/README.md
 !config/.gitkeep
+
+# Backend
+/backend/target/
+/target/
+
+# Frontend
+/frontend/node_modules/
+/frontend/dist/
+/inventory-frontend/
+
+# General
+.env
+logs/
+tmp/
+*.log

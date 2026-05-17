@@ -14,7 +14,8 @@ Write-Host ""
 
 $repoPath = "C:\SERVI-APP\inventory-management"
 $backendService = "servi-backend"
-$frontendPath = Join-Path $repoPath "inventory-frontend"
+$backendPath = Join-Path $repoPath "backend"
+$frontendPath = Join-Path $repoPath "frontend"
 $frontendDistPath = Join-Path $frontendPath "dist"
 $iisPath = "C:\inetpub\wwwroot\SERVI-FRONT\dist"
 
@@ -54,6 +55,7 @@ git pull origin main
 # -------------------------------------------------
 
 Write-Host "Construyendo backend..."
+Set-Location $backendPath
 .\mvnw.cmd -DskipTests package
 
 if ($LASTEXITCODE -ne 0) {
