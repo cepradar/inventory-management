@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import api from "./utils/axiosConfig";
 import DataTable from "./DataTable";
+import { usePermissions } from './utils/PermissionsContext';
 
 /**
  * COMPONENTE REFACTORIZADO: OrdenServicio
@@ -12,6 +13,8 @@ import DataTable from "./DataTable";
  * - Simplificado: solo maneja datos técnicos de la orden
  */
 export default function OrdenServicio() {
+  const { permissions } = usePermissions();
+  const can = (c) => permissions.includes(c);
   const [ordenes, setOrdenes] = useState([]);
   const [ordenesParaAsignar, setOrdenesParaAsignar] = useState([]);
   const [ordenesTecnico, setOrdenesTecnico] = useState([]);
@@ -117,8 +120,26 @@ export default function OrdenServicio() {
     }
   };
 
+  const handleDescargarOrdenPdf = async (ordenId) => {
+    if (!ordenId) return;
+    try {
+      const response = await api.get(`/api/servicios-reparacion/${ordenId}/pdf`, {
+        responseType: 'blob',
+      });
+      const url = window.URL.createObjectURL(new Blob([response.data], { type: 'application/pdf' }));
+      const link = document.createElement('a');
+      link.href = url;
+      link.setAttribute('download', `orden-servicio-${ordenId}.pdf`);
+      document.body.appendChild(link);
+      link.click();
+      link.parentNode.removeChild(link);
+      window.URL.revokeObjectURL(url);
+    } catch (err) {
+      setError('Error al generar el PDF de la orden de servicio');
+    }
+  };
+
   const handleEntregarOrden = async () => {
-    if (!selectedOrdenEntregarId) { setError("Selecciona una orden para entregar"); return; }
     setLoading(true);
     setError("");
     try {
@@ -202,14 +223,18 @@ export default function OrdenServicio() {
   };
 
   const handleRegistrarVentaOrden = async () => {
-    if (!ventaComprador.nombre.trim()) { setError("El nombre del comprador es requerido"); return; }
+    const ordenSeleccionada = ordenesTecnico.find((o) => o.id === selectedOrdenCierre);
+    if (!ordenSeleccionada?.clienteId || !ordenSeleccionada?.clienteTipoDocumentoId) {
+      setError("La orden seleccionada no tiene cliente asociado");
+      return;
+    }
     if (ventaItems.length === 0) { setError("Agrega al menos un producto a la venta"); return; }
     setLoading(true);
     setError("");
     try {
       await api.post("/api/ventas/registrar", {
-        nombreComprador: ventaComprador.nombre,
-        telefonoComprador: ventaComprador.telefono,
+        clienteId: ordenSeleccionada.clienteId,
+        clienteTipoDocumento: ordenSeleccionada.clienteTipoDocumentoId,
         observaciones: ventaObservaciones,
         ordenDeServicioId: selectedOrdenCierre || null,
         detalles: ventaItems.map((i) => ({
@@ -222,6 +247,7 @@ export default function OrdenServicio() {
       setVentaItems([]);
       setVentaObservaciones("");
       setVentaProductoBuscado("");
+      cargarVentasOrden(selectedOrdenCierre);
     } catch (err) {
       const msg = err.message || err.response?.data || "Error al registrar la venta";
       setError(msg);
@@ -601,31 +627,35 @@ export default function OrdenServicio() {
           >
             Listar
           </button>
-          <button
-            onClick={() => {
-              setActiveView("CREAR");
-              setError("");
-            }}
-            className={`px-6 py-2 rounded-lg font-medium transition ${activeView === "CREAR"
-                ? "bg-blue-600 text-white"
-                : "bg-white text-gray-700 border border-gray-300 hover:bg-gray-50"
-              }`}
-          >
-            Crear Orden
-          </button>
-          <button
-            onClick={() => {
-              setActiveView("ASIGNAR");
-              setError("");
-              cargarOrdenesParaAsignar(); // cargar solo órdenes SOC al abrir la vista
-            }}
-            className={`px-6 py-2 rounded-lg font-medium transition ${activeView === "ASIGNAR"
-                ? "bg-blue-600 text-white"
-                : "bg-white text-gray-700 border border-gray-300 hover:bg-gray-50"
-              }`}
-          >
-            Asignar Técnico
-          </button>
+          {can('orders.create') && (
+            <button
+              onClick={() => {
+                setActiveView("CREAR");
+                setError("");
+              }}
+              className={`px-6 py-2 rounded-lg font-medium transition ${activeView === "CREAR"
+                  ? "bg-blue-600 text-white"
+                  : "bg-white text-gray-700 border border-gray-300 hover:bg-gray-50"
+                }`}
+            >
+              Crear Orden
+            </button>
+          )}
+          {can('orders.assign_tech') && (
+            <button
+              onClick={() => {
+                setActiveView("ASIGNAR");
+                setError("");
+                cargarOrdenesParaAsignar(); // cargar solo órdenes SOC al abrir la vista
+              }}
+              className={`px-6 py-2 rounded-lg font-medium transition ${activeView === "ASIGNAR"
+                  ? "bg-blue-600 text-white"
+                  : "bg-white text-gray-700 border border-gray-300 hover:bg-gray-50"
+                }`}
+            >
+              Asignar Técnico
+            </button>
+          )}
           <button
             onClick={() => {
               setActiveView("Responder Orden");
@@ -884,11 +914,24 @@ export default function OrdenServicio() {
               Ventas Asociadas a la Orden
             </h3>
 
-            {loadingVentasOrden && (
-              <span className="text-sm text-gray-500">
-                Cargando ventas...
-              </span>
-            )}
+            <div className="flex items-center gap-3">
+              {loadingVentasOrden && (
+                <span className="text-sm text-gray-500">Cargando ventas...</span>
+              )}
+              {selectedOrdenCierre && can('orders.pdf') && (
+                <button
+                  type="button"
+                  onClick={() => handleDescargarOrdenPdf(selectedOrdenCierre)}
+                  className="flex items-center gap-1.5 px-3 py-1.5 bg-blue-600 text-white text-xs font-medium rounded-lg hover:bg-blue-700"
+                >
+                  <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+                      d="M12 10v6m0 0l-3-3m3 3l3-3M3 17V7a2 2 0 012-2h6l2 2h4a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2z" />
+                  </svg>
+                  PDF
+                </button>
+              )}
+            </div>
           </div>
 
           {!loadingVentasOrden && detallesVentasOrden.length === 0 && (
@@ -1081,42 +1124,25 @@ export default function OrdenServicio() {
               Registrar Venta
             </h3>
 
-            {/* Datos del cliente */}
-            <div className="grid grid-cols-2 gap-3">
-              <div>
-                <label className="block text-xs font-semibold text-gray-700 mb-1">
-                  Nombre Comprador <span className="text-red-500">*</span>
-                </label>
-                <input
-                  type="text"
-                  value={ventaComprador.nombre}
-                  onChange={(e) =>
-                    setVentaComprador((p) => ({
-                      ...p,
-                      nombre: e.target.value,
-                    }))
-                  }
-                  className="w-full h-9 px-3 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                />
-              </div>
-
-              <div>
-                <label className="block text-xs font-semibold text-gray-700 mb-1">
-                  Teléfono
-                </label>
-                <input
-                  type="text"
-                  value={ventaComprador.telefono}
-                  onChange={(e) =>
-                    setVentaComprador((p) => ({
-                      ...p,
-                      telefono: e.target.value,
-                    }))
-                  }
-                  className="w-full h-9 px-3 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                />
-              </div>
-            </div>
+            {/* Datos del cliente (solo lectura, derivados de la orden) */}
+            {(() => {
+              const ord = ordenesTecnico.find((o) => o.id === selectedOrdenCierre);
+              if (!ord) return null;
+              return (
+                <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 text-sm">
+                  <p className="text-xs font-semibold text-blue-700 mb-1">Cliente de la orden</p>
+                  <p className="font-medium text-gray-800">
+                    {ord.clienteNombre} {ord.clienteApellido}
+                  </p>
+                  {ord.clienteTelefono && (
+                    <p className="text-gray-600 text-xs">{ord.clienteTelefono}</p>
+                  )}
+                  <p className="text-gray-500 text-xs">
+                    Doc: {ord.clienteId} ({ord.clienteTipoDocumentoId})
+                  </p>
+                </div>
+              );
+            })()}
 
             {/* Agregar producto */}
             <div>
@@ -1289,6 +1315,20 @@ export default function OrdenServicio() {
             >
               {loading ? "Procesando..." : "Confirmar Entrega"}
             </button>
+
+            {selectedOrdenEntregarId && can('orders.pdf') && (
+              <button
+                type="button"
+                onClick={() => handleDescargarOrdenPdf(selectedOrdenEntregarId)}
+                className="mt-2 w-full py-2 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 flex items-center justify-center gap-2"
+              >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+                    d="M12 10v6m0 0l-3-3m3 3l3-3M3 17V7a2 2 0 012-2h6l2 2h4a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2z" />
+                </svg>
+                Descargar PDF de la Orden
+              </button>
+            )}
           </div>
         )}
 

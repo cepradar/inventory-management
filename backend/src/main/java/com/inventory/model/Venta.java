@@ -13,34 +13,21 @@ public class Venta {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    // Cambia de Product a lista de VentaDetalle
     @OneToMany(mappedBy = "venta", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     private List<VentaDetalle> detalles;
 
-    @Column(nullable = false)
-    private BigDecimal totalVenta;
-
-    // Campos legacy para compatibilidad con esquemas antiguos de la tabla venta.
+    /**
+     * FK compuesta hacia la tabla clientes (id + tipo_documento).
+     * Reemplaza los campos legacy nombreComprador / telefonoComprador / emailComprador.
+     */
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "product_id")
-    private Product legacyProduct;
+    @JoinColumns({
+        @JoinColumn(name = "cliente_id",             referencedColumnName = "id"),
+        @JoinColumn(name = "cliente_tipo_documento", referencedColumnName = "tipo_documento")
+    })
+    private Cliente cliente;
 
-    @Column(name = "cantidad", nullable = false)
-    private Integer legacyCantidad = 0;
-
-    @Column(name = "precio_unitario", nullable = false)
-    private BigDecimal legacyPrecioUnitario = BigDecimal.ZERO;
-
-    @Column(nullable = false)
-    private String nombreComprador;
-
-    @Column
-    private String telefonoComprador;
-
-    @Column
-    private String emailComprador;
-
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "usuario_username", nullable = false)
     private User usuario;
 
@@ -50,28 +37,20 @@ public class Venta {
     @Column
     private String observaciones;
 
-    /**
-     * Referencia opcional a la orden de servicio que originó esta venta.
-     * Se almacena directamente en la tabla `venta` para un acceso eficiente.
-     */
-    @Column(name = "orden_de_servicio_id")
+    @Column(name = "orden_de_servicio_id", nullable = true)
     private String ordenDeServicioId;
 
-    // Constructores
-    public Venta() {
-    }
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(
+        name = "orden_de_servicio_id",
+        referencedColumnName = "id",
+        insertable = false,
+        updatable = false,
+        foreignKey = @ForeignKey(name = "fk_venta_orden_servicio")
+    )
+    private OrdenDeServicio ordenDeServicio;
 
-    public Venta(List<VentaDetalle> detalles, String nombreComprador, 
-                 String telefonoComprador, String emailComprador, User usuario, String observaciones) {
-        this.detalles = detalles;
-        this.totalVenta = calcularTotalVenta();
-        this.nombreComprador = nombreComprador;
-        this.telefonoComprador = telefonoComprador;
-        this.emailComprador = emailComprador;
-        this.usuario = usuario;
-        this.observaciones = observaciones;
-        this.fecha = LocalDateTime.now();
-    }
+    public Venta() {}
 
     private BigDecimal calcularTotalVenta() {
         if (detalles == null) return BigDecimal.ZERO;
@@ -80,112 +59,42 @@ public class Venta {
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
     }
 
-    // Getters y Setters
-    public Long getId() {
-        return id;
-    }
+    // ── Getters / Setters ───────────────────────────────────────────────────
 
-    public void setId(Long id) {
-        this.id = id;
-    }
+    public Long getId() { return id; }
+    public void setId(Long id) { this.id = id; }
 
-    public List<VentaDetalle> getDetalles() {
-        return detalles;
-    }
-
+    public List<VentaDetalle> getDetalles() { return detalles; }
     public void setDetalles(List<VentaDetalle> detalles) {
         this.detalles = detalles;
-        this.totalVenta = calcularTotalVenta();
     }
 
-    public BigDecimal getTotalVenta() {
-        return totalVenta;
-    }
+    public BigDecimal getTotalVenta() { return calcularTotalVenta(); }
 
-    public void setTotalVenta(BigDecimal totalVenta) {
-        this.totalVenta = totalVenta;
-    }
+    public Cliente getCliente() { return cliente; }
+    public void setCliente(Cliente cliente) { this.cliente = cliente; }
 
-    public void setLegacyProduct(Product legacyProduct) {
-        this.legacyProduct = legacyProduct;
-    }
+    public User getUsuario() { return usuario; }
+    public void setUsuario(User usuario) { this.usuario = usuario; }
 
-    public void setLegacyCantidad(Integer legacyCantidad) {
-        this.legacyCantidad = legacyCantidad;
-    }
+    public LocalDateTime getFecha() { return fecha; }
+    public void setFecha(LocalDateTime fecha) { this.fecha = fecha; }
 
-    public void setLegacyPrecioUnitario(BigDecimal legacyPrecioUnitario) {
-        this.legacyPrecioUnitario = legacyPrecioUnitario;
-    }
+    public String getObservaciones() { return observaciones; }
+    public void setObservaciones(String observaciones) { this.observaciones = observaciones; }
 
-    public String getNombreComprador() {
-        return nombreComprador;
-    }
+    public String getOrdenDeServicioId() { return ordenDeServicioId; }
+    public void setOrdenDeServicioId(String ordenDeServicioId) { this.ordenDeServicioId = ordenDeServicioId; }
 
-    public void setNombreComprador(String nombreComprador) {
-        this.nombreComprador = nombreComprador;
-    }
-
-    public String getTelefonoComprador() {
-        return telefonoComprador;
-    }
-
-    public void setTelefonoComprador(String telefonoComprador) {
-        this.telefonoComprador = telefonoComprador;
-    }
-
-    public String getEmailComprador() {
-        return emailComprador;
-    }
-
-    public void setEmailComprador(String emailComprador) {
-        this.emailComprador = emailComprador;
-    }
-
-    public User getUsuario() {
-        return usuario;
-    }
-
-    public void setUsuario(User usuario) {
-        this.usuario = usuario;
-    }
-
-    public LocalDateTime getFecha() {
-        return fecha;
-    }
-
-    public void setFecha(LocalDateTime fecha) {
-        this.fecha = fecha;
-    }
-
-    public String getObservaciones() {
-        return observaciones;
-    }
-
-    public void setObservaciones(String observaciones) {
-        this.observaciones = observaciones;
-    }
-
-    public String getOrdenDeServicioId() {
-        return ordenDeServicioId;
-    }
-
-    public void setOrdenDeServicioId(String ordenDeServicioId) {
-        this.ordenDeServicioId = ordenDeServicioId;
-    }
+    public OrdenDeServicio getOrdenDeServicio() { return ordenDeServicio; }
+    public void setOrdenDeServicio(OrdenDeServicio ordenDeServicio) { this.ordenDeServicio = ordenDeServicio; }
 
     @Override
     public String toString() {
-        return "Venta{" +
-                "id=" + id +
-                ", detalles=" + detalles +
-                ", totalVenta=" + totalVenta +
-                ", nombreComprador='" + nombreComprador + '\'' +
-                ", telefonoComprador='" + telefonoComprador + '\'' +
-                ", emailComprador='" + emailComprador + '\'' +
-                ", usuario=" + usuario +
-                ", fecha=" + fecha +
-                ", observaciones='" + observaciones + '\'' +
-                '}';
+        return "Venta{id=" + id
+                + ", totalVenta=" + getTotalVenta()
+                + ", cliente=" + (cliente != null ? cliente.getId() : "null")
+                + ", usuario=" + (usuario != null ? usuario.getUsername() : "null")
+                + ", fecha=" + fecha + "}";
     }
 }

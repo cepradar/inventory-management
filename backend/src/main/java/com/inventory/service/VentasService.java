@@ -4,11 +4,13 @@ import com.inventory.dto.VentaDto;
 import com.inventory.dto.VentaDetalleDto;
 import com.inventory.dto.VentaDetalleRegistroDto;
 import com.inventory.dto.VentaRegistroDto;
+import com.inventory.model.Cliente;
 import com.inventory.model.Product;
 import com.inventory.model.User;
 import com.inventory.model.Venta;
 import com.inventory.model.VentaDetalle;
 import com.inventory.model.OrdenDeServicio;
+import com.inventory.repository.ClienteRepository;
 import com.inventory.repository.VentaRepository;
 import com.inventory.repository.VentaDetalleRepository;
 import com.inventory.repository.ProductRepository;
@@ -29,23 +31,13 @@ import java.util.stream.Collectors;
 @Transactional
 public class VentasService {
 
-    @Autowired
-    private VentaRepository ventaRepository;
-
-    @Autowired
-    private ProductRepository productRepository;
-
-    @Autowired
-    private UserRepository userRepository;
-
-    @Autowired
-    private AuditoriaService auditoriaService;
-
-    @Autowired
-    private VentaDetalleRepository ventaDetalleRepository;
-
-    @Autowired
-    private OrdenDeServicioRepository ordenDeServicioRepository;
+    @Autowired private VentaRepository ventaRepository;
+    @Autowired private ProductRepository productRepository;
+    @Autowired private UserRepository userRepository;
+    @Autowired private ClienteRepository clienteRepository;
+    @Autowired private AuditoriaService auditoriaService;
+    @Autowired private VentaDetalleRepository ventaDetalleRepository;
+    @Autowired private OrdenDeServicioRepository ordenDeServicioRepository;
 
     /**
      * Valida que el técnico autenticado tenga la orden asignada antes de registrar una venta.
@@ -61,180 +53,171 @@ public class VentasService {
     }
 
     /**
-     * Registra una nueva venta y crea automáticamente un movimiento SALIDA
+     * Registra una nueva venta.
+     * El cliente se resuelve por FK compuesta (clienteId + clienteTipoDocumento).
      */
     public VentaDto registrarVenta(VentaRegistroDto registroDto) {
-        User usuario = userRepository.findById(Objects.requireNonNull(registroDto.getUsuarioUsername(), "usuarioUsername"))
+        // Resolver usuario desde JWT
+        User usuario = userRepository.findById(
+                Objects.requireNonNull(registroDto.getUsuarioUsername(), "usuarioUsername"))
             .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
 
-        Venta venta = new Venta();
-        venta.setNombreComprador(registroDto.getNombreComprador());
-        venta.setTelefonoComprador(registroDto.getTelefonoComprador());
-        venta.setEmailComprador(registroDto.getEmailComprador());
-        venta.setUsuario(usuario);
-        venta.setFecha(LocalDateTime.now());
-        venta.setObservaciones(registroDto.getObservaciones());
-        venta.setOrdenDeServicioId(registroDto.getOrdenDeServicioId());
-        venta.setTotalVenta(BigDecimal.ZERO);
+        // Resolver cliente por FK compuesta
+        String clienteId  = Objects.requireNonNull(registroDto.getClienteId(), "clienteId");
+        String tipoDoc    = Objects.requireNonNull(registroDto.getClienteTipoDocumento(), "clienteTipoDocumento");
+        Cliente cliente   = clienteRepository.findByIdAndTipoDocumentoId(clienteId, tipoDoc)
+            .orElseThrow(() -> new RuntimeException(
+                "Cliente no encontrado: id=" + clienteId + ", tipo=" + tipoDoc));
 
         if (registroDto.getDetalles() == null || registroDto.getDetalles().isEmpty()) {
             throw new RuntimeException("La venta debe incluir al menos un detalle");
         }
 
-        VentaDetalleRegistroDto primerDetalle = registroDto.getDetalles().get(0);
-        Product primerProducto = productRepository.findById(primerDetalle.getProductId())
-            .orElseThrow(() -> new RuntimeException("Producto no encontrado: " + primerDetalle.getProductId()));
-        venta.setLegacyProduct(primerProducto);
-        venta.setLegacyCantidad(primerDetalle.getCantidad());
-        venta.setLegacyPrecioUnitario(primerDetalle.getPrecioUnitario());
+        // Construir venta base
+        Venta venta = new Venta();
+        venta.setCliente(cliente);
+        venta.setUsuario(usuario);
+        venta.setFecha(LocalDateTime.now());
+        venta.setObservaciones(registroDto.getObservaciones());
+        venta.setOrdenDeServicioId(registroDto.getOrdenDeServicioId());
 
-        // Guardar la venta para obtener el ID
+        // Guardar para obtener ID antes de crear detalles
         Venta ventaGuardada = ventaRepository.save(venta);
 
-        BigDecimal totalVenta = BigDecimal.ZERO;
+        // Crear detalles y descontar inventario
         List<VentaDetalle> detalles = new java.util.ArrayList<>();
 
         for (VentaDetalleRegistroDto detalleDto : registroDto.getDetalles()) {
             Product producto = productRepository.findById(detalleDto.getProductId())
-                .orElseThrow(() -> new RuntimeException("Producto no encontrado: " + detalleDto.getProductId()));
+                .orElseThrow(() -> new RuntimeException(
+                    "Producto no encontrado: " + detalleDto.getProductId()));
+
             if (producto.getQuantity() < detalleDto.getCantidad()) {
-            throw new RuntimeException("Cantidad insuficiente para producto " + producto.getName() + ". Disponible: " + producto.getQuantity());
+                throw new RuntimeException("Cantidad insuficiente para producto '"
+                    + producto.getName() + "'. Disponible: " + producto.getQuantity());
             }
-            // Crear detalle
-            VentaDetalle detalle = new VentaDetalle(ventaGuardada, producto, detalleDto.getCantidad(), detalleDto.getPrecioUnitario());
+
+            VentaDetalle detalle = new VentaDetalle(
+                ventaGuardada, producto, detalleDto.getCantidad(), detalleDto.getPrecioUnitario());
             detalles.add(detalle);
-            totalVenta = totalVenta.add(detalle.getSubtotal());
 
             // Actualizar inventario
+            int cantidadInicial = producto.getQuantity();
             producto.setQuantity(producto.getQuantity() - detalleDto.getCantidad());
             productRepository.save(producto);
 
-            // Registrar auditoría
-            Integer cantidadInicial = producto.getQuantity() + detalleDto.getCantidad();
-            Integer cantidadFinal = producto.getQuantity();
+            // Auditoría
             auditoriaService.registrarMovimiento(
                 producto.getId(),
                 cantidadInicial,
-                cantidadFinal,
+                producto.getQuantity(),
                 detalleDto.getPrecioUnitario(),
                 detalleDto.getPrecioUnitario(),
                 "VC",
-                "Venta a cliente: " + registroDto.getNombreComprador(),
+                "Venta a cliente: " + cliente.getNombre() + " " + cliente.getApellido(),
                 registroDto.getUsuarioUsername(),
                 "VENTA-" + ventaGuardada.getId()
             );
         }
 
-        // Asociar los detalles y actualizar el total
         ventaGuardada.setDetalles(detalles);
-        ventaGuardada.setTotalVenta(totalVenta);
         ventaRepository.save(ventaGuardada);
 
         return convertirADto(ventaGuardada);
     }
 
-    /**
-     * Obtiene todas las ventas
-     */
+    /** Obtiene todas las ventas ordenadas por fecha descendente. */
     public List<VentaDto> obtenerTodasVentas() {
-        List<Venta> ventas = ventaRepository.findAll();
-        return ventas.stream()
+        return ventaRepository.findAll().stream()
                 .sorted((v1, v2) -> v2.getFecha().compareTo(v1.getFecha()))
                 .map(this::convertirADto)
                 .collect(Collectors.toList());
     }
 
-    /**
-     * Obtiene ventas de un producto específico
-     */
+    /** Obtiene ventas de un producto específico. */
     public List<VentaDto> obtenerVentasProducto(String productId) {
-            Product producto = productRepository.findById(Objects.requireNonNull(productId, "productId"))
-                .orElseThrow(() -> new RuntimeException("Producto no encontrado"));
-            // Buscar los detalles de venta que contienen el producto
-            List<VentaDetalle> detalles = ventaDetalleRepository.findByProduct(producto);
-            // Obtener las ventas únicas asociadas a esos detalles
-            List<Venta> ventas = detalles.stream()
+        Product producto = productRepository.findById(
+                Objects.requireNonNull(productId, "productId"))
+            .orElseThrow(() -> new RuntimeException("Producto no encontrado"));
+        return ventaDetalleRepository.findByProduct(producto).stream()
                 .map(VentaDetalle::getVenta)
                 .distinct()
-                .collect(Collectors.toList());
-            return ventas.stream()
                 .map(this::convertirADto)
                 .collect(Collectors.toList());
     }
 
-    /**
-     * Obtiene ventas realizadas por un usuario
-     */
+    /** Obtiene ventas realizadas por un usuario específico. */
     public List<VentaDto> obtenerVentasUsuario(String usuarioUsername) {
-                User usuario = userRepository.findById(Objects.requireNonNull(usuarioUsername, "usuarioUsername"))
-                .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
-        List<Venta> ventas = ventaRepository.findByUsuario(usuario);
-        return ventas.stream()
+        User usuario = userRepository.findById(
+                Objects.requireNonNull(usuarioUsername, "usuarioUsername"))
+            .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
+        return ventaRepository.findByUsuario(usuario).stream()
                 .map(this::convertirADto)
                 .collect(Collectors.toList());
     }
 
-    /**
-     * Obtiene ventas en un rango de fechas
-     */
+    /** Obtiene ventas en un rango de fechas. */
     public List<VentaDto> obtenerVentasEnRango(LocalDateTime fechaInicio, LocalDateTime fechaFin) {
-        List<Venta> ventas = ventaRepository.findVentasByFechaRango(fechaInicio, fechaFin);
-        return ventas.stream()
+        return ventaRepository.findVentasByFechaRango(fechaInicio, fechaFin).stream()
                 .map(this::convertirADto)
                 .collect(Collectors.toList());
     }
 
-    /**
-     * Obtiene ventas por nombre de comprador
-     */
-    public List<VentaDto> obtenerVentasPorComprador(String nombreComprador) {
-        List<Venta> ventas = ventaRepository.findVentasByNombreComprador(nombreComprador);
-        return ventas.stream()
+    /** Busca ventas cuyo cliente coincide (nombre o apellido) con el texto dado. */
+    public List<VentaDto> obtenerVentasPorComprador(String nombre) {
+        return ventaRepository.findVentasByNombreComprador(nombre).stream()
                 .map(this::convertirADto)
                 .collect(Collectors.toList());
     }
 
-    /**
-     * Obtiene una venta por ID
-     */
+    /** Obtiene una venta por ID. */
     public VentaDto obtenerVentaPorId(Long ventaId) {
-                Optional<Venta> venta = ventaRepository.findById(Objects.requireNonNull(ventaId, "ventaId"));
-        return venta.map(this::convertirADto)
+        return ventaRepository.findById(Objects.requireNonNull(ventaId, "ventaId"))
+                .map(this::convertirADto)
                 .orElseThrow(() -> new RuntimeException("Venta no encontrada"));
     }
 
-    /**
-     * Obtiene el total de ventas en un rango de fechas
-     */
+    /** Obtiene el total de ventas en un rango de fechas. */
     public BigDecimal obtenerTotalVentasEnRango(LocalDateTime fechaInicio, LocalDateTime fechaFin) {
-        List<Venta> ventas = ventaRepository.findVentasByFechaRango(fechaInicio, fechaFin);
-        return ventas.stream()
+        return ventaRepository.findVentasByFechaRango(fechaInicio, fechaFin).stream()
                 .map(Venta::getTotalVenta)
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
     }
 
-    /**
-     * Convierte una entidad Venta a DTO
-     */
+    /** Obtiene las ventas asociadas a una orden de servicio. */
+    public List<VentaDto> obtenerVentasPorOrden(String ordenId) {
+        return ventaRepository.findByOrdenDeServicioId(ordenId).stream()
+                .map(this::convertirADto)
+                .collect(Collectors.toList());
+    }
+
+    // ── Conversión entidad → DTO ────────────────────────────────────────────
+
     private VentaDto convertirADto(Venta venta) {
         List<VentaDetalleDto> detallesDto = venta.getDetalles() != null
             ? venta.getDetalles().stream()
-                .map(detalle -> new VentaDetalleDto(
-                    detalle.getProduct().getId(),
-                    detalle.getProduct().getName(),
-                    detalle.getCantidad(),
-                    detalle.getPrecioUnitario(),
-                    detalle.getSubtotal()
+                .map(d -> new VentaDetalleDto(
+                    d.getProduct().getId(),
+                    d.getProduct().getName(),
+                    d.getCantidad(),
+                    d.getPrecioUnitario(),
+                    d.getSubtotal()
                 ))
                 .collect(Collectors.toList())
             : java.util.Collections.emptyList();
 
+        Cliente c = venta.getCliente();
+        String nombreComprador  = c != null
+            ? (c.getNombre() + " " + c.getApellido()).trim() : "";
+        String telefonoComprador = c != null ? (c.getTelefono() != null ? c.getTelefono() : "") : "";
+        String emailComprador    = c != null ? (c.getEmail()    != null ? c.getEmail()    : "") : "";
+
         VentaDto dto = new VentaDto(
             venta.getId(),
             venta.getTotalVenta(),
-            venta.getNombreComprador(),
-            venta.getTelefonoComprador(),
-            venta.getEmailComprador(),
+            nombreComprador,
+            telefonoComprador,
+            emailComprador,
             venta.getUsuario().getUsername(),
             venta.getUsuario().getFirstName() + " " + venta.getUsuario().getLastName(),
             venta.getFecha(),
@@ -242,15 +225,11 @@ public class VentasService {
             detallesDto
         );
         dto.setOrdenDeServicioId(venta.getOrdenDeServicioId());
+        if (c != null) {
+            dto.setClienteId(c.getId());
+            dto.setClienteTipoDocumento(c.getTipoDocumentoId());
+        }
         return dto;
     }
-
-    /**
-     * Obtiene las ventas asociadas a una orden de servicio.
-     */
-    public List<VentaDto> obtenerVentasPorOrden(String ordenId) {
-        return ventaRepository.findByOrdenDeServicioId(ordenId).stream()
-                .map(this::convertirADto)
-                .collect(Collectors.toList());
-    }
 }
+

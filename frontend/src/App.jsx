@@ -4,9 +4,11 @@ import Login from './components/auth/Login';
 import Dashboard from './components/Dashboard';
 import ProtectedRoute from './components/ProtectedRoute';
 import LandingPage from './components/LandingPage';
+import { PermissionsProvider } from './components/utils/PermissionsContext';
 
 function App() {
   return (
+    <PermissionsProvider>
     <Router>
       <Routes>
         <Route path="/login" element={<Login />} />
@@ -32,6 +34,7 @@ function App() {
         
       </Routes>
     </Router>
+    </PermissionsProvider>
   );
 }
 

@@ -3,8 +3,11 @@ import api from './utils/axiosConfig.jsx';
 import { PlusIcon, PencilIcon, ChevronDownIcon, ChevronUpIcon } from '@heroicons/react/24/outline';
 import DataTable from './DataTable';
 import Modal from './Modal';
+import { usePermissions } from './utils/PermissionsContext';
 
 export default function ClientManager() {
+  const { permissions } = usePermissions();
+  const can = (c) => permissions.includes(c);
   const [clients, setClients] = useState([]);
   const [loading, setLoading] = useState(false);
   const [formMode, setFormMode] = useState(null);
@@ -342,13 +345,15 @@ export default function ClientManager() {
     <div className="p-1 md:p-2">
       <div className="flex justify-between items-center mb-2 flex-wrap gap-2">
         <h3 className="text-sm md:text-base font-bold">Listado de Clientes</h3>
-        <button
-          onClick={() => (formMode === 'create' ? resetForm() : openCreateForm())}
-          className="h-9 px-4 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm font-medium transition-all inline-flex items-center gap-2"
-        >
-          <PlusIcon className="w-4 h-4" />
-          {formMode === 'create' ? 'Cancelar' : 'Nuevo Cliente'}
-        </button>
+        {can('clients.create') && (
+          <button
+            onClick={() => (formMode === 'create' ? resetForm() : openCreateForm())}
+            className="h-9 px-4 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm font-medium transition-all inline-flex items-center gap-2"
+          >
+            <PlusIcon className="w-4 h-4" />
+            {formMode === 'create' ? 'Cancelar' : 'Nuevo Cliente'}
+          </button>
+        )}
       </div>
 
       {formMode && (
@@ -468,13 +473,15 @@ export default function ClientManager() {
               />
             </div>
             <div className="md:col-span-2 flex gap-2">
-              <button
-                type="submit"
-                className="h-9 px-3 bg-green-600 hover:bg-green-700 text-white rounded-lg text-sm font-medium transition-all"
-              >
-                {editingClient ? 'Actualizar' : 'Guardar'}
-              </button>
-              {formMode === 'edit' && editingClient && (
+              {(editingClient ? can('clients.update') : can('clients.create')) && (
+                <button
+                  type="submit"
+                  className="h-9 px-3 bg-green-600 hover:bg-green-700 text-white rounded-lg text-sm font-medium transition-all"
+                >
+                  {editingClient ? 'Actualizar' : 'Guardar'}
+                </button>
+              )}
+              {formMode === 'edit' && editingClient && can('clients.delete') && (
                 <button
                   type="button"
                   onClick={() => handleDelete(editingClient)}
@@ -540,13 +547,15 @@ export default function ClientManager() {
               filterable: false,
               render: (client) => (
                 <div className="flex justify-center items-center gap-1 flex-nowrap">
-                  <button
-                    onClick={() => handleEdit(client)}
-                    className="inline-flex items-center justify-center bg-yellow-500 hover:bg-yellow-600 text-white p-0.5 rounded transition-colors flex-shrink-0"
-                    title="Editar"
-                  >
-                    <PencilIcon className="w-3 h-3" />
-                  </button>
+                  {can('clients.update') && (
+                    <button
+                      onClick={() => handleEdit(client)}
+                      className="inline-flex items-center justify-center bg-yellow-500 hover:bg-yellow-600 text-white p-0.5 rounded transition-colors flex-shrink-0"
+                      title="Editar"
+                    >
+                      <PencilIcon className="w-3 h-3" />
+                    </button>
+                  )}
                 </div>
               )
             }
@@ -567,12 +576,14 @@ export default function ClientManager() {
               </p>
             </div>
             <div className="flex items-center gap-2">
-              <button
-                onClick={() => handleEdit(selectedClient)}
-                className="h-9 px-3 bg-yellow-500 hover:bg-yellow-600 text-white rounded-lg text-sm font-medium transition-all"
-              >
-                Editar
-              </button>
+              {can('clients.update') && (
+                <button
+                  onClick={() => handleEdit(selectedClient)}
+                  className="h-9 px-3 bg-yellow-500 hover:bg-yellow-600 text-white rounded-lg text-sm font-medium transition-all"
+                >
+                  Editar
+                </button>
+              )}
               <button
                 onClick={() => {
                   setExpandedClientKey(null);

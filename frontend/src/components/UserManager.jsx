@@ -3,8 +3,11 @@ import api from './utils/axiosConfig';
 import { useNavigate } from 'react-router-dom';
 import { PencilIcon, TrashIcon } from '@heroicons/react/24/outline';
 import DataTable from './DataTable';
+import { usePermissions } from './utils/PermissionsContext';
 
 const UserForm = ({ formData, handleInputChange, handleFormSubmit, editingId, handleCancelEdit, roles, handleDelete }) => {
+  const { permissions } = usePermissions();
+  const can = (c) => permissions.includes(c);
   return (
     <form onSubmit={handleFormSubmit} className="border rounded shadow-sm p-3 md:p-4 bg-white">
       <h3 className="font-bold text-base md:text-lg mb-2">
@@ -110,10 +113,12 @@ const UserForm = ({ formData, handleInputChange, handleFormSubmit, editingId, ha
       </div>
 
       <div className="flex flex-col sm:flex-row gap-2 mt-2">
-        <button type="submit" className="h-9 px-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-all text-sm font-medium">
-          {editingId ? 'Actualizar' : 'Crear'}
-        </button>
-        {editingId && (
+        {(editingId ? can('users.update') : can('users.create')) && (
+          <button type="submit" className="h-9 px-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-all text-sm font-medium">
+            {editingId ? 'Actualizar' : 'Crear'}
+          </button>
+        )}
+        {editingId && can('users.delete') && (
           <button type="button" onClick={() => handleDelete(editingId)} className="h-9 px-3 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-all text-sm font-medium">
             Eliminar
           </button>
@@ -127,16 +132,20 @@ const UserForm = ({ formData, handleInputChange, handleFormSubmit, editingId, ha
 };
 
 const UserList = ({ data, onEdit, onDelete, onAdd }) => {
+  const { permissions } = usePermissions();
+  const can = (c) => permissions.includes(c);
   return (
     <div className="p-1 md:p-2">
       <div className="flex justify-between items-center mb-2 flex-wrap gap-2">
         <h3 className="text-sm md:text-base font-bold">Listado de Usuarios</h3>
-        <button
-          onClick={onAdd}
-          className="h-9 px-4 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm font-medium transition-all"
-        >
-          Crear Usuario
-        </button>
+        {can('users.create') && (
+          <button
+            onClick={onAdd}
+            className="h-9 px-4 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm font-medium transition-all"
+          >
+            Crear Usuario
+          </button>
+        )}
       </div>
 
       <DataTable
@@ -176,13 +185,15 @@ const UserList = ({ data, onEdit, onDelete, onAdd }) => {
             cellClassName: 'px-1',
             render: (user) => (
               <div className="flex justify-center items-center gap-1 flex-nowrap">
-                <button 
-                  onClick={() => onEdit(user.username)} 
-                  className="inline-flex items-center justify-center bg-yellow-500 hover:bg-yellow-600 text-white p-1 rounded transition-colors flex-shrink-0"
-                  title="Editar"
-                >
-                  <PencilIcon className="w-3.5 h-3.5" />
-                </button>
+                {can('users.update') && (
+                  <button 
+                    onClick={() => onEdit(user.username)} 
+                    className="inline-flex items-center justify-center bg-yellow-500 hover:bg-yellow-600 text-white p-1 rounded transition-colors flex-shrink-0"
+                    title="Editar"
+                  >
+                    <PencilIcon className="w-3.5 h-3.5" />
+                  </button>
+                )}
               </div>
             )
           }

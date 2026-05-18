@@ -1,5 +1,16 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import api from './utils/axiosConfig';
+import {
+  UsersIcon,
+  ArchiveBoxIcon,
+  UserGroupIcon,
+  ShoppingCartIcon,
+  ClipboardDocumentListIcon,
+  DocumentTextIcon,
+  Cog6ToothIcon,
+  ChevronDownIcon,
+  ChevronRightIcon,
+} from '@heroicons/react/24/outline';
 
 const CONFIG_OPTIONS = [
   { id: 'roles', label: 'Tipos de usuarios' },
@@ -9,6 +20,33 @@ const CONFIG_OPTIONS = [
   { id: 'permisos', label: 'Permisos por rol' }
 ];
 
+const MODULE_CONFIG = [
+  { key: 'users',    label: 'Usuarios',            Icon: UsersIcon },
+  { key: 'inventory', label: 'Inventario',           Icon: ArchiveBoxIcon },
+  { key: 'clients',  label: 'Clientes',             Icon: UserGroupIcon },
+  { key: 'sales',    label: 'Ventas',               Icon: ShoppingCartIcon },
+  { key: 'orders',   label: 'Órdenes de Servicio',  Icon: ClipboardDocumentListIcon },
+  { key: 'audit',    label: 'Auditoría',            Icon: DocumentTextIcon },
+  { key: 'config',   label: 'Configuración',        Icon: Cog6ToothIcon },
+];
+
+function ModuleCheckbox({ allActive, someActive, onChange }) {
+  const ref = useRef(null);
+  useEffect(() => {
+    if (ref.current) ref.current.indeterminate = someActive && !allActive;
+  }, [allActive, someActive]);
+  return (
+    <input
+      ref={ref}
+      type="checkbox"
+      checked={allActive}
+      onChange={onChange}
+      className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500 cursor-pointer flex-shrink-0"
+      onClick={(e) => e.stopPropagation()}
+    />
+  );
+}
+
 export default function ConfigDashboard() {
   const [activeOption, setActiveOption] = useState('roles');
   const [roles, setRoles] = useState([]);
@@ -17,6 +55,11 @@ export default function ConfigDashboard() {
   const [selectedRole, setSelectedRole] = useState('ADMIN');
   const [roleForm, setRoleForm] = useState({ name: '', color: '#4f46e5', description: '' });
   const [loadingPerms, setLoadingPerms] = useState(false);
+  const [expandedModules, setExpandedModules] = useState(() => {
+    const s = {};
+    MODULE_CONFIG.forEach((m) => { s[m.key] = true; });
+    return s;
+  });
 
   const fetchRoles = async () => {
     try {
@@ -60,6 +103,11 @@ export default function ConfigDashboard() {
   useEffect(() => {
     if (selectedRole) {
       fetchRolePermissions(selectedRole);
+      setExpandedModules(() => {
+        const s = {};
+        MODULE_CONFIG.forEach((m) => { s[m.key] = true; });
+        return s;
+      });
     }
   }, [selectedRole]);
 
@@ -83,14 +131,33 @@ export default function ConfigDashboard() {
   const togglePermission = (permId) => {
     setRolePerms((prev) =>
       prev.map((perm) =>
-        perm.permissionId === permId ? { ...perm, active: !perm.active } : perm
+        perm.id === permId ? { ...perm, assigned: !perm.assigned } : perm
+      )
+    );
+  };
+
+  const toggleModuleExpand = (modKey) => {
+    setExpandedModules((prev) => ({ ...prev, [modKey]: !prev[modKey] }));
+  };
+
+  const toggleAllInModule = (modKey) => {
+    const inModule = rolePerms.filter((p) => (p.moduleKey || 'general') === modKey);
+    const allActive = inModule.every((p) => p.assigned);
+    setRolePerms((prev) =>
+      prev.map((p) =>
+        (p.moduleKey || 'general') === modKey ? { ...p, assigned: !allActive } : p
       )
     );
   };
 
   const handleSavePermissions = async () => {
     try {
-      await api.put(`/api/permissions/role/${selectedRole}`, rolePerms);
+      const payload = rolePerms.map((p) => ({
+        permissionCode: p.code,
+        active: p.assigned ?? false,
+        reason: '',
+      }));
+      await api.put(`/api/permissions/role/${selectedRole}`, payload);
       fetchRolePermissions(selectedRole);
     } catch (err) {
       console.error('Error al guardar permisos:', err);
@@ -99,6 +166,19 @@ export default function ConfigDashboard() {
   };
 
   const roleOptions = useMemo(() => roles.map((r) => r.name), [roles]);
+
+  const permsByModule = useMemo(() => {
+    const groups = {};
+    rolePerms.forEach((p) => {
+      const mod = p.moduleKey || 'general';
+      if (!groups[mod]) groups[mod] = [];
+      groups[mod].push(p);
+    });
+    // Solo mostrar módulos definidos en MODULE_CONFIG (evita duplicados por claves legacy en DB)
+    return MODULE_CONFIG
+      .filter((m) => groups[m.key]?.length > 0)
+      .map((m) => ({ ...m, perms: groups[m.key] }));
+  }, [rolePerms]);
 
   return (
     <div className="bg-white rounded-lg shadow p-4 md:p-6">
@@ -218,39 +298,73 @@ export default function ConfigDashboard() {
                 </button>
               </div>
 
-              <div className="border border-gray-200 rounded">
-                <div className="grid grid-cols-[1fr_120px] px-3 py-2 bg-gray-50 text-xs font-semibold text-gray-700">
-                  <span>Permiso</span>
-                  <span className="text-center">Activo</span>
-                </div>
-                {loadingPerms ? (
-                  <div className="px-3 py-3 text-sm text-gray-500">Cargando permisos...</div>
-                ) : (
-                  <div className="divide-y divide-gray-200">
-                    {rolePerms.map((perm) => (
-                      <div key={perm.permissionId} className="grid grid-cols-[1fr_120px] px-3 py-2 text-sm">
-                        <span className="text-gray-800">{perm.permissionName}</span>
-                        <div className="flex justify-center">
-                          <input
-                            type="checkbox"
-                            checked={perm.active}
-                            onChange={() => togglePermission(perm.permissionId)}
+              {loadingPerms ? (
+                <div className="py-8 text-sm text-gray-500 text-center">Cargando permisos...</div>
+              ) : permsByModule.length === 0 ? (
+                <div className="py-8 text-sm text-gray-500 text-center">No hay permisos configurados para este rol.</div>
+              ) : (
+                <div className="space-y-2">
+                  {permsByModule.map(({ key, label, Icon, perms }, idx) => {
+                    const activeCount = perms.filter((p) => p.assigned).length;
+                    const allActive = activeCount === perms.length;
+                    const someActive = activeCount > 0;
+                    const isExpanded = expandedModules[key] ?? true;
+                    return (
+                      <div key={key} className="border border-gray-200 rounded-lg overflow-hidden">
+                        <div
+                          className="flex items-center gap-2 px-4 py-3 bg-gray-50 cursor-pointer select-none hover:bg-gray-100 transition-colors"
+                          onClick={() => toggleModuleExpand(key)}
+                        >
+                          <span className="text-xs font-bold text-gray-400 w-5 text-right flex-shrink-0">{idx + 1}.</span>
+                          <ModuleCheckbox
+                            allActive={allActive}
+                            someActive={someActive}
+                            onChange={() => toggleAllInModule(key)}
                           />
+                          {Icon && <Icon className="h-5 w-5 text-gray-600 flex-shrink-0" />}
+                          <span className="flex-1 text-sm font-semibold text-gray-800">{label}</span>
+                          <span className="text-xs text-gray-500 mr-1">
+                            {activeCount}/{perms.length} activos
+                          </span>
+                          {isExpanded
+                            ? <ChevronDownIcon className="h-4 w-4 text-gray-400 flex-shrink-0" />
+                            : <ChevronRightIcon className="h-4 w-4 text-gray-400 flex-shrink-0" />}
                         </div>
+                        {isExpanded && (
+                          <div className="divide-y divide-gray-100">
+                            {perms.map((perm) => (
+                              <label
+                                key={perm.id}
+                                className="flex items-center gap-3 pl-14 pr-4 py-2.5 cursor-pointer hover:bg-blue-50 transition-colors"
+                              >
+                                <input
+                                  type="checkbox"
+                                  checked={perm.assigned ?? false}
+                                  onChange={() => togglePermission(perm.id)}
+                                  className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500 flex-shrink-0"
+                                />
+                                <div className="flex-1 min-w-0">
+                                  <div className="text-sm text-gray-800">· {perm.label}</div>
+                                  <div className="text-xs text-gray-400 font-mono">{perm.code}</div>
+                                </div>
+                                {perm.critical && (
+                                  <span className="text-xs bg-red-100 text-red-700 px-1.5 py-0.5 rounded font-semibold flex-shrink-0">critico</span>
+                                )}
+                              </label>
+                            ))}
+                          </div>
+                        )}
                       </div>
-                    ))}
-                    {rolePerms.length === 0 && (
-                      <div className="px-3 py-3 text-sm text-gray-500">No hay permisos configurados</div>
-                    )}
-                  </div>
-                )}
-              </div>
+                    );
+                  })}
+                </div>
+              )}
 
-              <div className="flex justify-end">
+              <div className="flex justify-end pt-2">
                 <button
                   type="button"
                   onClick={handleSavePermissions}
-                  className="h-9 px-4 bg-green-600 hover:bg-green-700 text-white text-sm rounded"
+                  className="h-9 px-6 bg-green-600 hover:bg-green-700 text-white text-sm font-semibold rounded"
                 >
                   Guardar permisos
                 </button>

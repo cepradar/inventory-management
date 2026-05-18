@@ -2,10 +2,13 @@ package com.inventory.controller;
 
 import com.inventory.dto.OrdenDeServicioDto;
 import com.inventory.service.OrdenDeServicioService;
+import com.inventory.service.OrdenServicioPdfService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
@@ -22,6 +25,9 @@ public class OrdenDeServicioController {
 
     @Autowired
     private OrdenDeServicioService service;
+
+    @Autowired
+    private OrdenServicioPdfService ordenServicioPdfService;
 
     @PostMapping("/registrar")
     @PreAuthorize("isAuthenticated()")
@@ -221,6 +227,41 @@ public class OrdenDeServicioController {
             return ResponseEntity.ok("Eliminado");
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Error: " + e.getMessage());
+        }
+    }
+
+    /**
+     * Genera el PDF de la orden de servicio y lo devuelve como descarga.
+     * El PDF se construye en memoria y no se persiste en disco.
+     * ADMIN puede descargar cualquier orden; TECNICO solo las asignadas a él.
+     */
+    @GetMapping("/{id}/pdf")
+    @PreAuthorize("hasAnyRole('ADMIN', 'TECNICO')")
+    public ResponseEntity<byte[]> descargarPdf(@PathVariable String id, Authentication auth) {
+        try {
+            // Validar acceso para técnicos: solo pueden descargar su propia orden
+            boolean isTecnico = auth.getAuthorities().stream()
+                    .anyMatch(a -> a.getAuthority().equals("ROLE_TECNICO"));
+            if (isTecnico) {
+                OrdenDeServicioDto orden = service.obtenerServicioPorId(id);
+                if (orden.getTecnicoAsignadoUsername() == null
+                        || !orden.getTecnicoAsignadoUsername().equals(auth.getName())) {
+                    return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+                }
+            }
+
+            byte[] pdfBytes = ordenServicioPdfService.generarPdf(id);
+
+            HttpHeaders headers = new HttpHeaders();
+            headers.setContentType(MediaType.APPLICATION_PDF);
+            headers.setContentDispositionFormData("attachment", "orden-servicio-" + id + ".pdf");
+            headers.setContentLength(pdfBytes.length);
+
+            log.info("PDF generado para orden {} por {}", id, auth.getName());
+            return new ResponseEntity<>(pdfBytes, headers, HttpStatus.OK);
+        } catch (Exception e) {
+            log.error("Error al generar PDF para orden {}: {}", id, e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
     }
 }

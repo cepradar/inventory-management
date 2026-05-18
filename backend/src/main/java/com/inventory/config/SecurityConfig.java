@@ -80,8 +80,10 @@ public class SecurityConfig {
     .requestMatchers(HttpMethod.POST, "/api/auditoria/registrar").authenticated() // Permitir registro de eventos a usuarios autenticados
     .requestMatchers("/api/auditoria/**").hasAnyRole("ADMIN", "TECNICO")
     .requestMatchers("/api/ventas/**").hasAnyRole("ADMIN", "TECNICO")
-    .requestMatchers("/api/permissions/role/**").authenticated()
+    .requestMatchers("/api/permissions/me").authenticated()
+    .requestMatchers("/api/permissions/role/**").hasRole("ADMIN")
     .requestMatchers("/api/permissions/**").hasRole("ADMIN")
+    .requestMatchers(HttpMethod.GET, "/api/roles/active").authenticated()
     .requestMatchers("/api/roles/**").hasRole("ADMIN")
     
     // Permite usuarios autenticados para gestión de clientes y servicios

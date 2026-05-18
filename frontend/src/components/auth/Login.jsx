@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from '../utils/axiosConfig'; // Asegúrate de que la ruta sea correcta
+import { usePermissions } from '../utils/PermissionsContext';
 
 function Login() {
   const [username, setUsername] = useState('');
@@ -11,6 +12,7 @@ function Login() {
   const [companyName, setCompanyName] = useState('');
   const [companyLogo2Url, setCompanyLogo2Url] = useState('');
   const navigate = useNavigate();
+  const { reload: reloadPermissions } = usePermissions();
 
   useEffect(() => {
     let isMounted = true;
@@ -67,6 +69,7 @@ function Login() {
       localStorage.setItem('userRole', role);
       localStorage.setItem('username', serverUsername || username.toUpperCase());
       
+      await reloadPermissions();
       setMessage(`Bienvenido, ${username}`);
       setLoginStatus('success');
       navigate('/dashboard');

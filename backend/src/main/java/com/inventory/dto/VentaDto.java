@@ -7,9 +7,16 @@ import java.math.BigDecimal;
 public class VentaDto {
     private Long id;
     private BigDecimal totalVenta;
+    /** Nombre + apellido derivado de la FK cliente. Solo lectura. */
     private String nombreComprador;
+    /** Teléfono derivado de la FK cliente. Solo lectura. */
     private String telefonoComprador;
+    /** Email derivado de la FK cliente. Solo lectura. */
     private String emailComprador;
+    /** Documento del cliente (parte 1 de la llave compuesta). */
+    private String clienteId;
+    /** Tipo de documento del cliente (parte 2 de la llave compuesta). */
+    private String clienteTipoDocumento;
     private String usuarioUsername;
     private String usuarioNombre;
     private LocalDateTime fecha;
@@ -65,6 +72,12 @@ public class VentaDto {
 
     public String getOrdenDeServicioId() { return ordenDeServicioId; }
     public void setOrdenDeServicioId(String ordenDeServicioId) { this.ordenDeServicioId = ordenDeServicioId; }
+
+    public String getClienteId() { return clienteId; }
+    public void setClienteId(String clienteId) { this.clienteId = clienteId; }
+
+    public String getClienteTipoDocumento() { return clienteTipoDocumento; }
+    public void setClienteTipoDocumento(String clienteTipoDocumento) { this.clienteTipoDocumento = clienteTipoDocumento; }
 
     public List<VentaDetalleDto> getDetalles() { return detalles; }
     public void setDetalles(List<VentaDetalleDto> detalles) { this.detalles = detalles; }

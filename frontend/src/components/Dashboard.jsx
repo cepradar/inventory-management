@@ -12,6 +12,7 @@ import OrdenServicio from './OrdenServicio';
 import ConfigDashboard from './ConfigDashboard';
 import { useNavigate } from 'react-router-dom';
 import axios from './utils/axiosConfig';
+import { usePermissions } from './utils/PermissionsContext';
 
 function Dashboard() {
   const [activeModule, setActiveModule] = useState('home');
@@ -26,7 +27,7 @@ function Dashboard() {
   const [companyLogoUrl, setCompanyLogoUrl] = useState(null);
   const [hasActiveForm, setHasActiveForm] = useState(false); // 🔔 Estado para saber si hay formulario activo
   const [pendingModuleChange, setPendingModuleChange] = useState(null); // 🔔 Cambio pendiente
-  const [permissions, setPermissions] = useState([]);
+  const { permissions } = usePermissions();
 
   const sidebarRef = useRef(null);
   const navRef = useRef(null);
@@ -41,23 +42,25 @@ function Dashboard() {
     else navigate('/login');
   }, [navigate]);
 
-  useEffect(() => {
-    const fetchPermissions = async () => {
-      if (!userRole) return;
-      try {
-        const response = await axios.get(`/api/permissions/role/${userRole}`);
-        const activePerms = (response.data || [])
-          .filter((perm) => perm.active)
-          .map((perm) => perm.permissionName);
-        setPermissions(activePerms);
-      } catch (error) {
-        console.warn('No se pudieron cargar permisos, usando acceso por rol:', error);
-        setPermissions([]);
-      }
-    };
+  // Permiso mínimo requerido para acceder a cada módulo
+  const MODULE_MIN_PERMISSION = {
+    users: 'users.read',
+    inventory: 'inventory.read',
+    clients: 'clients.read',
+    sales: 'sales.read',
+    'ordenes-servicio': 'orders.read',
+    audit: 'audit.read',
+    settings: 'config.roles.read',
+  };
 
-    fetchPermissions();
-  }, [userRole]);
+  // Si el módulo activo pierde acceso, volver al inicio
+  useEffect(() => {
+    if (permissions.length === 0) return;
+    const required = MODULE_MIN_PERMISSION[activeModule];
+    if (required && !permissions.includes(required)) {
+      setActiveModule('home');
+    }
+  }, [permissions]);
 
   useEffect(() => {
     let isMounted = true;

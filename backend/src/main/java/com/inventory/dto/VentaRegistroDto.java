@@ -3,9 +3,10 @@ package com.inventory.dto;
 import java.util.List;
 
 public class VentaRegistroDto {
-    private String nombreComprador;
-    private String telefonoComprador;
-    private String emailComprador;
+    /** Número de documento del cliente (parte 1 de la llave compuesta). */
+    private String clienteId;
+    /** Tipo de documento del cliente (parte 2 de la llave compuesta). */
+    private String clienteTipoDocumento;
     private String usuarioUsername;
     private String observaciones;
     private String ordenDeServicioId;
@@ -13,14 +14,11 @@ public class VentaRegistroDto {
 
     public VentaRegistroDto() {}
 
-    public String getNombreComprador() { return nombreComprador; }
-    public void setNombreComprador(String nombreComprador) { this.nombreComprador = nombreComprador; }
+    public String getClienteId() { return clienteId; }
+    public void setClienteId(String clienteId) { this.clienteId = clienteId; }
 
-    public String getTelefonoComprador() { return telefonoComprador; }
-    public void setTelefonoComprador(String telefonoComprador) { this.telefonoComprador = telefonoComprador; }
-
-    public String getEmailComprador() { return emailComprador; }
-    public void setEmailComprador(String emailComprador) { this.emailComprador = emailComprador; }
+    public String getClienteTipoDocumento() { return clienteTipoDocumento; }
+    public void setClienteTipoDocumento(String clienteTipoDocumento) { this.clienteTipoDocumento = clienteTipoDocumento; }
 
     public String getUsuarioUsername() { return usuarioUsername; }
     public void setUsuarioUsername(String usuarioUsername) { this.usuarioUsername = usuarioUsername; }

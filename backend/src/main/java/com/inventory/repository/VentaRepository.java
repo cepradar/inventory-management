@@ -27,7 +27,7 @@ public interface VentaRepository extends JpaRepository<Venta, Long> {
     List<Venta> findVentasByFechaRango(@Param("fechaInicio") LocalDateTime fechaInicio, 
                                       @Param("fechaFin") LocalDateTime fechaFin);
     
-    @Query("SELECT v FROM Venta v WHERE v.nombreComprador LIKE %:nombre% ORDER BY v.fecha DESC")
+    @Query("SELECT v FROM Venta v WHERE LOWER(CONCAT(v.cliente.nombre, ' ', v.cliente.apellido)) LIKE LOWER(CONCAT('%', :nombre, '%')) ORDER BY v.fecha DESC")
     List<Venta> findVentasByNombreComprador(@Param("nombre") String nombre);
 
     List<Venta> findByOrdenDeServicioId(String ordenDeServicioId);

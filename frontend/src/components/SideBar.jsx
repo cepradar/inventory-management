@@ -12,8 +12,7 @@ import {
 } from '@heroicons/react/24/outline';
 
 function Sidebar({ onModuleChange, activeModule, isExpanded, toggleSidebar, sidebarRef, userName, permissions = [] }) {
-  const isSuperAdmin = userName && userName.trim().toUpperCase() === 'ADMIN';
-  const hasPermission = (permName) => isSuperAdmin || permissions.includes(permName);
+  const can = (code) => permissions.includes(code);
 
   return (
     <div 
@@ -33,7 +32,7 @@ function Sidebar({ onModuleChange, activeModule, isExpanded, toggleSidebar, side
 
       <ul className="flex-1 overflow-y-auto space-y-0.5 px-1">
 
-        {hasPermission('USUARIOS') && (
+        {can('users.read') && (
           <li>
             <button
               onClick={() => onModuleChange('users')}
@@ -46,7 +45,7 @@ function Sidebar({ onModuleChange, activeModule, isExpanded, toggleSidebar, side
           </li>
         )}
 
-        {hasPermission('INVENTARIOS') && (
+        {can('inventory.read') && (
           <li>
             <button
               onClick={() => onModuleChange('inventory')}
@@ -59,7 +58,7 @@ function Sidebar({ onModuleChange, activeModule, isExpanded, toggleSidebar, side
           </li>
         )}
 
-        {hasPermission('CLIENTES') && (
+        {can('clients.read') && (
           <li>
             <button
               onClick={() => onModuleChange('clients')}
@@ -72,7 +71,7 @@ function Sidebar({ onModuleChange, activeModule, isExpanded, toggleSidebar, side
           </li>
         )}
 
-        {hasPermission('VENTAS') && (
+        {can('sales.read') && (
           <li>
             <button
               onClick={() => onModuleChange('sales')}
@@ -85,7 +84,7 @@ function Sidebar({ onModuleChange, activeModule, isExpanded, toggleSidebar, side
           </li>
         )}
 
-        {hasPermission('ORDENES_SERVICIO') && (
+        {can('orders.read') && (
           <li>
             <button
               onClick={() => onModuleChange('ordenes-servicio')}
@@ -98,7 +97,7 @@ function Sidebar({ onModuleChange, activeModule, isExpanded, toggleSidebar, side
           </li>
         )}
 
-        {hasPermission('AUDITORIA') && (
+        {can('audit.read') && (
           <li>
             <button
               onClick={() => onModuleChange('audit')}
@@ -111,7 +110,7 @@ function Sidebar({ onModuleChange, activeModule, isExpanded, toggleSidebar, side
           </li>
         )}
 
-        {hasPermission('CONFIGURACION') && (
+        {can('config.roles.read') && (
           <li>
             <button
               onClick={() => onModuleChange('settings')}

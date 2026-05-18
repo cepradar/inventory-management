@@ -1,8 +1,11 @@
 import React, { useState, useEffect, useMemo } from "react";
 import api from "./utils/axiosConfig";
 import DataTable from "./DataTable";
+import { usePermissions } from './utils/PermissionsContext';
 
 const SalesModule = () => {
+  const { permissions } = usePermissions();
+  const can = (c) => permissions.includes(c);
   const [ventas, setVentas] = useState([]);
   const [productos, setProductos] = useState([]);
   const [mostrarFormulario, setMostrarFormulario] = useState(false);
@@ -320,8 +323,8 @@ const SalesModule = () => {
         return;
       }
 
-      if (!formulario.nombreComprador) {
-        setError("Por favor ingresa el nombre del comprador");
+      if (!clienteEncontrado?.documento || !clienteEncontrado?.tipoDocumentoId) {
+        setError("El cliente seleccionado no tiene documento o tipo de documento");
         setLoading(false);
         return;
       }
@@ -357,9 +360,8 @@ const SalesModule = () => {
       }
 
       const payload = {
-        nombreComprador: formulario.nombreComprador,
-        telefonoComprador: formulario.telefonoComprador,
-        emailComprador: formulario.emailComprador,
+        clienteId: clienteEncontrado.documento,
+        clienteTipoDocumento: clienteEncontrado.tipoDocumentoId,
         // usuarioUsername es ignorado por el backend — se toma del JWT
         observaciones: formulario.observaciones,
         detalles: formulario.items.map((item) => ({
@@ -502,12 +504,14 @@ const SalesModule = () => {
             <h3 className="text-sm md:text-base font-bold">
               Historial de ventas ({ventas.length})
             </h3>
-            <button
-              onClick={() => setMostrarFormulario(true)}
-              className="h-9 px-4 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-all text-sm font-medium"
-            >
-              + Nueva Venta
-            </button>
+            {can('sales.create') && (
+              <button
+                onClick={() => setMostrarFormulario(true)}
+                className="h-9 px-4 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-all text-sm font-medium"
+              >
+                + Nueva Venta
+              </button>
+            )}
           </div>
         )}
 
