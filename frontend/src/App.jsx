@@ -1,41 +1,59 @@
-import React from 'react';
+import React, { lazy, Suspense } from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
-import Login from './components/auth/Login';
-import Dashboard from './components/Dashboard';
-import ProtectedRoute from './components/ProtectedRoute';
-import LandingPage from './components/LandingPage';
-import { PermissionsProvider } from './components/utils/PermissionsContext';
 
-function App() {
+import { PermissionsProvider } from './context/PermissionsContext';
+import { ToastProvider }       from './components/ui/Toast';
+import { ErrorBoundary }       from './components/ui/ErrorBoundary';
+import ProtectedRoute          from './components/common/ProtectedRoute';
+import Spinner                 from './components/ui/Spinner';
+
+// ── Lazy loading — cada módulo se carga solo cuando se necesita ──────────────
+const LandingPage = lazy(() => import('./components/LandingPage'));
+const Login       = lazy(() => import('./components/auth/Login'));
+const Dashboard   = lazy(() => import('./components/Dashboard'));
+
+function PageLoader() {
   return (
-    <PermissionsProvider>
-    <Router>
-      <Routes>
-        <Route path="/login" element={<Login />} />
-        
-        {/*
-          Ruta única y protegida para todos los usuarios.
-          El componente Dashboard se encargará de mostrar el contenido
-          basado en el rol del usuario que se le pase.
-        */}
-        <Route
-          path="/dashboard"
-          element={
-            <ProtectedRoute>
-              <Dashboard />
-            </ProtectedRoute>
-          }
-        />
-
-        <Route path="/" element={<LandingPage />} />
-        
-        {/* Manejo de rutas no encontradas */}
-        <Route path="*" element={<h1>404: Página no encontrada</h1>} />
-        
-      </Routes>
-    </Router>
-    </PermissionsProvider>
+    <div className="min-h-screen flex items-center justify-center">
+      <Spinner size="lg" label="Cargando página..." />
+    </div>
   );
 }
 
-export default App;
+function NotFound() {
+  return (
+    <div className="min-h-screen flex flex-col items-center justify-center gap-4 text-center p-8">
+      <h1 className="text-6xl font-bold text-gray-300">404</h1>
+      <p className="text-lg text-gray-600">Página no encontrada</p>
+      <a href="/" className="text-blue-600 hover:underline text-sm">Volver al inicio</a>
+    </div>
+  );
+}
+
+export default function App() {
+  return (
+    <ErrorBoundary>
+      <ToastProvider>
+        <PermissionsProvider>
+          <Router>
+            <Suspense fallback={<PageLoader />}>
+              <Routes>
+                <Route path="/"         element={<LandingPage />} />
+                <Route path="/login"    element={<Login />} />
+                <Route
+                  path="/dashboard"
+                  element={
+                    <ProtectedRoute>
+                      <Dashboard />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route path="*" element={<NotFound />} />
+              </Routes>
+            </Suspense>
+          </Router>
+        </PermissionsProvider>
+      </ToastProvider>
+    </ErrorBoundary>
+  );
+}

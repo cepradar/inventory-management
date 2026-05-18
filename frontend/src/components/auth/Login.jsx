@@ -1,7 +1,8 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import axios from '../utils/axiosConfig'; // Asegúrate de que la ruta sea correcta
-import { usePermissions } from '../utils/PermissionsContext';
+import axiosClient from '../../api/axiosClient';
+import { usePermissions } from '../../context/PermissionsContext';
+import { useCompanyInfo } from '../../hooks/useCompanyInfo';
 
 function Login() {
   const [username, setUsername] = useState('');
@@ -9,43 +10,12 @@ function Login() {
   const [message, setMessage] = useState('');
   const [loginStatus, setLoginStatus] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
-  const [companyName, setCompanyName] = useState('');
-  const [companyLogo2Url, setCompanyLogo2Url] = useState('');
+
   const navigate = useNavigate();
   const { reload: reloadPermissions } = usePermissions();
+  const { companyInfo, logoUrl: companyLogo2Url } = useCompanyInfo('logo2');
 
-  useEffect(() => {
-    let isMounted = true;
-    let objectUrl = null;
-
-    const fetchCompanyInfo = async () => {
-      try {
-        const response = await axios.get('/api/company/info');
-        if (!isMounted) return;
-        setCompanyName(response.data?.razonSocial || '');
-
-        if (response.data?.id) {
-          const logoResponse = await axios.get(`/api/company/${response.data.id}/logo2`, {
-            responseType: 'blob',
-          });
-          if (!isMounted) return;
-          objectUrl = URL.createObjectURL(logoResponse.data);
-          setCompanyLogo2Url(objectUrl);
-        }
-      } catch (error) {
-        console.warn('No se pudo cargar la información de la empresa:', error);
-      }
-    };
-
-    fetchCompanyInfo();
-
-    return () => {
-      isMounted = false;
-      if (objectUrl) {
-        URL.revokeObjectURL(objectUrl);
-      }
-    };
-  }, []);
+  const companyName = companyInfo?.razonSocial || '';
 
   const handleLogin = async (e) => {
     e.preventDefault();
@@ -61,21 +31,16 @@ function Login() {
     }
 
     try {
-      const response = await axios.post('/auth/login', { username, password });
-      
+      const response = await axiosClient.post('/auth/login', { username, password });
       const { token, role, username: serverUsername } = response.data;
-      
       localStorage.setItem('authToken', token);
       localStorage.setItem('userRole', role);
       localStorage.setItem('username', serverUsername || username.toUpperCase());
-      
       await reloadPermissions();
       setMessage(`Bienvenido, ${username}`);
       setLoginStatus('success');
       navigate('/dashboard');
-      
     } catch (error) {
-      console.error('Error:', error.response ? error.response.data : error.message);
       const errorMessage = error.response?.data?.message || 'Credenciales incorrectas';
       setMessage(errorMessage);
       setLoginStatus('error');

@@ -1,38 +1,30 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import axios from './utils/axiosConfig';
+import axiosClient from '../api/axiosClient';
+import { useToast } from './ui/Toast';
 
 function ProfileMenu({ userName }) {
   const navigate = useNavigate();
+  const { toast } = useToast();
   const [isOpen, setIsOpen] = useState(false);
   const [profilePicture, setProfilePicture] = useState(() => {
     const username = localStorage.getItem('username');
-    if (!username) {
-      return null;
-    }
-    const cacheKey = `profilePicture:${username}`;
-    return localStorage.getItem(cacheKey);
+    if (!username) return null;
+    return localStorage.getItem(`profilePicture:${username}`);
   });
   const [loading, setLoading] = useState(() => {
     const username = localStorage.getItem('username');
-    if (!username) {
-      return false;
-    }
-    const cacheKey = `profilePicture:${username}`;
-    return !localStorage.getItem(cacheKey);
+    if (!username) return false;
+    return !localStorage.getItem(`profilePicture:${username}`);
   });
   const menuRef = useRef(null);
   const lastUsernameRef = useRef(null);
 
-  // Cargar la foto de perfil al montar el componente
   useEffect(() => {
     const loadProfilePicture = async () => {
       try {
         const username = localStorage.getItem('username');
-        if (!username) {
-          setLoading(false);
-          return;
-        }
+        if (!username) { setLoading(false); return; }
 
         if (lastUsernameRef.current !== username) {
           lastUsernameRef.current = username;
@@ -41,96 +33,63 @@ function ProfileMenu({ userName }) {
         }
 
         const cacheKey = `profilePicture:${username}`;
-        const cachedImage = localStorage.getItem(cacheKey);
-        if (cachedImage) {
-          setProfilePicture(cachedImage);
-          setLoading(false);
-          return;
-        }
-        
-        const response = await axios.get(`/auth/profile-picture/${username}`, {
-          responseType: 'arraybuffer',
-          timeout: 8000,
-          silent: true
+        const cached = localStorage.getItem(cacheKey);
+        if (cached) { setProfilePicture(cached); setLoading(false); return; }
+
+        const response = await axiosClient.get(`/auth/profile-picture/${username}`, {
+          responseType: 'arraybuffer', timeout: 8000, silent: true,
         });
-        
-        if (response.data && response.data.byteLength > 0) {
+        if (response.data?.byteLength > 0) {
           const base64 = btoa(
-            new Uint8Array(response.data).reduce(
-              (data, byte) => data + String.fromCharCode(byte),
-              ''
-            )
+            new Uint8Array(response.data).reduce((d, b) => d + String.fromCharCode(b), '')
           );
           const imageUrl = `data:image/jpeg;base64,${base64}`;
           localStorage.setItem(cacheKey, imageUrl);
           setProfilePicture(imageUrl);
         }
-      } catch (error) {
-        // Silenciosamente usar placeholder si no hay foto
-        if (error.code !== 'ECONNABORTED') {
-          console.log('Sin foto de perfil configurada');
-        }
+      } catch {
+        // Sin foto — usar placeholder
       } finally {
         setLoading(false);
       }
     };
-
     loadProfilePicture();
-    
-    // Cleanup: liberar URL cuando el componente se desmonte
-    return () => {};
   }, [userName]);
 
-  // Cierra el menú si se hace clic fuera de él
   useEffect(() => {
     const handleClickOutside = (event) => {
-      if (menuRef.current && !menuRef.current.contains(event.target)) {
-        setIsOpen(false);
-      }
+      if (menuRef.current && !menuRef.current.contains(event.target)) setIsOpen(false);
     };
     document.addEventListener('mousedown', handleClickOutside);
-    return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
-    };
-  }, [menuRef]);
-
-  const verifyToken = () => {
-    const token = localStorage.getItem('authToken');
-    if (!token) {
-      alert('No estás autorizado. Redirigiendo al login...');
-      navigate('/login');
-      return null;
-    }
-    return token;
-  };
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
 
   const handleLogout = () => {
     localStorage.clear();
-    alert('Sesión cerrada.');
+    toast.info('Sesión cerrada.');
     navigate('/login');
   };
 
   const handlePasswordChange = async () => {
     setIsOpen(false);
-    const token = verifyToken();
-    if (!token) return;
+    const token = localStorage.getItem('authToken');
+    if (!token) { navigate('/login'); return; }
 
     const newPassword = prompt('Introduce tu nueva contraseña:');
     if (!newPassword) return;
 
     try {
-      const response = await axios.post('/auth/change-password', { newPassword });
-      alert(response.data.message);
-    } catch (error) {
-      console.error('Error al cambiar la contraseña:', error);
-      alert('Error al cambiar la contraseña.');
+      const response = await axiosClient.post('/auth/change-password', { newPassword });
+      toast.success(response.data.message || 'Contraseña actualizada.');
+    } catch {
+      toast.error('Error al cambiar la contraseña.');
     }
   };
 
   const handleProfilePictureUpdate = async (event) => {
     setIsOpen(false);
-    const token = verifyToken();
-    if (!token) return;
+    const token = localStorage.getItem('authToken');
+    if (!token) { navigate('/login'); return; }
 
     const file = event.target.files[0];
     if (!file) return;
@@ -139,33 +98,25 @@ function ProfileMenu({ userName }) {
     formData.append('file', file);
 
     try {
-      // El interceptor de axios añadirá automáticamente el token
-      const response = await axios.post('/auth/update-profile-picture', formData);
-      alert(response.data.message);
-      // Recargar la foto sin recargar la página
+      const response = await axiosClient.post('/auth/update-profile-picture', formData);
+      toast.success(response.data.message || 'Foto actualizada.');
       const username = localStorage.getItem('username');
       if (username) {
         const cacheKey = `profilePicture:${username}`;
-        const picResponse = await axios.get(`/auth/profile-picture/${username}`, {
-          responseType: 'arraybuffer',
-          timeout: 8000,
-          silent: true
+        const picResponse = await axiosClient.get(`/auth/profile-picture/${username}`, {
+          responseType: 'arraybuffer', timeout: 8000, silent: true,
         });
-        if (picResponse.data && picResponse.data.byteLength > 0) {
+        if (picResponse.data?.byteLength > 0) {
           const base64 = btoa(
-            new Uint8Array(picResponse.data).reduce(
-              (data, byte) => data + String.fromCharCode(byte),
-              ''
-            )
+            new Uint8Array(picResponse.data).reduce((d, b) => d + String.fromCharCode(b), '')
           );
           const imageUrl = `data:image/jpeg;base64,${base64}`;
           localStorage.setItem(cacheKey, imageUrl);
           setProfilePicture(imageUrl);
         }
       }
-    } catch (error) {
-      console.error('Error al actualizar la foto de perfil:', error);
-      alert('Error al actualizar la foto de perfil.');
+    } catch {
+      toast.error('Error al actualizar la foto de perfil.');
     }
   };
 

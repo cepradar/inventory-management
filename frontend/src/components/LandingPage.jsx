@@ -1,10 +1,9 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
-import axios from './utils/axiosConfig';
+import axiosClient from '../api/axiosClient';
+import { useCompanyInfo } from '../hooks/useCompanyInfo';
 
 function LandingPage() {
-  const [companyInfo, setCompanyInfo] = useState(null);
-  const [logoUrl, setLogoUrl] = useState('');
   const [status, setStatus] = useState('loading');
   const [activeSlide, setActiveSlide] = useState(0);
   const [dragOffset, setDragOffset] = useState(0);
@@ -25,56 +24,11 @@ function LandingPage() {
   const dragStartX = useRef(0);
   const mascotTimeoutRef = useRef(null);
 
+  const { companyInfo, logoUrl, loading: companyLoading } = useCompanyInfo('logo2');
+
   useEffect(() => {
-    let isMounted = true;
-    let objectUrl = null;
-
-    const fetchCompanyInfo = async () => {
-      try {
-        const infoResponse = await axios.get('/api/company/info');
-        if (!isMounted) return;
-        setCompanyInfo(infoResponse.data || null);
-
-        if (infoResponse.data?.id) {
-          try {
-            const logo2Response = await axios.get(`/api/company/${infoResponse.data.id}/logo2`, {
-              responseType: 'blob',
-            });
-            if (!isMounted) return;
-            objectUrl = URL.createObjectURL(logo2Response.data);
-            setLogoUrl(objectUrl);
-          } catch (error) {
-            try {
-              const logoResponse = await axios.get(`/api/company/${infoResponse.data.id}/logo`, {
-                responseType: 'blob',
-              });
-              if (!isMounted) return;
-              objectUrl = URL.createObjectURL(logoResponse.data);
-              setLogoUrl(objectUrl);
-            } catch (logoError) {
-              setLogoUrl('');
-            }
-          }
-        }
-
-        setStatus('ready');
-      } catch (error) {
-        console.warn('No se pudo cargar la informacion de la empresa:', error);
-        if (isMounted) {
-          setStatus('error');
-        }
-      }
-    };
-
-    fetchCompanyInfo();
-
-    return () => {
-      isMounted = false;
-      if (objectUrl) {
-        URL.revokeObjectURL(objectUrl);
-      }
-    };
-  }, []);
+    if (!companyLoading) setStatus(companyInfo ? 'ready' : 'error');
+  }, [companyLoading, companyInfo]);
 
   const heroTitle = 'Servicio tecnico especializado';
   const heroSubtitle = 'Electrodomesticos de gama blanca';
@@ -457,7 +411,7 @@ function LandingPage() {
                   setIsSubmitting(true);
                   
                   try {
-                    const response = await axios.post('/auth/register-client', registerForm);
+                    const response = await axiosClient.post('/auth/register-client', registerForm);
                     setRegisterSuccess(true);
                   } catch (error) {
                     setRegisterError(

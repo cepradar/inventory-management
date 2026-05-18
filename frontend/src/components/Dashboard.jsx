@@ -1,154 +1,107 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { lazy, Suspense, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import AdminSidebar from './SideBar';
-import AdminNavbar from './NavBar';
-import CrudManager from './CrudManager';
-import UserManager from './UserManager';
-import AuditModule from './AuditModule';
-import SalesModule from './SalesModule';
-import Modal from './Modal';
-import ClientManager from './ClientManager';
-import IngresoElectrodomestico from './IngresoElectrodomestico';
-import OrdenServicio from './OrdenServicio';
-import ConfigDashboard from './ConfigDashboard';
-import { useNavigate } from 'react-router-dom';
-import axios from './utils/axiosConfig';
-import { usePermissions } from './utils/PermissionsContext';
+import AdminNavbar  from './NavBar';
+import Modal        from './common/Modal';
+import Spinner      from './ui/Spinner';
+import { useNavigate }   from 'react-router-dom';
+import { usePermissions } from '../context/PermissionsContext';
+import { useCompanyInfo } from '../hooks/useCompanyInfo';
+
+// ── Lazy loading — cada módulo se carga solo cuando se necesita ───────────────
+const CrudManager          = lazy(() => import('./CrudManager'));
+const UserManager          = lazy(() => import('./UserManager'));
+const AuditModule          = lazy(() => import('./AuditModule'));
+const SalesModule          = lazy(() => import('./SalesModule'));
+const ClientManager        = lazy(() => import('./ClientManager'));
+const IngresoElectrodomestico = lazy(() => import('./IngresoElectrodomestico'));
+const OrdenServicio        = lazy(() => import('./OrdenServicio'));
+const ConfigDashboard      = lazy(() => import('./ConfigDashboard'));
+
+function ModuleSpinner() {
+  return (
+    <div className="flex items-center justify-center h-48">
+      <Spinner size="lg" />
+    </div>
+  );
+}
 
 function Dashboard() {
-  const [activeModule, setActiveModule] = useState('home');
-  const [activeInventoryView, setActiveInventoryView] = useState(null);
-  const [showModal, setShowModal] = useState(false);
-  const [modalMessage, setModalMessage] = useState('');
-  const [modalAction, setModalAction] = useState(() => { });
-  const [isSidebarExpanded, setIsSidebarExpanded] = useState(true);
-  const [userRole, setUserRole] = useState(null);
-  const [userName, setUserName] = useState(null);
-  const [companyInfo, setCompanyInfo] = useState(null);
-  const [companyLogoUrl, setCompanyLogoUrl] = useState(null);
-  const [hasActiveForm, setHasActiveForm] = useState(false); // 🔔 Estado para saber si hay formulario activo
-  const [pendingModuleChange, setPendingModuleChange] = useState(null); // 🔔 Cambio pendiente
+  const [activeModule, setActiveModule]               = useState('home');
+  const [activeInventoryView, setActiveInventoryView] = useState('products');
+  const [showModal, setShowModal]                     = useState(false);
+  const [modalMessage, setModalMessage]               = useState('');
+  const [modalAction, setModalAction]                 = useState(() => () => {});
+  const [isSidebarExpanded, setIsSidebarExpanded]     = useState(true);
+  const [userRole, setUserRole]                       = useState(null);
+  const [userName, setUserName]                       = useState(null);
+  const [hasActiveForm, setHasActiveForm]             = useState(false);
+  const [pendingModuleChange, setPendingModuleChange] = useState(null);
+  const [sidebarWidth, setSidebarWidth]               = useState(196);
+
   const { permissions } = usePermissions();
+  const { companyInfo, logoUrl: companyLogoUrl } = useCompanyInfo('logo');
 
   const sidebarRef = useRef(null);
-  const navRef = useRef(null);
-  const [sidebarWidth, setSidebarWidth] = useState(0);
-  const navigate = useNavigate();
+  const navigate   = useNavigate();
 
+  // ── Leer credenciales del localStorage ──────────────────────────────────
   useEffect(() => {
-    const role = localStorage.getItem('userRole');
+    const role     = localStorage.getItem('userRole');
     const username = localStorage.getItem('username');
-    if (role) setUserRole(role);
+    if (role)     setUserRole(role);
     if (username) setUserName(username);
-    else navigate('/login');
+    else          navigate('/login');
   }, [navigate]);
 
-  // Permiso mínimo requerido para acceder a cada módulo
-  const MODULE_MIN_PERMISSION = {
-    users: 'users.read',
-    inventory: 'inventory.read',
-    clients: 'clients.read',
-    sales: 'sales.read',
+  // ── Permisos mínimos por módulo ──────────────────────────────────────────
+  const MODULE_MIN_PERMISSION = useMemo(() => ({
+    users:            'users.read',
+    inventory:        'inventory.read',
+    clients:          'clients.read',
+    sales:            'sales.read',
     'ordenes-servicio': 'orders.read',
-    audit: 'audit.read',
-    settings: 'config.roles.read',
-  };
+    audit:            'audit.read',
+    settings:         'config.roles.read',
+  }), []);
 
-  // Si el módulo activo pierde acceso, volver al inicio
-  // (settings es accesible con config.roles.read O reports.read)
   useEffect(() => {
     if (permissions.length === 0) return;
     const required = MODULE_MIN_PERMISSION[activeModule];
-    if (required && !permissions.includes(required)) {
+    if (!required) return;
+    if (!permissions.includes(required)) {
       if (activeModule === 'settings' && permissions.includes('reports.read')) return;
       setActiveModule('home');
     }
-  }, [permissions]);
+  }, [permissions, activeModule, MODULE_MIN_PERMISSION]);
 
+  // ── Sidebar collapse al hacer click fuera ───────────────────────────────
   useEffect(() => {
-    let isMounted = true;
-    let objectUrl = null;
-
-    const fetchCompanyInfo = async () => {
-      try {
-        const infoResponse = await axios.get('/api/company/info');
-        if (!isMounted) return;
-        setCompanyInfo(infoResponse.data);
-
-        if (infoResponse.data?.id) {
-          const logoResponse = await axios.get(`/api/company/${infoResponse.data.id}/logo`, {
-            responseType: 'blob',
-          });
-          if (!isMounted) return;
-          objectUrl = URL.createObjectURL(logoResponse.data);
-          setCompanyLogoUrl(objectUrl);
-        }
-      } catch (error) {
-        console.warn('No se pudo cargar la información de la empresa:', error);
-      }
-    };
-
-    fetchCompanyInfo();
-
-    return () => {
-      isMounted = false;
-      if (objectUrl) {
-        URL.revokeObjectURL(objectUrl);
-      }
-    };
-  }, []);
-
-  useEffect(() => {
-    function handleClickOutside(event) {
+    const handleOutsideClick = (event) => {
       if (isSidebarExpanded && sidebarRef.current && !sidebarRef.current.contains(event.target)) {
         setIsSidebarExpanded(false);
       }
-    }
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
+    };
+    document.addEventListener('mousedown', handleOutsideClick);
+    return () => document.removeEventListener('mousedown', handleOutsideClick);
   }, [isSidebarExpanded]);
 
+  // ── Ancho del sidebar en sync con estado ────────────────────────────────
   useEffect(() => {
-    // Calcular el ancho esperado sincronicamente basado en isSidebarExpanded
-    // 196px cuando está expandido, 44px cuando está colapsado
-    const expectedWidth = isSidebarExpanded ? 196 : 44;
-    setSidebarWidth(expectedWidth);
+    setSidebarWidth(isSidebarExpanded ? 196 : 44);
   }, [isSidebarExpanded]);
 
-  // Effect adicional para manejar cambios de pantalla (redimensión)
   useEffect(() => {
     const handleResize = () => {
-      if (sidebarRef.current) {
-        setSidebarWidth(sidebarRef.current.offsetWidth);
-      }
+      if (sidebarRef.current) setSidebarWidth(sidebarRef.current.offsetWidth);
     };
-
     window.addEventListener('resize', handleResize);
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
-  const toggleSidebar = () => setIsSidebarExpanded(!isSidebarExpanded);
+  // ── Handlers ────────────────────────────────────────────────────────────
+  const toggleSidebar = useCallback(() => setIsSidebarExpanded((v) => !v), []);
 
-  const handleModuleChange = (module) => {
-    // 🔔 Si hay formulario activo, mostrar confirmación
-    if (hasActiveForm && module !== activeModule) {
-      setPendingModuleChange(module);
-      setShowModal(true);
-      setModalMessage('Tienes cambios sin guardar. ¿Estás seguro de que quieres salir?');
-      setModalAction(() => () => {
-        // Confirmar cambio de módulo
-        executeModuleChange(module);
-        setHasActiveForm(false);
-        setPendingModuleChange(null);
-        setShowModal(false);
-      });
-      return;
-    }
-
-    // Si no hay formulario activo, cambiar directamente
-    executeModuleChange(module);
-  };
-
-  const executeModuleChange = (module) => {
+  const executeModuleChange = useCallback((module) => {
     setActiveModule(module);
     if (module === 'logout') {
       setShowModal(true);
@@ -161,10 +114,26 @@ function Dashboard() {
     } else if (module === 'inventory') {
       setActiveInventoryView('products');
     }
-  };
+  }, [navigate]);
 
+  const handleModuleChange = useCallback((module) => {
+    if (hasActiveForm && module !== activeModule) {
+      setPendingModuleChange(module);
+      setShowModal(true);
+      setModalMessage('Tienes cambios sin guardar. ¿Estás seguro de que quieres salir?');
+      setModalAction(() => () => {
+        executeModuleChange(module);
+        setHasActiveForm(false);
+        setPendingModuleChange(null);
+        setShowModal(false);
+      });
+      return;
+    }
+    executeModuleChange(module);
+  }, [hasActiveForm, activeModule, executeModuleChange]);
 
-  const renderContent = () => {
+  // ── Renderizado del módulo activo ────────────────────────────────────────
+  const renderContent = useCallback(() => {
     switch (activeModule) {
       case 'home':
         return (
@@ -190,30 +159,32 @@ function Dashboard() {
         );
       case 'inventory':
         return (
-          <CrudManager 
-            resourceType={activeInventoryView} 
-            userRole={userRole} 
-            onFormStateChange={setHasActiveForm}
-          />
+          <Suspense fallback={<ModuleSpinner />}>
+            <CrudManager
+              resourceType={activeInventoryView}
+              userRole={userRole}
+              onFormStateChange={setHasActiveForm}
+            />
+          </Suspense>
         );
       case 'users':
-        return <UserManager />;
+        return <Suspense fallback={<ModuleSpinner />}><UserManager /></Suspense>;
       case 'audit':
-        return <AuditModule />;
+        return <Suspense fallback={<ModuleSpinner />}><AuditModule /></Suspense>;
       case 'sales':
-        return <SalesModule />;
+        return <Suspense fallback={<ModuleSpinner />}><SalesModule /></Suspense>;
       case 'clients':
-        return <ClientManager />;
+        return <Suspense fallback={<ModuleSpinner />}><ClientManager /></Suspense>;
       case 'settings':
-        return <ConfigDashboard />;
+        return <Suspense fallback={<ModuleSpinner />}><ConfigDashboard /></Suspense>;
       case 'ordenes-servicio':
-        return <OrdenServicio />;
+        return <Suspense fallback={<ModuleSpinner />}><OrdenServicio /></Suspense>;
       case 'ingresos':
-        return <IngresoElectrodomestico />;
+        return <Suspense fallback={<ModuleSpinner />}><IngresoElectrodomestico /></Suspense>;
       default:
         return null;
     }
-  };
+  }, [activeModule, activeInventoryView, userRole, companyLogoUrl, companyInfo]);
 
   return (
     <div className="min-h-screen">
@@ -242,7 +213,6 @@ function Dashboard() {
         }}
       >
         <AdminNavbar
-          navRef={navRef}
           activeModule={activeModule}
           onHomeClick={() => handleModuleChange('home')}
           companyName={companyInfo?.razonSocial}

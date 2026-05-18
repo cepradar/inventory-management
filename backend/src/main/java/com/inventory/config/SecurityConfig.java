@@ -27,7 +27,7 @@ public class SecurityConfig {
 
     private final String[] allowedOriginPatterns;
 
-    public SecurityConfig(@Value("${app.cors.allowed-origin-patterns:http://localhost:5173,https://*.trycloudflare.com}") String patterns) {
+    public SecurityConfig(@Value("${app.cors.allowed-origin-patterns:http://localhost:5173,http://192.168.1.9:5173}") String patterns) {
         this.allowedOriginPatterns = patterns.split("\\s*,\\s*");
     }
 
