@@ -2,6 +2,7 @@ import React, { useEffect, useMemo, useRef, useState } from 'react';
 import api from './utils/axiosConfig';
 import { usePermissions } from './utils/PermissionsContext';
 import ReportesModule from './ReportesModule';
+import MiscManager from './MiscManager';
 import {
   UsersIcon,
   ArchiveBoxIcon,
@@ -13,26 +14,36 @@ import {
   ChevronDownIcon,
   ChevronRightIcon,
   DocumentChartBarIcon,
+  ShieldCheckIcon,
+  WrenchScrewdriverIcon,
+  BuildingOfficeIcon,
+  TagIcon,
 } from '@heroicons/react/24/outline';
 
 const CONFIG_OPTIONS = [
-  { id: 'roles',       label: 'Tipos de usuarios',               perm: 'config.roles.read' },
-  { id: 'documentos', label: 'Tipos de documento',              perm: 'config.roles.read' },
-  { id: 'cat-electro', label: 'Categorias de electrodomesticos', perm: 'config.roles.read' },
-  { id: 'cat-productos', label: 'Categorias de productos',       perm: 'config.roles.read' },
-  { id: 'permisos',   label: 'Permisos por rol',                perm: 'config.roles.read' },
-  { id: 'reportes',   label: 'Reportes',                        perm: 'reports.read' },
+  { id: 'permisos',      label: 'Permisos por rol',                perm: 'config.roles.read',          Icon: ShieldCheckIcon },
+  { id: 'reportes',      label: 'Reportes',                        perm: 'reports.read',               Icon: DocumentChartBarIcon },
+  { id: 'misc',          label: 'Misceláneas',                     perm: 'config.user-types.read',     Icon: ArchiveBoxIcon },
 ];
 
 const MODULE_CONFIG = [
-  { key: 'users',    label: 'Usuarios',            Icon: UsersIcon },
-  { key: 'inventory', label: 'Inventario',           Icon: ArchiveBoxIcon },
-  { key: 'clients',  label: 'Clientes',             Icon: UserGroupIcon },
-  { key: 'sales',    label: 'Ventas',               Icon: ShoppingCartIcon },
-  { key: 'orders',   label: 'Órdenes de Servicio',  Icon: ClipboardDocumentListIcon },
-  { key: 'audit',    label: 'Auditoría',            Icon: DocumentTextIcon },
-  { key: 'reports',  label: 'Reportes',             Icon: DocumentChartBarIcon },
-  { key: 'config',   label: 'Configuración',        Icon: Cog6ToothIcon },
+  { key: 'users',     label: 'Usuarios',            Icon: UsersIcon },
+  { key: 'inventory', label: 'Inventario',          Icon: ArchiveBoxIcon },
+  { key: 'clients',   label: 'Clientes',            Icon: UserGroupIcon },
+  { key: 'sales',     label: 'Ventas',              Icon: ShoppingCartIcon },
+  { key: 'orders',    label: 'Órdenes de Servicio', Icon: ClipboardDocumentListIcon },
+  { key: 'audit',     label: 'Auditoría',           Icon: DocumentTextIcon },
+  { key: 'config',    label: 'Configuración',       Icon: Cog6ToothIcon },
+];
+
+const CONFIG_CATEGORY_CONFIG = [
+  { key: 'user-types',     label: 'Tipos de usuarios',               Icon: UsersIcon,             group: 'misc' },
+  { key: 'document-types', label: 'Tipos de documento',              Icon: DocumentTextIcon,      group: 'misc' },
+  { key: 'appliance-cat',  label: 'Categorías de electrodomésticos', Icon: WrenchScrewdriverIcon, group: 'misc' },
+  { key: 'product-cat',    label: 'Categorías de productos',         Icon: TagIcon,               group: 'misc' },
+  { key: 'roles',          label: 'Permisos por rol',                Icon: ShieldCheckIcon },
+  { key: 'company',        label: 'Empresa',                         Icon: BuildingOfficeIcon,    group: 'misc' },
+  { key: 'reports',        label: 'Reportes',                        Icon: DocumentChartBarIcon },
 ];
 
 function ModuleCheckbox({ allActive, someActive, onChange }) {
@@ -56,13 +67,14 @@ export default function ConfigDashboard() {
   const { permissions } = usePermissions();
   const can = (c) => permissions.includes(c);
 
-  const [activeOption, setActiveOption] = useState('roles');
+  const [activeOption, setActiveOption] = useState('permisos');
 
   // Ajustar opción activa según permisos disponibles
   useEffect(() => {
     if (permissions.length === 0) return;
-    if (!can('config.roles.read') && can('reports.read')) {
-      setActiveOption('reportes');
+    const available = CONFIG_OPTIONS.filter((opt) => can(opt.perm));
+    if (available.length > 0 && !available.find((opt) => opt.id === activeOption)) {
+      setActiveOption(available[0].id);
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [permissions]);
@@ -77,6 +89,12 @@ export default function ConfigDashboard() {
     MODULE_CONFIG.forEach((m) => { s[m.key] = true; });
     return s;
   });
+  const [expandedCategories, setExpandedCategories] = useState(() => {
+    const s = {};
+    CONFIG_CATEGORY_CONFIG.forEach((c) => { s[c.key] = true; });
+    return s;
+  });
+  const [expandedGroups, setExpandedGroups] = useState({ misc: true });
 
   const fetchRoles = async () => {
     try {
@@ -125,6 +143,12 @@ export default function ConfigDashboard() {
         MODULE_CONFIG.forEach((m) => { s[m.key] = true; });
         return s;
       });
+      setExpandedCategories(() => {
+        const s = {};
+        CONFIG_CATEGORY_CONFIG.forEach((c) => { s[c.key] = true; });
+        return s;
+      });
+      setExpandedGroups({ misc: true });
     }
   }, [selectedRole]);
 
@@ -157,12 +181,51 @@ export default function ConfigDashboard() {
     setExpandedModules((prev) => ({ ...prev, [modKey]: !prev[modKey] }));
   };
 
+  const toggleCategoryExpand = (catKey) => {
+    setExpandedCategories((prev) => ({ ...prev, [catKey]: !prev[catKey] }));
+  };
+
+  const toggleGroupExpand = (groupKey) => {
+    setExpandedGroups((prev) => ({ ...prev, [groupKey]: !prev[groupKey] }));
+  };
+
+  const toggleAllInGroup = (modKey, groupKey) => {
+    const groupCatKeys = CONFIG_CATEGORY_CONFIG
+      .filter((c) => c.group === groupKey)
+      .map((c) => c.key);
+    const groupPerms = rolePerms.filter(
+      (p) => p.moduleKey === modKey && groupCatKeys.includes(p.categoryKey)
+    );
+    const allActive = groupPerms.every((p) => p.assigned);
+    setRolePerms((prev) =>
+      prev.map((p) =>
+        p.moduleKey === modKey && groupCatKeys.includes(p.categoryKey)
+          ? { ...p, assigned: !allActive }
+          : p
+      )
+    );
+  };
+
   const toggleAllInModule = (modKey) => {
     const inModule = rolePerms.filter((p) => (p.moduleKey || 'general') === modKey);
     const allActive = inModule.every((p) => p.assigned);
     setRolePerms((prev) =>
       prev.map((p) =>
         (p.moduleKey || 'general') === modKey ? { ...p, assigned: !allActive } : p
+      )
+    );
+  };
+
+  const toggleAllInCategory = (modKey, catKey) => {
+    const catPerms = rolePerms.filter(
+      (p) => p.moduleKey === modKey && p.categoryKey === catKey
+    );
+    const allActive = catPerms.every((p) => p.assigned);
+    setRolePerms((prev) =>
+      prev.map((p) =>
+        p.moduleKey === modKey && p.categoryKey === catKey
+          ? { ...p, assigned: !allActive }
+          : p
       )
     );
   };
@@ -191,10 +254,34 @@ export default function ConfigDashboard() {
       if (!groups[mod]) groups[mod] = [];
       groups[mod].push(p);
     });
-    // Solo mostrar módulos definidos en MODULE_CONFIG (evita duplicados por claves legacy en DB)
     return MODULE_CONFIG
       .filter((m) => groups[m.key]?.length > 0)
-      .map((m) => ({ ...m, perms: groups[m.key] }));
+      .map((m) => {
+        if (m.key === 'config') {
+          const catGroups = {};
+          (groups[m.key] || []).forEach((p) => {
+            const cat = p.categoryKey || 'general';
+            if (!catGroups[cat]) catGroups[cat] = [];
+            catGroups[cat].push(p);
+          });
+          const miscSubCategories = [];
+          const directCategories = [];
+          CONFIG_CATEGORY_CONFIG
+            .filter((c) => catGroups[c.key]?.length > 0)
+            .forEach((c) => {
+              const catObj = { ...c, perms: catGroups[c.key] };
+              if (c.group === 'misc') miscSubCategories.push(catObj);
+              else directCategories.push(catObj);
+            });
+          const categories = [];
+          if (miscSubCategories.length > 0) {
+            categories.push({ key: 'misc', label: 'Misceláneas', Icon: ArchiveBoxIcon, isGroup: true, subCategories: miscSubCategories });
+          }
+          categories.push(...directCategories);
+          return { ...m, categories };
+        }
+        return { ...m, perms: groups[m.key] };
+      });
   }, [rolePerms]);
 
   return (
@@ -207,12 +294,13 @@ export default function ConfigDashboard() {
               <button
                 key={opt.id}
                 onClick={() => setActiveOption(opt.id)}
-                className={`w-full text-left px-3 py-2 text-sm transition-colors ${
+                className={`w-full flex items-center gap-2 px-3 py-2 text-sm transition-colors ${
                   activeOption === opt.id
                     ? 'bg-blue-50 text-blue-700 font-semibold'
                     : 'text-gray-700 hover:bg-gray-50'
                 }`}
               >
+                {opt.Icon && <opt.Icon className="h-4 w-4 flex-shrink-0" />}
                 {opt.label}
               </button>
             ))}
@@ -220,74 +308,6 @@ export default function ConfigDashboard() {
         </div>
 
         <div className="border border-gray-200 rounded-lg p-4">
-          {activeOption === 'roles' && (
-            <div className="space-y-4">
-              <div>
-                <h3 className="text-lg font-semibold text-gray-800">Tipos de usuarios</h3>
-                <p className="text-sm text-gray-500">Crea y consulta roles del sistema.</p>
-              </div>
-
-              <form onSubmit={handleCreateRole} className="grid grid-cols-1 md:grid-cols-3 gap-3">
-                <input
-                  type="text"
-                  name="name"
-                  value={roleForm.name}
-                  onChange={handleRoleFormChange}
-                  className="w-full h-9 px-3 text-sm border border-gray-300 rounded"
-                  placeholder="Nombre del rol"
-                  required
-                />
-                <input
-                  type="text"
-                  name="description"
-                  value={roleForm.description}
-                  onChange={handleRoleFormChange}
-                  className="w-full h-9 px-3 text-sm border border-gray-300 rounded"
-                  placeholder="Descripcion"
-                />
-                <div className="flex gap-2">
-                  <input
-                    type="color"
-                    name="color"
-                    value={roleForm.color}
-                    onChange={handleRoleFormChange}
-                    className="h-9 w-12 border border-gray-300 rounded"
-                    title="Color"
-                  />
-                  <button
-                    type="submit"
-                    className="flex-1 h-9 bg-blue-600 hover:bg-blue-700 text-white text-sm rounded"
-                  >
-                    Crear rol
-                  </button>
-                </div>
-              </form>
-
-              <div className="border border-gray-200 rounded">
-                <div className="grid grid-cols-[1fr_1fr_80px] gap-2 px-3 py-2 bg-gray-50 text-xs font-semibold text-gray-700">
-                  <span>Rol</span>
-                  <span>Descripcion</span>
-                  <span>Color</span>
-                </div>
-                <div className="divide-y divide-gray-200">
-                  {roles.map((rol) => (
-                    <div key={rol.name} className="grid grid-cols-[1fr_1fr_80px] gap-2 px-3 py-2 text-sm">
-                      <span className="font-semibold text-gray-800">{rol.name}</span>
-                      <span className="text-gray-600">{rol.description || '-'}</span>
-                      <span
-                        className="inline-flex h-6 w-6 rounded"
-                        style={{ backgroundColor: rol.color || '#4f46e5' }}
-                      ></span>
-                    </div>
-                  ))}
-                  {roles.length === 0 && (
-                    <div className="px-3 py-3 text-sm text-gray-500">No hay roles registrados</div>
-                  )}
-                </div>
-              </div>
-            </div>
-          )}
-
           {activeOption === 'permisos' && (
             <div className="space-y-4">
               <div>
@@ -321,35 +341,179 @@ export default function ConfigDashboard() {
                 <div className="py-8 text-sm text-gray-500 text-center">No hay permisos configurados para este rol.</div>
               ) : (
                 <div className="space-y-2">
-                  {permsByModule.map(({ key, label, Icon, perms }, idx) => {
-                    const activeCount = perms.filter((p) => p.assigned).length;
-                    const allActive = activeCount === perms.length;
+                  {permsByModule.map((mod, idx) => {
+                    const isExpanded = expandedModules[mod.key] ?? true;
+                    const flatPerms = mod.categories
+                      ? mod.categories.flatMap((c) =>
+                          c.isGroup ? c.subCategories.flatMap((sc) => sc.perms) : c.perms
+                        )
+                      : mod.perms;
+                    const activeCount = flatPerms.filter((p) => p.assigned).length;
+                    const allActive = activeCount === flatPerms.length;
                     const someActive = activeCount > 0;
-                    const isExpanded = expandedModules[key] ?? true;
                     return (
-                      <div key={key} className="border border-gray-200 rounded-lg overflow-hidden">
+                      <div key={mod.key} className="border border-gray-200 rounded-lg overflow-hidden">
                         <div
                           className="flex items-center gap-2 px-4 py-3 bg-gray-50 cursor-pointer select-none hover:bg-gray-100 transition-colors"
-                          onClick={() => toggleModuleExpand(key)}
+                          onClick={() => toggleModuleExpand(mod.key)}
                         >
                           <span className="text-xs font-bold text-gray-400 w-5 text-right flex-shrink-0">{idx + 1}.</span>
                           <ModuleCheckbox
                             allActive={allActive}
                             someActive={someActive}
-                            onChange={() => toggleAllInModule(key)}
+                            onChange={() => toggleAllInModule(mod.key)}
                           />
-                          {Icon && <Icon className="h-5 w-5 text-gray-600 flex-shrink-0" />}
-                          <span className="flex-1 text-sm font-semibold text-gray-800">{label}</span>
+                          {mod.Icon && <mod.Icon className="h-5 w-5 text-gray-600 flex-shrink-0" />}
+                          <span className="flex-1 text-sm font-semibold text-gray-800">{mod.label}</span>
                           <span className="text-xs text-gray-500 mr-1">
-                            {activeCount}/{perms.length} activos
+                            {activeCount}/{flatPerms.length} activos
                           </span>
                           {isExpanded
                             ? <ChevronDownIcon className="h-4 w-4 text-gray-400 flex-shrink-0" />
                             : <ChevronRightIcon className="h-4 w-4 text-gray-400 flex-shrink-0" />}
                         </div>
-                        {isExpanded && (
+
+                        {/* Módulo con subcategorías (config) */}
+                        {isExpanded && mod.categories && (
                           <div className="divide-y divide-gray-100">
-                            {perms.map((perm) => (
+                            {mod.categories.map((cat) => {
+                              if (cat.isGroup) {
+                                const groupPerms = cat.subCategories.flatMap((sc) => sc.perms);
+                                const groupActive = groupPerms.filter((p) => p.assigned).length;
+                                const groupAll = groupActive === groupPerms.length;
+                                const groupSome = groupActive > 0;
+                                const groupExpanded = expandedGroups[cat.key] ?? true;
+                                return (
+                                  <div key={cat.key}>
+                                    <div
+                                      className="flex items-center gap-2 pl-12 pr-4 py-2.5 bg-indigo-50/60 cursor-pointer select-none hover:bg-indigo-100/60 transition-colors"
+                                      onClick={() => toggleGroupExpand(cat.key)}
+                                    >
+                                      <ModuleCheckbox
+                                        allActive={groupAll}
+                                        someActive={groupSome}
+                                        onChange={() => toggleAllInGroup(mod.key, cat.key)}
+                                      />
+                                      {cat.Icon && <cat.Icon className="h-4 w-4 text-indigo-500 flex-shrink-0" />}
+                                      <span className="flex-1 text-xs font-semibold text-indigo-700">{cat.label}</span>
+                                      <span className="text-xs text-indigo-400 mr-1">{groupActive}/{groupPerms.length} activos</span>
+                                      {groupExpanded
+                                        ? <ChevronDownIcon className="h-3.5 w-3.5 text-indigo-400 flex-shrink-0" />
+                                        : <ChevronRightIcon className="h-3.5 w-3.5 text-indigo-400 flex-shrink-0" />}
+                                    </div>
+                                    {groupExpanded && (
+                                      <div className="divide-y divide-gray-100">
+                                        {cat.subCategories.map((subCat) => {
+                                          const subActive = subCat.perms.filter((p) => p.assigned).length;
+                                          const subAll = subActive === subCat.perms.length;
+                                          const subSome = subActive > 0;
+                                          const subExpanded = expandedCategories[subCat.key] ?? true;
+                                          return (
+                                            <div key={subCat.key}>
+                                              <div
+                                                className="flex items-center gap-2 pl-16 pr-4 py-2 bg-gray-50/60 cursor-pointer select-none hover:bg-gray-100/60 transition-colors"
+                                                onClick={() => toggleCategoryExpand(subCat.key)}
+                                              >
+                                                <ModuleCheckbox
+                                                  allActive={subAll}
+                                                  someActive={subSome}
+                                                  onChange={() => toggleAllInCategory(mod.key, subCat.key)}
+                                                />
+                                                {subCat.Icon && <subCat.Icon className="h-4 w-4 text-gray-400 flex-shrink-0" />}
+                                                <span className="flex-1 text-xs font-semibold text-gray-600">{subCat.label}</span>
+                                                <span className="text-xs text-gray-400 mr-1">{subActive}/{subCat.perms.length}</span>
+                                                {subExpanded
+                                                  ? <ChevronDownIcon className="h-3.5 w-3.5 text-gray-400 flex-shrink-0" />
+                                                  : <ChevronRightIcon className="h-3.5 w-3.5 text-gray-400 flex-shrink-0" />}
+                                              </div>
+                                              {subExpanded && (
+                                                <div className="divide-y divide-gray-100">
+                                                  {subCat.perms.map((perm) => (
+                                                    <label
+                                                      key={perm.id}
+                                                      className="flex items-center gap-3 pl-24 pr-4 py-2 cursor-pointer hover:bg-blue-50 transition-colors"
+                                                    >
+                                                      <input
+                                                        type="checkbox"
+                                                        checked={perm.assigned ?? false}
+                                                        onChange={() => togglePermission(perm.id)}
+                                                        className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500 flex-shrink-0"
+                                                      />
+                                                      <div className="flex-1 min-w-0">
+                                                        <div className="text-sm text-gray-800">· {perm.label}</div>
+                                                        <div className="text-xs text-gray-400 font-mono">{perm.code}</div>
+                                                      </div>
+                                                      {perm.critical && (
+                                                        <span className="text-xs bg-red-100 text-red-700 px-1.5 py-0.5 rounded font-semibold flex-shrink-0">crítico</span>
+                                                      )}
+                                                    </label>
+                                                  ))}
+                                                </div>
+                                              )}
+                                            </div>
+                                          );
+                                        })}
+                                      </div>
+                                    )}
+                                  </div>
+                                );
+                              }
+                              const catActive = cat.perms.filter((p) => p.assigned).length;
+                              const catAll = catActive === cat.perms.length;
+                              const catSome = catActive > 0;
+                              const catExpanded = expandedCategories[cat.key] ?? true;
+                              return (
+                                <div key={cat.key}>
+                                  <div
+                                    className="flex items-center gap-2 pl-12 pr-4 py-2.5 bg-gray-50/60 cursor-pointer select-none hover:bg-gray-100/60 transition-colors"
+                                    onClick={() => toggleCategoryExpand(cat.key)}
+                                  >
+                                    <ModuleCheckbox
+                                      allActive={catAll}
+                                      someActive={catSome}
+                                      onChange={() => toggleAllInCategory(mod.key, cat.key)}
+                                    />
+                                    {cat.Icon && <cat.Icon className="h-4 w-4 text-gray-500 flex-shrink-0" />}
+                                    <span className="flex-1 text-xs font-semibold text-gray-700">{cat.label}</span>
+                                    <span className="text-xs text-gray-400 mr-1">{catActive}/{cat.perms.length}</span>
+                                    {catExpanded
+                                      ? <ChevronDownIcon className="h-3.5 w-3.5 text-gray-400 flex-shrink-0" />
+                                      : <ChevronRightIcon className="h-3.5 w-3.5 text-gray-400 flex-shrink-0" />}
+                                  </div>
+                                  {catExpanded && (
+                                    <div className="divide-y divide-gray-100">
+                                      {cat.perms.map((perm) => (
+                                        <label
+                                          key={perm.id}
+                                          className="flex items-center gap-3 pl-20 pr-4 py-2 cursor-pointer hover:bg-blue-50 transition-colors"
+                                        >
+                                          <input
+                                            type="checkbox"
+                                            checked={perm.assigned ?? false}
+                                            onChange={() => togglePermission(perm.id)}
+                                            className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500 flex-shrink-0"
+                                          />
+                                          <div className="flex-1 min-w-0">
+                                            <div className="text-sm text-gray-800">· {perm.label}</div>
+                                            <div className="text-xs text-gray-400 font-mono">{perm.code}</div>
+                                          </div>
+                                          {perm.critical && (
+                                            <span className="text-xs bg-red-100 text-red-700 px-1.5 py-0.5 rounded font-semibold flex-shrink-0">crítico</span>
+                                          )}
+                                        </label>
+                                      ))}
+                                    </div>
+                                  )}
+                                </div>
+                              );
+                            })}
+                          </div>
+                        )}
+
+                        {/* Módulo plano (sin subcategorías) */}
+                        {isExpanded && mod.perms && (
+                          <div className="divide-y divide-gray-100">
+                            {mod.perms.map((perm) => (
                               <label
                                 key={perm.id}
                                 className="flex items-center gap-3 pl-14 pr-4 py-2.5 cursor-pointer hover:bg-blue-50 transition-colors"
@@ -365,7 +529,7 @@ export default function ConfigDashboard() {
                                   <div className="text-xs text-gray-400 font-mono">{perm.code}</div>
                                 </div>
                                 {perm.critical && (
-                                  <span className="text-xs bg-red-100 text-red-700 px-1.5 py-0.5 rounded font-semibold flex-shrink-0">critico</span>
+                                  <span className="text-xs bg-red-100 text-red-700 px-1.5 py-0.5 rounded font-semibold flex-shrink-0">crítico</span>
                                 )}
                               </label>
                             ))}
@@ -395,7 +559,11 @@ export default function ConfigDashboard() {
             </div>
           )}
 
-          {activeOption !== 'roles' && activeOption !== 'permisos' && activeOption !== 'reportes' && (
+          {activeOption === 'misc' && (
+            <MiscManager />
+          )}
+
+          {activeOption !== 'permisos' && activeOption !== 'reportes' && activeOption !== 'misc' && (
             <div className="text-sm text-gray-500">
               Esta seccion estara disponible proximamente.
             </div>

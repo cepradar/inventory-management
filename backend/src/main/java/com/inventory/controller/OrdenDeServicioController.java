@@ -1,8 +1,8 @@
 package com.inventory.controller;
 
 import com.inventory.dto.OrdenDeServicioDto;
+import com.inventory.service.DocumentoGeneradorService;
 import com.inventory.service.OrdenDeServicioService;
-import com.inventory.service.OrdenServicioPdfService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -27,7 +27,7 @@ public class OrdenDeServicioController {
     private OrdenDeServicioService service;
 
     @Autowired
-    private OrdenServicioPdfService ordenServicioPdfService;
+    private DocumentoGeneradorService documentoGeneradorService;
 
     @PostMapping("/registrar")
     @PreAuthorize("isAuthenticated()")
@@ -250,7 +250,7 @@ public class OrdenDeServicioController {
                 }
             }
 
-            byte[] pdfBytes = ordenServicioPdfService.generarPdf(id);
+            byte[] pdfBytes = documentoGeneradorService.generarOrdenServicio(id);
 
             HttpHeaders headers = new HttpHeaders();
             headers.setContentType(MediaType.APPLICATION_PDF);

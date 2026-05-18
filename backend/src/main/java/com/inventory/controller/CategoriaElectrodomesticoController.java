@@ -38,4 +38,23 @@ public class CategoriaElectrodomesticoController {
             return ResponseEntity.badRequest().body("Error: " + e.getMessage());
         }
     }
+
+    @PutMapping("/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<?> actualizar(@PathVariable Long id, @RequestBody CategoriaElectrodomestico dto) {
+        return repository.findById(id).map(existing -> {
+            if (dto.getNombre() != null) existing.setNombre(dto.getNombre());
+            existing.setDescripcion(dto.getDescripcion());
+            if (dto.getActivo() != null) existing.setActivo(dto.getActivo());
+            return ResponseEntity.ok(repository.save(existing));
+        }).orElseGet(() -> ResponseEntity.notFound().build());
+    }
+
+    @DeleteMapping("/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<?> eliminar(@PathVariable Long id) {
+        if (!repository.existsById(id)) return ResponseEntity.notFound().build();
+        repository.deleteById(id);
+        return ResponseEntity.noContent().build();
+    }
 }

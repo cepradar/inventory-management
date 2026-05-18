@@ -1,6 +1,6 @@
 package com.inventory.controller;
 
-import com.inventory.service.FacturaService;
+import com.inventory.service.DocumentoGeneradorService;
 import com.inventory.service.VentasService;
 import com.inventory.dto.VentaDto;
 import org.springframework.http.HttpHeaders;
@@ -15,16 +15,17 @@ import org.springframework.web.bind.annotation.*;
 @RequestMapping("/api/facturas")
 public class FacturaController {
 
-    private final FacturaService facturaService;
+    private final DocumentoGeneradorService documentoGeneradorService;
     private final VentasService ventasService;
 
-    public FacturaController(FacturaService facturaService, VentasService ventasService) {
-        this.facturaService = facturaService;
-        this.ventasService  = ventasService;
+    public FacturaController(DocumentoGeneradorService documentoGeneradorService,
+                             VentasService ventasService) {
+        this.documentoGeneradorService = documentoGeneradorService;
+        this.ventasService = ventasService;
     }
 
     /**
-     * Genera y descarga la factura PDF de una venta.
+     * Genera y descarga la factura PDF de una venta usando JasperReports.
      * ADMIN puede descargar cualquier venta; TECNICO solo las suyas.
      * El PDF se genera en memoria y no se almacena en disco.
      */
@@ -41,7 +42,7 @@ public class FacturaController {
                 }
             }
 
-            byte[] pdf = facturaService.generarFacturaPdf(ventaId);
+            byte[] pdf = documentoGeneradorService.generarFactura(ventaId);
             HttpHeaders headers = new HttpHeaders();
             headers.setContentType(MediaType.APPLICATION_PDF);
             headers.setContentDispositionFormData("attachment", "factura-" + ventaId + ".pdf");

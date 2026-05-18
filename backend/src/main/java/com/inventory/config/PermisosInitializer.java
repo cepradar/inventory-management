@@ -12,6 +12,7 @@ import org.springframework.context.annotation.Configuration;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
 @Configuration
 public class PermisosInitializer {
@@ -54,19 +55,41 @@ public class PermisosInitializer {
         // audit
         new String[]{"audit.read",            "Ver auditoría",               "audit",     null,         "read"},
         new String[]{"audit.export",          "Exportar auditoría",          "audit",     null,         "export"},
-        // config
-        new String[]{"config.roles.read",     "Ver roles y permisos",        "config",    "roles",      "read"},
-        new String[]{"config.roles.write",    "Gestionar roles y permisos",  "config",    "roles",      "write"},
-        new String[]{"config.company.read",   "Ver configuración empresa",   "config",    "company",    "read"},
-        new String[]{"config.company.write",  "Editar configuración empresa","config",    "company",    "write"},
-        // reports
-        new String[]{"reports.read",          "Ver reportes",                "reports",   null,         "read"},
-        new String[]{"reports.export",        "Exportar reportes",           "reports",   null,         "export"},
-        new String[]{"reports.upload",        "Subir plantillas",            "reports",   null,         "upload"},
-        new String[]{"reports.download",      "Descargar plantillas",        "reports",   null,         "download"},
-        new String[]{"reports.preview",       "Vista previa de reportes",    "reports",   null,         "preview"},
-        new String[]{"reports.delete",        "Eliminar plantillas",         "reports",   null,         "delete"},
-        new String[]{"reports.update",        "Actualizar plantillas",       "reports",   null,         "update"}
+        // config — tipos de usuarios (roles)
+        new String[]{"config.user-types.read",   "Ver tipos de usuarios",               "config", "user-types",     "read"},
+        new String[]{"config.user-types.create", "Crear tipos de usuarios",             "config", "user-types",     "create"},
+        new String[]{"config.user-types.update", "Editar tipos de usuarios",            "config", "user-types",     "update"},
+        new String[]{"config.user-types.delete", "Eliminar tipos de usuarios",          "config", "user-types",     "delete"},
+        // config — tipos de documento
+        new String[]{"config.document-types.read",   "Ver tipos de documento",          "config", "document-types", "read"},
+        new String[]{"config.document-types.create", "Crear tipos de documento",        "config", "document-types", "create"},
+        new String[]{"config.document-types.update", "Editar tipos de documento",       "config", "document-types", "update"},
+        new String[]{"config.document-types.delete", "Eliminar tipos de documento",     "config", "document-types", "delete"},
+        // config — categorías de electrodomésticos
+        new String[]{"config.appliance-cat.read",   "Ver categorías de electrodomésticos",    "config", "appliance-cat", "read"},
+        new String[]{"config.appliance-cat.create", "Crear categorías de electrodomésticos",  "config", "appliance-cat", "create"},
+        new String[]{"config.appliance-cat.update", "Editar categorías de electrodomésticos", "config", "appliance-cat", "update"},
+        new String[]{"config.appliance-cat.delete", "Eliminar categorías de electrodomésticos","config","appliance-cat", "delete"},
+        // config — categorías de productos
+        new String[]{"config.product-cat.read",   "Ver categorías de productos",         "config", "product-cat", "read"},
+        new String[]{"config.product-cat.create", "Crear categorías de productos",       "config", "product-cat", "create"},
+        new String[]{"config.product-cat.update", "Editar categorías de productos",      "config", "product-cat", "update"},
+        new String[]{"config.product-cat.delete", "Eliminar categorías de productos",    "config", "product-cat", "delete"},
+        // config — permisos por rol
+        new String[]{"config.roles.read",  "Ver permisos por rol",       "config", "roles", "read"},
+        new String[]{"config.roles.write", "Gestionar permisos por rol", "config", "roles", "write"},
+        // config — empresa
+        new String[]{"config.company.read",  "Ver configuración empresa",   "config", "company", "read"},
+        new String[]{"config.company.write", "Editar configuración empresa","config", "company", "write"},
+        // config — reportes (plantillas); códigos reports.* se mantienen para no romper guards existentes
+        new String[]{"reports.read",     "Ver reportes",             "config", "reports", "read"},
+        new String[]{"reports.download", "Descargar plantillas",     "config", "reports", "download"},
+        new String[]{"reports.upload",   "Subir plantillas",         "config", "reports", "upload"},
+        new String[]{"reports.update",   "Reemplazar plantillas",    "config", "reports", "update"},
+        new String[]{"reports.toggle",   "Activar/Desactivar plantillas","config","reports", "toggle"},
+        new String[]{"reports.delete",   "Eliminar plantillas",      "config", "reports", "delete"},
+        new String[]{"reports.export",   "Exportar reportes",        "config", "reports", "export"},
+        new String[]{"reports.preview",  "Vista previa de reportes", "config", "reports", "preview"}
     );
 
     /** Permisos asignados por defecto a cada rol */
@@ -75,7 +98,9 @@ public class PermisosInitializer {
         "TECNICO", List.of("inventory.read", "clients.read", "clients.create", "clients.update",
                            "sales.read", "sales.create", "sales.invoice.pdf",
                            "orders.read", "orders.create", "orders.update", "orders.assign_tech",
-                           "orders.pdf", "audit.read", "reports.read", "reports.preview"),
+                           "orders.pdf", "audit.read",
+                           "reports.read", "reports.preview",
+                           "config.user-types.read", "config.appliance-cat.read", "config.product-cat.read"),
         "CLIENTE", List.of("inventory.read", "orders.read", "sales.read")
     );
 
@@ -84,12 +109,26 @@ public class PermisosInitializer {
                                    RolePermissionRepository rolePermissionRepo,
                                    RolesRepository rolesRepo) {
         return args -> {
-            // 1. Seed del catálogo de permisos (idempotente)
+            // 1. Seed del catálogo de permisos — upsert: inserta si no existe, actualiza si cambió moduleKey/categoryKey
             for (String[] entry : CATALOG) {
-                permisosRepo.findByCode(entry[0]).orElseGet(() -> {
-                    Permisos p = new Permisos(entry[0], entry[1], entry[2], entry[3], entry[4]);
-                    return permisosRepo.save(p);
-                });
+                permisosRepo.findByCode(entry[0]).ifPresentOrElse(
+                    existing -> {
+                        boolean changed =
+                            !Objects.equals(existing.getLabel(),       entry[1]) ||
+                            !Objects.equals(existing.getModuleKey(),   entry[2]) ||
+                            !Objects.equals(existing.getCategoryKey(), entry[3]) ||
+                            !Objects.equals(existing.getActionKey(),   entry[4]);
+                        if (changed) {
+                            existing.setLabel(entry[1]);
+                            existing.setModuleKey(entry[2]);
+                            existing.setCategoryKey(entry[3]);
+                            existing.setActionKey(entry[4]);
+                            permisosRepo.save(existing);
+                        }
+                    },
+                    () -> permisosRepo.save(
+                        new Permisos(entry[0], entry[1], entry[2], entry[3], entry[4]))
+                );
             }
 
             // 2. Sincronizar asignaciones por rol

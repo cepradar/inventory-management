@@ -28,7 +28,7 @@ const NAV_ITEMS = [
     icon: Cog6ToothIcon,
     permission: null,
     customCan: (permissions) =>
-      permissions.includes('config.roles.read') || permissions.includes('reports.read'),
+      permissions.some((p) => p.startsWith('config.') || p.startsWith('reports.')),
   },
 ];
 

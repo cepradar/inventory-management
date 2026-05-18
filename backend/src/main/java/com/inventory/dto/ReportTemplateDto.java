@@ -2,12 +2,29 @@ package com.inventory.dto;
 
 /**
  * DTO para transferencia de datos de ReportTemplate.
+ * Incluye campos de módulo, tipo de documento, código y versión para la
+ * arquitectura de generación de documentos basada en JasperReports.
  */
 public class ReportTemplateDto {
 
     private Long id;
     private String nombre;
+
+    /** Código único de la plantilla (ej: "FACTURA_VENTA", "ORDEN_SERVICIO") */
+    private String codigo;
+
+    /** Módulo funcional (VENTAS, ORDENES, INVENTARIO, etc.) */
+    private String modulo;
+
+    /** Tipo de documento generado (FACTURA_VENTA, ORDEN_SERVICIO, etc.) */
+    private String tipoDocumento;
+
+    /** Versión de la plantilla */
+    private String version;
+
+    /** Campo legacy mantenido para compatibilidad */
     private String tipoReporte;
+
     private String descripcion;
     private boolean activo;
     private String fechaCreacion;
@@ -28,6 +45,18 @@ public class ReportTemplateDto {
 
     public String getNombre() { return nombre; }
     public void setNombre(String nombre) { this.nombre = nombre; }
+
+    public String getCodigo() { return codigo; }
+    public void setCodigo(String codigo) { this.codigo = codigo; }
+
+    public String getModulo() { return modulo; }
+    public void setModulo(String modulo) { this.modulo = modulo; }
+
+    public String getTipoDocumento() { return tipoDocumento; }
+    public void setTipoDocumento(String tipoDocumento) { this.tipoDocumento = tipoDocumento; }
+
+    public String getVersion() { return version; }
+    public void setVersion(String version) { this.version = version; }
 
     public String getTipoReporte() { return tipoReporte; }
     public void setTipoReporte(String tipoReporte) { this.tipoReporte = tipoReporte; }

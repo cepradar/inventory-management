@@ -47,18 +47,22 @@ public class ReportTemplateController {
 
     /**
      * Sube una plantilla nueva (.jrxml o .jasper).
+     * Soporta los campos nuevos de módulo y tipoDocumento.
      */
     @PostMapping(value = "/upload", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<ReportTemplateDto> subir(
             @RequestParam("nombre") String nombre,
-            @RequestParam("tipoReporte") String tipoReporte,
+            @RequestParam(value = "tipoReporte", required = false) String tipoReporte,
+            @RequestParam(value = "modulo", required = false) String modulo,
+            @RequestParam(value = "tipoDocumento", required = false) String tipoDocumento,
             @RequestParam(value = "descripcion", required = false) String descripcion,
             @RequestParam("archivo") MultipartFile archivo,
             Authentication authentication) {
         try {
             String username = authentication.getName();
-            ReportTemplateDto result = reportTemplateService.subirPlantilla(nombre, tipoReporte, descripcion, archivo, username);
+            ReportTemplateDto result = reportTemplateService.subirPlantilla(
+                    nombre, tipoReporte, modulo, tipoDocumento, descripcion, archivo, username);
             return ResponseEntity.ok(result);
         } catch (IllegalArgumentException e) {
             return ResponseEntity.badRequest().build();

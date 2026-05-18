@@ -56,14 +56,17 @@ public class ReportTemplateService {
     /**
      * Sube una plantilla nueva (JRXML o JASPER).
      *
-     * @param nombre      nombre descriptivo
-     * @param tipo        tipo de reporte (ej: FACTURA)
-     * @param descripcion descripción opcional
-     * @param archivo     archivo .jrxml o .jasper
-     * @param username    usuario que realiza la operación
+     * @param nombre        nombre descriptivo
+     * @param tipo          tipo de reporte legacy (ej: FACTURA) — puede ser null si se usa tipoDocumento
+     * @param modulo        módulo funcional (ej: VENTAS) — puede ser null
+     * @param tipoDocumento tipo de documento (ej: FACTURA_VENTA) — puede ser null
+     * @param descripcion   descripción opcional
+     * @param archivo       archivo .jrxml o .jasper
+     * @param username      usuario que realiza la operación
      */
     @Transactional
     public ReportTemplateDto subirPlantilla(String nombre, String tipo,
+                                             String modulo, String tipoDocumento,
                                              String descripcion, MultipartFile archivo,
                                              String username) throws Exception {
 
@@ -76,11 +79,17 @@ public class ReportTemplateService {
             throw new IllegalArgumentException("El archivo debe tener extensión .jrxml o .jasper");
         }
 
-        ReportTemplate.TipoReporte tipoReporte = parseTipo(tipo);
+        ReportTemplate.TipoReporte tipoReporte = (tipo != null && !tipo.isBlank()) ? parseTipo(tipo) : null;
 
         ReportTemplate template = new ReportTemplate();
         template.setNombre(nombre);
         template.setTipoReporte(tipoReporte);
+        if (modulo != null && !modulo.isBlank()) {
+            try { template.setModulo(ReportTemplate.ModuloReporte.valueOf(modulo.toUpperCase())); } catch (Exception ignored) {}
+        }
+        if (tipoDocumento != null && !tipoDocumento.isBlank()) {
+            try { template.setTipoDocumento(ReportTemplate.TipoDocumento.valueOf(tipoDocumento.toUpperCase())); } catch (Exception ignored) {}
+        }
         template.setDescripcion(descripcion);
         template.setCreadoPor(username);
         template.setActivo(true);
@@ -159,6 +168,18 @@ public class ReportTemplateService {
         if (dto.getTipoReporte() != null) {
             template.setTipoReporte(parseTipo(dto.getTipoReporte()));
         }
+        if (dto.getModulo() != null && !dto.getModulo().isBlank()) {
+            try { template.setModulo(ReportTemplate.ModuloReporte.valueOf(dto.getModulo().toUpperCase())); } catch (Exception ignored) {}
+        }
+        if (dto.getTipoDocumento() != null && !dto.getTipoDocumento().isBlank()) {
+            try { template.setTipoDocumento(ReportTemplate.TipoDocumento.valueOf(dto.getTipoDocumento().toUpperCase())); } catch (Exception ignored) {}
+        }
+        if (dto.getCodigo() != null && !dto.getCodigo().isBlank()) {
+            template.setCodigo(dto.getCodigo().toUpperCase().replace(' ', '_'));
+        }
+        if (dto.getVersion() != null && !dto.getVersion().isBlank()) {
+            template.setVersion(dto.getVersion());
+        }
         template.setFechaActualizacion(LocalDateTime.now());
         return toDto(repository.save(template));
     }
@@ -196,6 +217,10 @@ public class ReportTemplateService {
         ReportTemplateDto dto = new ReportTemplateDto();
         dto.setId(t.getId());
         dto.setNombre(t.getNombre());
+        dto.setCodigo(t.getCodigo());
+        dto.setModulo(t.getModulo() != null ? t.getModulo().name() : null);
+        dto.setTipoDocumento(t.getTipoDocumento() != null ? t.getTipoDocumento().name() : null);
+        dto.setVersion(t.getVersion());
         dto.setTipoReporte(t.getTipoReporte() != null ? t.getTipoReporte().name() : null);
         dto.setDescripcion(t.getDescripcion());
         dto.setActivo(Boolean.TRUE.equals(t.getActivo()));

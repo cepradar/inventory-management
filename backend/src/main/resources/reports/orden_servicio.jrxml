@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="UTF-8"?>
+﻿<?xml version="1.0" encoding="UTF-8"?>
 <!-- Plantilla de Orden de Servicio - JasperReports 6.x -->
 <jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports"
               xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
@@ -44,201 +44,201 @@
 
       <!-- ──────── ENCABEZADO (fondo azul) ──────── -->
       <rectangle>
-        <reportElement x="0" y="0" width="535" height="60" backcolor="#1e3a5f" forecolor="#1e3a5f" uuid="r1"/>
+        <reportElement x="0" y="0" width="535" height="60" backcolor="#1e3a5f" forecolor="#1e3a5f" uuid="192c4a55-e8b8-4cdb-9f73-f74d346aa3f4"/>
         <graphicElement><pen lineWidth="0"/></graphicElement>
       </rectangle>
       <textField isBlankWhenNull="true">
-        <reportElement x="10" y="6" width="300" height="24" forecolor="#FFFFFF" uuid="t1"/>
+        <reportElement x="10" y="6" width="300" height="24" forecolor="#FFFFFF" uuid="e3e930be-6182-47e2-9245-94ab9c3962d1"/>
         <textElement verticalAlignment="Middle"><font fontName="SansSerif" size="14" isBold="true"/></textElement>
         <textFieldExpression><![CDATA[$P{EMPRESA_NOMBRE}]]></textFieldExpression>
       </textField>
       <textField isBlankWhenNull="true">
-        <reportElement x="10" y="32" width="300" height="12" forecolor="#b0c4de" uuid="t2"/>
+        <reportElement x="10" y="32" width="300" height="12" forecolor="#b0c4de" uuid="0bba3c6d-d4ac-4af2-b184-b463a2bac182"/>
         <textElement><font fontName="SansSerif" size="8"/></textElement>
         <textFieldExpression><![CDATA["NIT: " + $P{EMPRESA_NIT} + "  Tel: " + $P{EMPRESA_TELEFONO}]]></textFieldExpression>
       </textField>
       <staticText>
-        <reportElement x="340" y="6" width="185" height="26" forecolor="#FFFFFF" uuid="s1"/>
+        <reportElement x="340" y="6" width="185" height="26" forecolor="#FFFFFF" uuid="de53ecce-cbb7-4813-84b2-568e28675ad2"/>
         <textElement textAlignment="Right" verticalAlignment="Middle"><font fontName="SansSerif" size="16" isBold="true"/></textElement>
         <text><![CDATA[ORDEN DE SERVICIO]]></text>
       </staticText>
       <textField isBlankWhenNull="true">
-        <reportElement x="340" y="34" width="185" height="12" forecolor="#b0c4de" uuid="t3"/>
+        <reportElement x="340" y="34" width="185" height="12" forecolor="#b0c4de" uuid="bb802711-3104-45a0-979f-05a3eae5a9bb"/>
         <textElement textAlignment="Right"><font fontName="SansSerif" size="8"/></textElement>
         <textFieldExpression><![CDATA["No. " + $P{ORDEN_ID} + "  Estado: " + $P{ORDEN_ESTADO}]]></textFieldExpression>
       </textField>
 
       <!-- ──────── SECCIÓN: Fechas ──────── -->
       <rectangle>
-        <reportElement x="0" y="68" width="535" height="18" backcolor="#eef2f7" forecolor="#eef2f7" uuid="r2"/>
+        <reportElement x="0" y="68" width="535" height="18" backcolor="#eef2f7" forecolor="#eef2f7" uuid="d3fca035-eed3-4012-aa83-4ec9dbad4ec9"/>
         <graphicElement><pen lineWidth="0"/></graphicElement>
       </rectangle>
       <staticText>
-        <reportElement x="5" y="71" width="100" height="12" uuid="sl1"/>
+        <reportElement x="5" y="71" width="100" height="12" uuid="11edb161-e1e3-46f2-98e4-c4729a1f8163"/>
         <textElement><font fontName="SansSerif" size="7" isBold="true"/></textElement>
         <text><![CDATA[Fecha Ingreso:]]></text>
       </staticText>
       <textField isBlankWhenNull="true">
-        <reportElement x="105" y="71" width="120" height="12" uuid="tf1"/>
+        <reportElement x="105" y="71" width="120" height="12" uuid="4365ef0f-6011-47d2-a445-a5af440368b2"/>
         <textElement><font fontName="SansSerif" size="7"/></textElement>
         <textFieldExpression><![CDATA[$P{ORDEN_FECHA_INGRESO}]]></textFieldExpression>
       </textField>
       <staticText>
-        <reportElement x="260" y="71" width="95" height="12" uuid="sl2"/>
+        <reportElement x="260" y="71" width="95" height="12" uuid="a6e9a6b4-2263-425e-8ede-174793890e84"/>
         <textElement><font fontName="SansSerif" size="7" isBold="true"/></textElement>
         <text><![CDATA[Fecha Salida Estimada:]]></text>
       </staticText>
       <textField isBlankWhenNull="true">
-        <reportElement x="360" y="71" width="120" height="12" uuid="tf2"/>
+        <reportElement x="360" y="71" width="120" height="12" uuid="6b4da73d-657b-45bd-8980-86f1fd1984e7"/>
         <textElement><font fontName="SansSerif" size="7"/></textElement>
         <textFieldExpression><![CDATA[$P{ORDEN_FECHA_SALIDA}]]></textFieldExpression>
       </textField>
 
       <!-- ──────── SECCIÓN: Datos cliente ──────── -->
       <staticText>
-        <reportElement x="0" y="96" width="535" height="14" backcolor="#d9e8f7" forecolor="#1e3a5f" uuid="sh1"/>
+        <reportElement x="0" y="96" width="535" height="14" backcolor="#d9e8f7" forecolor="#1e3a5f" uuid="c81928a5-fdce-4f83-9b0e-fec166052fc7"/>
         <box><pen lineWidth="0"/></box>
         <textElement><font fontName="SansSerif" size="8" isBold="true"/></textElement>
         <text><![CDATA[  DATOS DEL CLIENTE]]></text>
       </staticText>
       <!-- Fila cliente 1 -->
-      <staticText><reportElement x="5" y="114" width="80" height="12" uuid="cl1"/>
+      <staticText><reportElement x="5" y="114" width="80" height="12" uuid="81c73abe-d968-41c6-9a15-fe31b99761a9"/>
         <textElement><font fontName="SansSerif" size="8" isBold="true"/></textElement><text><![CDATA[Nombre:]]></text></staticText>
-      <textField isBlankWhenNull="true"><reportElement x="85" y="114" width="200" height="12" uuid="clv1"/>
+      <textField isBlankWhenNull="true"><reportElement x="85" y="114" width="200" height="12" uuid="d40c5079-32bf-449e-9924-ca8804c66e19"/>
         <textElement><font fontName="SansSerif" size="8"/></textElement>
         <textFieldExpression><![CDATA[$P{CLIENTE_NOMBRE}]]></textFieldExpression></textField>
-      <staticText><reportElement x="295" y="114" width="80" height="12" uuid="cl2"/>
+      <staticText><reportElement x="295" y="114" width="80" height="12" uuid="be193366-876e-4a32-82a1-5f4f26d739f9"/>
         <textElement><font fontName="SansSerif" size="8" isBold="true"/></textElement><text><![CDATA[Documento:]]></text></staticText>
-      <textField isBlankWhenNull="true"><reportElement x="375" y="114" width="155" height="12" uuid="clv2"/>
+      <textField isBlankWhenNull="true"><reportElement x="375" y="114" width="155" height="12" uuid="14937490-34f5-4cdc-9619-144f825a3eb1"/>
         <textElement><font fontName="SansSerif" size="8"/></textElement>
         <textFieldExpression><![CDATA[$P{CLIENTE_DOCUMENTO}]]></textFieldExpression></textField>
       <!-- Fila cliente 2 -->
-      <staticText><reportElement x="5" y="128" width="80" height="12" uuid="cl3"/>
+      <staticText><reportElement x="5" y="128" width="80" height="12" uuid="e203511a-3ce2-4332-ba83-05bee5914a79"/>
         <textElement><font fontName="SansSerif" size="8" isBold="true"/></textElement><text><![CDATA[Teléfono:]]></text></staticText>
-      <textField isBlankWhenNull="true"><reportElement x="85" y="128" width="200" height="12" uuid="clv3"/>
+      <textField isBlankWhenNull="true"><reportElement x="85" y="128" width="200" height="12" uuid="fcc7c1b7-d245-4638-b22e-08e86d45c6d7"/>
         <textElement><font fontName="SansSerif" size="8"/></textElement>
         <textFieldExpression><![CDATA[$P{CLIENTE_TELEFONO}]]></textFieldExpression></textField>
-      <staticText><reportElement x="295" y="128" width="80" height="12" uuid="cl4"/>
+      <staticText><reportElement x="295" y="128" width="80" height="12" uuid="0948e399-9e75-4137-b072-b7ef040c992a"/>
         <textElement><font fontName="SansSerif" size="8" isBold="true"/></textElement><text><![CDATA[Email:]]></text></staticText>
-      <textField isBlankWhenNull="true"><reportElement x="375" y="128" width="155" height="12" uuid="clv4"/>
+      <textField isBlankWhenNull="true"><reportElement x="375" y="128" width="155" height="12" uuid="e454cb82-055b-4e5b-94f7-b96bd18b86c2"/>
         <textElement><font fontName="SansSerif" size="8"/></textElement>
         <textFieldExpression><![CDATA[$P{CLIENTE_EMAIL}]]></textFieldExpression></textField>
 
       <!-- ──────── SECCIÓN: Datos del equipo ──────── -->
       <staticText>
-        <reportElement x="0" y="148" width="535" height="14" backcolor="#d9e8f7" forecolor="#1e3a5f" uuid="sh2"/>
+        <reportElement x="0" y="148" width="535" height="14" backcolor="#d9e8f7" forecolor="#1e3a5f" uuid="72c25262-0cd6-48a5-812a-d47cf002a1ec"/>
         <box><pen lineWidth="0"/></box>
         <textElement><font fontName="SansSerif" size="8" isBold="true"/></textElement>
         <text><![CDATA[  EQUIPO / ELECTRODOMÉSTICO]]></text>
       </staticText>
-      <staticText><reportElement x="5" y="166" width="80" height="12" uuid="eq1"/>
+      <staticText><reportElement x="5" y="166" width="80" height="12" uuid="53f670c4-6b2c-4fc9-96ad-8700ca58c334"/>
         <textElement><font fontName="SansSerif" size="8" isBold="true"/></textElement><text><![CDATA[Tipo:]]></text></staticText>
-      <textField isBlankWhenNull="true"><reportElement x="85" y="166" width="180" height="12" uuid="eqv1"/>
+      <textField isBlankWhenNull="true"><reportElement x="85" y="166" width="180" height="12" uuid="fcf6704c-c72c-4a10-8cbb-4f46fbede164"/>
         <textElement><font fontName="SansSerif" size="8"/></textElement>
         <textFieldExpression><![CDATA[$P{EQUIPO_TIPO}]]></textFieldExpression></textField>
-      <staticText><reportElement x="275" y="166" width="60" height="12" uuid="eq2"/>
+      <staticText><reportElement x="275" y="166" width="60" height="12" uuid="d886a86c-3ab6-4be3-b7cb-f035ff9fb74e"/>
         <textElement><font fontName="SansSerif" size="8" isBold="true"/></textElement><text><![CDATA[Marca:]]></text></staticText>
-      <textField isBlankWhenNull="true"><reportElement x="335" y="166" width="195" height="12" uuid="eqv2"/>
+      <textField isBlankWhenNull="true"><reportElement x="335" y="166" width="195" height="12" uuid="75b30412-05e4-4657-9c67-60d015132ee2"/>
         <textElement><font fontName="SansSerif" size="8"/></textElement>
         <textFieldExpression><![CDATA[$P{EQUIPO_MARCA}]]></textFieldExpression></textField>
-      <staticText><reportElement x="5" y="180" width="80" height="12" uuid="eq3"/>
+      <staticText><reportElement x="5" y="180" width="80" height="12" uuid="c793a14a-bf13-44d9-9e53-c11d5211db39"/>
         <textElement><font fontName="SansSerif" size="8" isBold="true"/></textElement><text><![CDATA[Modelo:]]></text></staticText>
-      <textField isBlankWhenNull="true"><reportElement x="85" y="180" width="180" height="12" uuid="eqv3"/>
+      <textField isBlankWhenNull="true"><reportElement x="85" y="180" width="180" height="12" uuid="0331bf4d-8aa6-4412-b6a0-19d1b2a5cde7"/>
         <textElement><font fontName="SansSerif" size="8"/></textElement>
         <textFieldExpression><![CDATA[$P{EQUIPO_MODELO}]]></textFieldExpression></textField>
-      <staticText><reportElement x="275" y="180" width="60" height="12" uuid="eq4"/>
+      <staticText><reportElement x="275" y="180" width="60" height="12" uuid="20fcb17a-9ef0-48ca-96db-fb2b72ed48d3"/>
         <textElement><font fontName="SansSerif" size="8" isBold="true"/></textElement><text><![CDATA[N° Serie:]]></text></staticText>
-      <textField isBlankWhenNull="true"><reportElement x="335" y="180" width="195" height="12" uuid="eqv4"/>
+      <textField isBlankWhenNull="true"><reportElement x="335" y="180" width="195" height="12" uuid="4380ba0d-cb1b-4690-b6b9-59061b88e83a"/>
         <textElement><font fontName="SansSerif" size="8"/></textElement>
         <textFieldExpression><![CDATA[$P{EQUIPO_SERIE}]]></textFieldExpression></textField>
-      <staticText><reportElement x="5" y="194" width="80" height="12" uuid="eq5"/>
+      <staticText><reportElement x="5" y="194" width="80" height="12" uuid="9f22ab5b-d823-483b-a3d8-30a226e443bb"/>
         <textElement><font fontName="SansSerif" size="8" isBold="true"/></textElement><text><![CDATA[Tipo Servicio:]]></text></staticText>
-      <textField isBlankWhenNull="true"><reportElement x="85" y="194" width="445" height="12" uuid="eqv5"/>
+      <textField isBlankWhenNull="true"><reportElement x="85" y="194" width="445" height="12" uuid="29548b58-22da-4346-992e-f322bee7df00"/>
         <textElement><font fontName="SansSerif" size="8"/></textElement>
         <textFieldExpression><![CDATA[$P{TIPO_SERVICIO}]]></textFieldExpression></textField>
 
       <!-- ──────── SECCIÓN: Diagnóstico ──────── -->
       <staticText>
-        <reportElement x="0" y="214" width="535" height="14" backcolor="#d9e8f7" forecolor="#1e3a5f" uuid="sh3"/>
+        <reportElement x="0" y="214" width="535" height="14" backcolor="#d9e8f7" forecolor="#1e3a5f" uuid="5d5bec47-ecee-4688-adc0-ccf86660b503"/>
         <box><pen lineWidth="0"/></box>
         <textElement><font fontName="SansSerif" size="8" isBold="true"/></textElement>
         <text><![CDATA[  DIAGNÓSTICO Y SOLUCIÓN]]></text>
       </staticText>
-      <staticText><reportElement x="5" y="232" width="120" height="12" uuid="dg1"/>
+      <staticText><reportElement x="5" y="232" width="120" height="12" uuid="bdf981aa-7fd7-46bc-ac9b-b84bb7dcbc1a"/>
         <textElement><font fontName="SansSerif" size="8" isBold="true"/></textElement><text><![CDATA[Descripción del problema:]]></text></staticText>
       <textField isBlankWhenNull="true" isStretchWithOverflow="true">
-        <reportElement x="5" y="244" width="525" height="30" uuid="dgv1"/>
+        <reportElement x="5" y="244" width="525" height="30" uuid="59c7874f-7e65-42f4-84ac-2393045b0ad4"/>
         <textElement><font fontName="SansSerif" size="8"/></textElement>
         <textFieldExpression><![CDATA[$P{DESCRIPCION_PROBLEMA}]]></textFieldExpression></textField>
-      <staticText><reportElement x="5" y="278" width="80" height="12" uuid="dg2"/>
+      <staticText><reportElement x="5" y="278" width="80" height="12" uuid="b9c1f338-2001-4464-9253-63531a1dedf5"/>
         <textElement><font fontName="SansSerif" size="8" isBold="true"/></textElement><text><![CDATA[Diagnóstico:]]></text></staticText>
       <textField isBlankWhenNull="true" isStretchWithOverflow="true">
-        <reportElement x="5" y="290" width="525" height="30" uuid="dgv2"/>
+        <reportElement x="5" y="290" width="525" height="30" uuid="d1d07b10-f765-4f63-b0d7-927afa7c3c62"/>
         <textElement><font fontName="SansSerif" size="8"/></textElement>
         <textFieldExpression><![CDATA[$P{DIAGNOSTICO}]]></textFieldExpression></textField>
-      <staticText><reportElement x="5" y="324" width="80" height="12" uuid="dg3"/>
+      <staticText><reportElement x="5" y="324" width="80" height="12" uuid="7cac4345-8f62-4a52-befc-ca1fadb02870"/>
         <textElement><font fontName="SansSerif" size="8" isBold="true"/></textElement><text><![CDATA[Solución:]]></text></staticText>
       <textField isBlankWhenNull="true" isStretchWithOverflow="true">
-        <reportElement x="5" y="336" width="525" height="30" uuid="dgv3"/>
+        <reportElement x="5" y="336" width="525" height="30" uuid="43052135-65c4-4820-89fd-a1ccbdc92456"/>
         <textElement><font fontName="SansSerif" size="8"/></textElement>
         <textFieldExpression><![CDATA[$P{SOLUCION}]]></textFieldExpression></textField>
-      <staticText><reportElement x="5" y="370" width="100" height="12" uuid="dg4"/>
+      <staticText><reportElement x="5" y="370" width="100" height="12" uuid="102c3d11-7dd4-4c38-bbe0-aa4c7fd61f27"/>
         <textElement><font fontName="SansSerif" size="8" isBold="true"/></textElement><text><![CDATA[Partes cambiadas:]]></text></staticText>
       <textField isBlankWhenNull="true">
-        <reportElement x="105" y="370" width="425" height="12" uuid="dgv4"/>
+        <reportElement x="105" y="370" width="425" height="12" uuid="56c4029e-0459-44c7-87c9-64ac3eb854bc"/>
         <textElement><font fontName="SansSerif" size="8"/></textElement>
         <textFieldExpression><![CDATA[$P{PARTES_CAMBIADAS}]]></textFieldExpression></textField>
 
       <!-- ──────── SECCIÓN: Costos ──────── -->
       <staticText>
-        <reportElement x="0" y="390" width="535" height="14" backcolor="#d9e8f7" forecolor="#1e3a5f" uuid="sh4"/>
+        <reportElement x="0" y="390" width="535" height="14" backcolor="#d9e8f7" forecolor="#1e3a5f" uuid="cc5e1e50-40ba-4606-961e-693963b23e0d"/>
         <box><pen lineWidth="0"/></box>
         <textElement><font fontName="SansSerif" size="8" isBold="true"/></textElement>
         <text><![CDATA[  COSTOS]]></text>
       </staticText>
-      <staticText><reportElement x="5" y="408" width="120" height="14" uuid="cs1"/>
+      <staticText><reportElement x="5" y="408" width="120" height="14" uuid="d344d819-1a21-4c6d-9260-00a82f548c2a"/>
         <textElement><font fontName="SansSerif" size="8" isBold="true"/></textElement><text><![CDATA[Costo del servicio:]]></text></staticText>
-      <textField isBlankWhenNull="true"><reportElement x="135" y="408" width="120" height="14" uuid="csv1"/>
+      <textField isBlankWhenNull="true"><reportElement x="135" y="408" width="120" height="14" uuid="8cf2942f-a4d6-4316-8463-27af18846448"/>
         <textElement><font fontName="SansSerif" size="8"/></textElement>
         <textFieldExpression><![CDATA[$P{COSTO_SERVICIO}]]></textFieldExpression></textField>
       <!-- Línea separadora total -->
-      <line><reportElement x="340" y="408" width="195" height="1" forecolor="#888888" uuid="csl1"/>
+      <line><reportElement x="340" y="408" width="195" height="1" forecolor="#888888" uuid="7fe324c7-e41e-4b33-b6f1-48b672e74f11"/>
         <graphicElement><pen lineWidth="0.5"/></graphicElement></line>
-      <staticText><reportElement x="340" y="414" width="100" height="16" uuid="cs2"/>
+      <staticText><reportElement x="340" y="414" width="100" height="16" uuid="e6ec99e8-0c4a-476c-acff-9c438482ae45"/>
         <textElement textAlignment="Right" verticalAlignment="Middle"><font fontName="SansSerif" size="10" isBold="true"/></textElement>
         <text><![CDATA[TOTAL:]]></text></staticText>
-      <textField isBlankWhenNull="true"><reportElement x="440" y="414" width="90" height="16" uuid="csv2"/>
+      <textField isBlankWhenNull="true"><reportElement x="440" y="414" width="90" height="16" uuid="ce52f19c-a935-4e83-ba07-8030c7567443"/>
         <textElement textAlignment="Right" verticalAlignment="Middle"><font fontName="SansSerif" size="10" isBold="true"/></textElement>
         <textFieldExpression><![CDATA[$P{TOTAL_COSTO}]]></textFieldExpression></textField>
 
       <!-- ──────── SECCIÓN: Garantía + Observaciones ──────── -->
-      <staticText><reportElement x="5" y="438" width="80" height="12" uuid="ga1"/>
+      <staticText><reportElement x="5" y="438" width="80" height="12" uuid="71dc5b65-eb4c-4c3a-a55d-32c06fc0898b"/>
         <textElement><font fontName="SansSerif" size="8" isBold="true"/></textElement><text><![CDATA[Garantía:]]></text></staticText>
-      <textField isBlankWhenNull="true"><reportElement x="85" y="438" width="200" height="12" uuid="gav1"/>
+      <textField isBlankWhenNull="true"><reportElement x="85" y="438" width="200" height="12" uuid="b407aa33-438c-4055-83bc-0e3f1524fb5a"/>
         <textElement><font fontName="SansSerif" size="8"/></textElement>
         <textFieldExpression><![CDATA[$P{ORDEN_GARANTIA}]]></textFieldExpression></textField>
-      <staticText><reportElement x="5" y="454" width="80" height="12" uuid="ob1"/>
+      <staticText><reportElement x="5" y="454" width="80" height="12" uuid="931d48ee-3312-4d0c-a282-0f61798c617b"/>
         <textElement><font fontName="SansSerif" size="8" isBold="true"/></textElement><text><![CDATA[Observaciones:]]></text></staticText>
-      <textField isBlankWhenNull="true" isStretchWithOverflow="true"><reportElement x="85" y="454" width="445" height="24" uuid="obv1"/>
+      <textField isBlankWhenNull="true" isStretchWithOverflow="true"><reportElement x="85" y="454" width="445" height="24" uuid="91e6879b-c942-42af-ac49-b69f4ab99334"/>
         <textElement><font fontName="SansSerif" size="8"/></textElement>
         <textFieldExpression><![CDATA[$P{OBSERVACIONES}]]></textFieldExpression></textField>
 
       <!-- ──────── FIRMAS ──────── -->
-      <line><reportElement x="20" y="530" width="200" height="1" forecolor="#333333" uuid="fl1"/>
+      <line><reportElement x="20" y="530" width="200" height="1" forecolor="#333333" uuid="3070eb17-b550-45e8-8969-3a4e1aeff4d1"/>
         <graphicElement><pen lineWidth="0.5"/></graphicElement></line>
-      <textField isBlankWhenNull="true"><reportElement x="20" y="534" width="200" height="12" uuid="flt1"/>
+      <textField isBlankWhenNull="true"><reportElement x="20" y="534" width="200" height="12" uuid="61c7d594-882e-4bfe-ab3f-c06b299a9367"/>
         <textElement textAlignment="Center"><font fontName="SansSerif" size="8"/></textElement>
         <textFieldExpression><![CDATA[$P{TECNICO_NOMBRE}]]></textFieldExpression></textField>
-      <staticText><reportElement x="20" y="546" width="200" height="12" uuid="fls1"/>
+      <staticText><reportElement x="20" y="546" width="200" height="12" uuid="1600db46-6e81-4b72-a813-fc027db27479"/>
         <textElement textAlignment="Center"><font fontName="SansSerif" size="7" isItalic="true"/></textElement>
         <text><![CDATA[Técnico responsable]]></text></staticText>
 
-      <line><reportElement x="315" y="530" width="200" height="1" forecolor="#333333" uuid="fl2"/>
+      <line><reportElement x="315" y="530" width="200" height="1" forecolor="#333333" uuid="ba131e01-6964-410b-9d57-3f23b33cc9d9"/>
         <graphicElement><pen lineWidth="0.5"/></graphicElement></line>
-      <textField isBlankWhenNull="true"><reportElement x="315" y="534" width="200" height="12" uuid="flt2"/>
+      <textField isBlankWhenNull="true"><reportElement x="315" y="534" width="200" height="12" uuid="58dbeea6-ee55-42b9-a420-e967c2f884b5"/>
         <textElement textAlignment="Center"><font fontName="SansSerif" size="8"/></textElement>
         <textFieldExpression><![CDATA[$P{RECEPCIONISTA_NOMBRE}]]></textFieldExpression></textField>
-      <staticText><reportElement x="315" y="546" width="200" height="12" uuid="fls2"/>
+      <staticText><reportElement x="315" y="546" width="200" height="12" uuid="6b0af4c5-51ad-4fe6-b9e7-d3f3021aa5eb"/>
         <textElement textAlignment="Center"><font fontName="SansSerif" size="7" isItalic="true"/></textElement>
         <text><![CDATA[Recepcionista / Responsable]]></text></staticText>
 
@@ -248,15 +248,15 @@
   <!-- ═══════════════════ PAGE FOOTER ═══════════════════ -->
   <pageFooter>
     <band height="25">
-      <line><reportElement x="0" y="0" width="535" height="1" forecolor="#cccccc" uuid="pfl"/>
+      <line><reportElement x="0" y="0" width="535" height="1" forecolor="#cccccc" uuid="feeb37ea-729a-4c53-afde-05cdda805fe2"/>
         <graphicElement><pen lineWidth="0.5"/></graphicElement></line>
       <textField isBlankWhenNull="true">
-        <reportElement x="0" y="5" width="350" height="14" forecolor="#888888" uuid="pf1"/>
+        <reportElement x="0" y="5" width="350" height="14" forecolor="#888888" uuid="a71f23a5-2740-4d15-896b-7cfbd8d43393"/>
         <textElement><font fontName="SansSerif" size="7"/></textElement>
         <textFieldExpression><![CDATA[$P{EMPRESA_NOMBRE} + " - Documento generado automáticamente"]]></textFieldExpression>
       </textField>
       <textField>
-        <reportElement x="420" y="5" width="115" height="14" forecolor="#888888" uuid="pf2"/>
+        <reportElement x="420" y="5" width="115" height="14" forecolor="#888888" uuid="98dd4f50-253c-4344-ae13-2b49dd6552b0"/>
         <textElement textAlignment="Right"><font fontName="SansSerif" size="7"/></textElement>
         <textFieldExpression><![CDATA["Pág. " + $V{PAGE_NUMBER} + " de " + $V{PAGE_COUNT}]]></textFieldExpression>
       </textField>

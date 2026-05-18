@@ -2,10 +2,12 @@ package com.inventory.controller;
 
 import com.inventory.dto.CategoryProductDto;
 import com.inventory.model.CategoryProduct;
+import com.inventory.repository.CategoryProductRepository;
 import com.inventory.service.CategoriaDeProductosService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -17,6 +19,9 @@ public class CategoryController {
 
     @Autowired
     private CategoriaDeProductosService categoryService;
+
+    @Autowired
+    private CategoryProductRepository categoryProductRepository;
 
     // Obtener todas las categorías
     @GetMapping("/listarCategoria")
@@ -64,16 +69,37 @@ public class CategoryController {
          return new ResponseEntity<>(null, HttpStatus.NOT_FOUND);
      }
 
-    // Eliminar una categoría
+    // Eliminar una categoría (legacy — usa body)
     @DeleteMapping("/eliminarCategoria/{id}")
     public ResponseEntity<Void> eliminarCategoria(@PathVariable String id, @RequestBody CategoryProductDto categoriaDto) {
         try {
-            // Llamamos al servicio para eliminar la categoría
             categoryService.eliminarCategoria(categoriaDto);
-            return new ResponseEntity<>(HttpStatus.NO_CONTENT); // Si la eliminación es exitosa
+            return new ResponseEntity<>(HttpStatus.NO_CONTENT);
         } catch (IllegalArgumentException e) {
-            // Si la categoría no se encuentra
-            return new ResponseEntity<>(HttpStatus.NOT_FOUND); // 404 Not Found
+            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
         }
+    }
+
+    // ── Endpoints estándar REST ──────────────────────────────────────────────
+
+    @PutMapping("/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<CategoryProductDto> actualizar(@PathVariable String id, @RequestBody CategoryProductDto dto) {
+        return categoryProductRepository.findById(id).map(existing -> {
+            if (dto.getName() != null) existing.setName(dto.getName());
+            existing.setDescription(dto.getDescription());
+            CategoryProduct saved = categoryProductRepository.save(existing);
+            return ResponseEntity.ok(new CategoryProductDto(saved));
+        }).orElseGet(() -> ResponseEntity.notFound().build());
+    }
+
+    @DeleteMapping("/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<Void> eliminar(@PathVariable String id) {
+        if (!categoryProductRepository.existsById(id)) {
+            return ResponseEntity.notFound().build();
+        }
+        categoryProductRepository.deleteById(id);
+        return ResponseEntity.noContent().build();
     }
 }

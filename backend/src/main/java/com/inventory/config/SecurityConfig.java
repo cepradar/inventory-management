@@ -69,7 +69,10 @@ public class SecurityConfig {
             .authorizeHttpRequests(auth -> auth
     .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
     .requestMatchers("/auth/register", "/auth/register-client", "/auth/login", "/api/public/**").permitAll()
-    .requestMatchers("/api/company/info", "/api/company/*/logo", "/api/company/*/logo2").permitAll()
+    .requestMatchers(HttpMethod.GET, "/api/company/info", "/api/company/*/logo", "/api/company/*/logo2").permitAll()
+    .requestMatchers(HttpMethod.POST, "/api/company/*/logo", "/api/company/*/logo2").hasRole("ADMIN")
+    .requestMatchers(HttpMethod.POST, "/api/company/crear").hasRole("ADMIN")
+    .requestMatchers(HttpMethod.PUT, "/api/company/**").hasRole("ADMIN")
     .requestMatchers("/auth/update-profile-picture", "/auth/update-password", "/auth/logout").authenticated()
 
     // Requiere el rol ADMIN para configuración crítica
@@ -93,6 +96,7 @@ public class SecurityConfig {
     .requestMatchers("/api/servicios-reparacion/**").authenticated()
     .requestMatchers("/api/marcas-electrodomestico/**").authenticated()
     .requestMatchers("/api/categorias-electrodomestico/**").authenticated()
+    .requestMatchers("/api/documento-tipos/**").hasRole("ADMIN")
     .requestMatchers("/api/users/technicians").authenticated() // Para asignar técnicos en órdenes
     .requestMatchers("/api/reportes/**").authenticated() // Acceso autenticado; @PreAuthorize controla roles en cada endpoint
 

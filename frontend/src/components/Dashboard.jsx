@@ -75,7 +75,8 @@ function Dashboard() {
     const required = MODULE_MIN_PERMISSION[activeModule];
     if (!required) return;
     if (!permissions.includes(required)) {
-      if (activeModule === 'settings' && permissions.includes('reports.read')) return;
+      // Settings es accesible con cualquier permiso config.* o reports.*
+      if (activeModule === 'settings' && permissions.some((p) => p.startsWith('config.') || p.startsWith('reports.'))) return;
       setActiveModule('home');
     }
   }, [permissions, activeModule, MODULE_MIN_PERMISSION]);
