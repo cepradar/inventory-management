@@ -1,0 +1,252 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Plantilla de Factura de Venta - JasperReports 6.x -->
+<jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports"
+              xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+              xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports
+              http://jasperreports.sourceforge.net/xsd/jasperreport.xsd"
+              name="factura"
+              pageWidth="595" pageHeight="842"
+              columnWidth="535" leftMargin="30" rightMargin="30"
+              topMargin="30" bottomMargin="30"
+              uuid="a1b2c3d4-0001-0001-0001-000000000001">
+
+  <!-- ═══════════════════ Parámetros ═══════════════════ -->
+  <parameter name="EMPRESA_NOMBRE"    class="java.lang.String"><defaultValueExpression><![CDATA["Mi Empresa"]]></defaultValueExpression></parameter>
+  <parameter name="EMPRESA_NIT"       class="java.lang.String"><defaultValueExpression><![CDATA[""]]></defaultValueExpression></parameter>
+  <parameter name="EMPRESA_DIRECCION" class="java.lang.String"><defaultValueExpression><![CDATA[""]]></defaultValueExpression></parameter>
+  <parameter name="EMPRESA_TELEFONO"  class="java.lang.String"><defaultValueExpression><![CDATA[""]]></defaultValueExpression></parameter>
+  <parameter name="EMPRESA_EMAIL"     class="java.lang.String"><defaultValueExpression><![CDATA[""]]></defaultValueExpression></parameter>
+  <parameter name="VENTA_ID"          class="java.lang.String"><defaultValueExpression><![CDATA[""]]></defaultValueExpression></parameter>
+  <parameter name="VENTA_FECHA"       class="java.lang.String"><defaultValueExpression><![CDATA[""]]></defaultValueExpression></parameter>
+  <parameter name="VENTA_TOTAL"       class="java.lang.String"><defaultValueExpression><![CDATA["$ 0.00"]]></defaultValueExpression></parameter>
+  <parameter name="VENTA_OBSERVACIONES" class="java.lang.String"><defaultValueExpression><![CDATA[""]]></defaultValueExpression></parameter>
+  <parameter name="CLIENTE_NOMBRE"    class="java.lang.String"><defaultValueExpression><![CDATA[""]]></defaultValueExpression></parameter>
+  <parameter name="CLIENTE_DOCUMENTO" class="java.lang.String"><defaultValueExpression><![CDATA[""]]></defaultValueExpression></parameter>
+  <parameter name="CLIENTE_TELEFONO"  class="java.lang.String"><defaultValueExpression><![CDATA[""]]></defaultValueExpression></parameter>
+  <parameter name="CLIENTE_EMAIL"     class="java.lang.String"><defaultValueExpression><![CDATA[""]]></defaultValueExpression></parameter>
+  <parameter name="VENDEDOR_NOMBRE"   class="java.lang.String"><defaultValueExpression><![CDATA[""]]></defaultValueExpression></parameter>
+
+  <!-- ═══════════════════ Campos del datasource ═══════════════════ -->
+  <field name="productNombre"   class="java.lang.String"/>
+  <field name="cantidad"        class="java.lang.Integer"/>
+  <field name="precioUnitario"  class="java.math.BigDecimal"/>
+  <field name="subtotal"        class="java.math.BigDecimal"/>
+
+  <!-- ═══════════════════ Variables ═══════════════════ -->
+  <variable name="TOTAL_ACUM" class="java.math.BigDecimal" calculation="Sum" resetType="Report">
+    <variableExpression><![CDATA[$F{subtotal}]]></variableExpression>
+    <initialValueExpression><![CDATA[java.math.BigDecimal.ZERO]]></initialValueExpression>
+  </variable>
+  <variable name="FILA_COLOR" class="java.lang.Boolean" calculation="Count" resetType="Report">
+    <variableExpression><![CDATA[true]]></variableExpression>
+  </variable>
+
+  <!-- ═══════════════════ TITLE BAND — Encabezado empresa + cliente ═══════════════════ -->
+  <title>
+    <band height="175" splitType="Stretch">
+
+      <!-- Fondo encabezado empresa -->
+      <rectangle>
+        <reportElement x="0" y="0" width="535" height="70" backcolor="#1e3a5f" forecolor="#1e3a5f" uuid="r001"/>
+        <graphicElement><pen lineWidth="0"/></graphicElement>
+      </rectangle>
+
+      <!-- Nombre empresa -->
+      <textField isBlankWhenNull="true">
+        <reportElement x="10" y="8" width="350" height="28" forecolor="#FFFFFF" uuid="t001"/>
+        <textElement verticalAlignment="Middle"><font fontName="SansSerif" size="16" isBold="true"/></textElement>
+        <textFieldExpression><![CDATA[$P{EMPRESA_NOMBRE}]]></textFieldExpression>
+      </textField>
+
+      <!-- NIT -->
+      <textField isBlankWhenNull="true">
+        <reportElement x="10" y="36" width="250" height="14" forecolor="#b0c4de" uuid="t002"/>
+        <textElement><font fontName="SansSerif" size="8"/></textElement>
+        <textFieldExpression><![CDATA["NIT: " + $P{EMPRESA_NIT}]]></textFieldExpression>
+      </textField>
+      <!-- Tel + email -->
+      <textField isBlankWhenNull="true">
+        <reportElement x="10" y="50" width="350" height="14" forecolor="#b0c4de" uuid="t003"/>
+        <textElement><font fontName="SansSerif" size="8"/></textElement>
+        <textFieldExpression><![CDATA[$P{EMPRESA_TELEFONO} + "  |  " + $P{EMPRESA_EMAIL}]]></textFieldExpression>
+      </textField>
+
+      <!-- FACTURA label (derecha) -->
+      <staticText>
+        <reportElement x="385" y="5" width="140" height="30" forecolor="#FFFFFF" uuid="s001"/>
+        <textElement textAlignment="Right" verticalAlignment="Middle"><font fontName="SansSerif" size="20" isBold="true"/></textElement>
+        <text><![CDATA[FACTURA]]></text>
+      </staticText>
+      <textField isBlankWhenNull="true">
+        <reportElement x="385" y="35" width="140" height="14" forecolor="#b0c4de" uuid="t004"/>
+        <textElement textAlignment="Right"><font fontName="SansSerif" size="8"/></textElement>
+        <textFieldExpression><![CDATA["No. " + $P{VENTA_ID}]]></textFieldExpression>
+      </textField>
+      <textField isBlankWhenNull="true">
+        <reportElement x="385" y="49" width="140" height="14" forecolor="#b0c4de" uuid="t005"/>
+        <textElement textAlignment="Right"><font fontName="SansSerif" size="8"/></textElement>
+        <textFieldExpression><![CDATA["Fecha: " + $P{VENTA_FECHA}]]></textFieldExpression>
+      </textField>
+
+      <!-- Sección FACTURAR A + VENDEDOR -->
+      <staticText>
+        <reportElement x="0" y="80" width="100" height="14" uuid="s002"/>
+        <textElement><font fontName="SansSerif" size="8" isBold="true"/></textElement>
+        <text><![CDATA[FACTURAR A:]]></text>
+      </staticText>
+      <textField isBlankWhenNull="true">
+        <reportElement x="0" y="94" width="260" height="14" uuid="t006"/>
+        <textElement><font fontName="SansSerif" size="9" isBold="true"/></textElement>
+        <textFieldExpression><![CDATA[$P{CLIENTE_NOMBRE}]]></textFieldExpression>
+      </textField>
+      <textField isBlankWhenNull="true">
+        <reportElement x="0" y="108" width="260" height="12" uuid="t007"/>
+        <textElement><font fontName="SansSerif" size="8"/></textElement>
+        <textFieldExpression><![CDATA["Doc: " + $P{CLIENTE_DOCUMENTO} + "  Tel: " + $P{CLIENTE_TELEFONO}]]></textFieldExpression>
+      </textField>
+      <textField isBlankWhenNull="true">
+        <reportElement x="0" y="120" width="260" height="12" uuid="t008"/>
+        <textElement><font fontName="SansSerif" size="8"/></textElement>
+        <textFieldExpression><![CDATA[$P{CLIENTE_EMAIL}]]></textFieldExpression>
+      </textField>
+
+      <staticText>
+        <reportElement x="300" y="80" width="80" height="14" uuid="s003"/>
+        <textElement><font fontName="SansSerif" size="8" isBold="true"/></textElement>
+        <text><![CDATA[VENDEDOR:]]></text>
+      </staticText>
+      <textField isBlankWhenNull="true">
+        <reportElement x="300" y="94" width="235" height="14" uuid="t009"/>
+        <textElement><font fontName="SansSerif" size="9"/></textElement>
+        <textFieldExpression><![CDATA[$P{VENDEDOR_NOMBRE}]]></textFieldExpression>
+      </textField>
+
+      <!-- Línea divisoria -->
+      <line>
+        <reportElement x="0" y="148" width="535" height="1" forecolor="#1e3a5f" uuid="l001"/>
+        <graphicElement><pen lineWidth="1.5"/></graphicElement>
+      </line>
+    </band>
+  </title>
+
+  <!-- ═══════════════════ COLUMN HEADER ═══════════════════ -->
+  <columnHeader>
+    <band height="22">
+      <rectangle>
+        <reportElement x="0" y="0" width="535" height="22" backcolor="#1e3a5f" forecolor="#1e3a5f" uuid="r002"/>
+        <graphicElement><pen lineWidth="0"/></graphicElement>
+      </rectangle>
+      <staticText>
+        <reportElement x="5"   y="3" width="255" height="16" forecolor="#FFFFFF" uuid="ch1"/>
+        <textElement><font fontName="SansSerif" size="8" isBold="true"/></textElement>
+        <text><![CDATA[DESCRIPCION]]></text>
+      </staticText>
+      <staticText>
+        <reportElement x="265" y="3" width="70"  height="16" forecolor="#FFFFFF" uuid="ch2"/>
+        <textElement textAlignment="Center"><font fontName="SansSerif" size="8" isBold="true"/></textElement>
+        <text><![CDATA[CANTIDAD]]></text>
+      </staticText>
+      <staticText>
+        <reportElement x="340" y="3" width="95"  height="16" forecolor="#FFFFFF" uuid="ch3"/>
+        <textElement textAlignment="Right"><font fontName="SansSerif" size="8" isBold="true"/></textElement>
+        <text><![CDATA[PRECIO UNIT.]]></text>
+      </staticText>
+      <staticText>
+        <reportElement x="440" y="3" width="90"  height="16" forecolor="#FFFFFF" uuid="ch4"/>
+        <textElement textAlignment="Right"><font fontName="SansSerif" size="8" isBold="true"/></textElement>
+        <text><![CDATA[SUBTOTAL]]></text>
+      </staticText>
+    </band>
+  </columnHeader>
+
+  <!-- ═══════════════════ DETAIL ═══════════════════ -->
+  <detail>
+    <band height="20" splitType="Stretch">
+      <!-- Filas alternadas -->
+      <rectangle>
+        <reportElement x="0" y="0" width="535" height="20" uuid="r003">
+          <printWhenExpression><![CDATA[$V{REPORT_COUNT} % 2 == 0]]></printWhenExpression>
+          <property name="net.sf.jasperreports.export.xls.ignore.graphics" value="false"/>
+        </reportElement>
+        <graphicElement><pen lineWidth="0"/></graphicElement>
+        <reportElement x="0" y="0" width="535" height="20" backcolor="#eef2f7" forecolor="#eef2f7" uuid="r003b"/>
+      </rectangle>
+
+      <textField isBlankWhenNull="true" isStretchWithOverflow="true">
+        <reportElement x="5"   y="3" width="255" height="14" uuid="d1"/>
+        <textElement><font fontName="SansSerif" size="8"/></textElement>
+        <textFieldExpression><![CDATA[$F{productNombre}]]></textFieldExpression>
+      </textField>
+      <textField isBlankWhenNull="true">
+        <reportElement x="265" y="3" width="70"  height="14" uuid="d2"/>
+        <textElement textAlignment="Center"><font fontName="SansSerif" size="8"/></textElement>
+        <textFieldExpression><![CDATA[$F{cantidad}]]></textFieldExpression>
+      </textField>
+      <textField isBlankWhenNull="true" pattern="$ #,##0.00">
+        <reportElement x="340" y="3" width="95"  height="14" uuid="d3"/>
+        <textElement textAlignment="Right"><font fontName="SansSerif" size="8"/></textElement>
+        <textFieldExpression><![CDATA[$F{precioUnitario}]]></textFieldExpression>
+      </textField>
+      <textField isBlankWhenNull="true" pattern="$ #,##0.00">
+        <reportElement x="440" y="3" width="90"  height="14" uuid="d4"/>
+        <textElement textAlignment="Right"><font fontName="SansSerif" size="8"/></textElement>
+        <textFieldExpression><![CDATA[$F{subtotal}]]></textFieldExpression>
+      </textField>
+    </band>
+  </detail>
+
+  <!-- ═══════════════════ SUMMARY — Totales + Observaciones ═══════════════════ -->
+  <summary>
+    <band height="90" splitType="Stretch">
+      <!-- Línea -->
+      <line>
+        <reportElement x="340" y="5" width="195" height="1" forecolor="#1e3a5f" uuid="sl1"/>
+        <graphicElement><pen lineWidth="1.0"/></graphicElement>
+      </line>
+      <!-- Total -->
+      <staticText>
+        <reportElement x="340" y="10" width="95" height="18" uuid="ss1"/>
+        <textElement textAlignment="Right" verticalAlignment="Middle"><font fontName="SansSerif" size="10" isBold="true"/></textElement>
+        <text><![CDATA[TOTAL:]]></text>
+      </staticText>
+      <textField isBlankWhenNull="true">
+        <reportElement x="440" y="10" width="90" height="18" uuid="sv1"/>
+        <textElement textAlignment="Right" verticalAlignment="Middle"><font fontName="SansSerif" size="10" isBold="true"/></textElement>
+        <textFieldExpression><![CDATA[$P{VENTA_TOTAL}]]></textFieldExpression>
+      </textField>
+
+      <!-- Observaciones -->
+      <staticText>
+        <reportElement x="0" y="38" width="120" height="12" uuid="so1"/>
+        <textElement><font fontName="SansSerif" size="8" isBold="true"/></textElement>
+        <text><![CDATA[Observaciones:]]></text>
+      </staticText>
+      <textField isBlankWhenNull="true" isStretchWithOverflow="true">
+        <reportElement x="0" y="50" width="535" height="30" uuid="so2"/>
+        <textElement><font fontName="SansSerif" size="8"/></textElement>
+        <textFieldExpression><![CDATA[$P{VENTA_OBSERVACIONES}]]></textFieldExpression>
+      </textField>
+    </band>
+  </summary>
+
+  <!-- ═══════════════════ PAGE FOOTER ═══════════════════ -->
+  <pageFooter>
+    <band height="25">
+      <line>
+        <reportElement x="0" y="0" width="535" height="1" forecolor="#cccccc" uuid="pfl"/>
+        <graphicElement><pen lineWidth="0.5"/></graphicElement>
+      </line>
+      <textField>
+        <reportElement x="0" y="5" width="200" height="14" forecolor="#888888" uuid="pf1"/>
+        <textElement><font fontName="SansSerif" size="7"/></textElement>
+        <textFieldExpression><![CDATA[$P{EMPRESA_NOMBRE} + "  |  " + $P{EMPRESA_DIRECCION}]]></textFieldExpression>
+      </textField>
+      <textField>
+        <reportElement x="400" y="5" width="135" height="14" forecolor="#888888" uuid="pf2"/>
+        <textElement textAlignment="Right"><font fontName="SansSerif" size="7"/></textElement>
+        <textFieldExpression><![CDATA["Pág. " + $V{PAGE_NUMBER} + " de " + $V{PAGE_COUNT}]]></textFieldExpression>
+      </textField>
+    </band>
+  </pageFooter>
+
+</jasperReport>

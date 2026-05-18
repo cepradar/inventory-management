@@ -94,6 +94,7 @@ public class SecurityConfig {
     .requestMatchers("/api/marcas-electrodomestico/**").authenticated()
     .requestMatchers("/api/categorias-electrodomestico/**").authenticated()
     .requestMatchers("/api/users/technicians").authenticated() // Para asignar técnicos en órdenes
+    .requestMatchers("/api/reportes/**").authenticated() // Acceso autenticado; @PreAuthorize controla roles en cada endpoint
 
     .anyRequest().authenticated()
             )

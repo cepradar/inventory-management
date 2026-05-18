@@ -61,7 +61,12 @@ public class PermisosInitializer {
         new String[]{"config.company.write",  "Editar configuración empresa","config",    "company",    "write"},
         // reports
         new String[]{"reports.read",          "Ver reportes",                "reports",   null,         "read"},
-        new String[]{"reports.export",        "Exportar reportes",           "reports",   null,         "export"}
+        new String[]{"reports.export",        "Exportar reportes",           "reports",   null,         "export"},
+        new String[]{"reports.upload",        "Subir plantillas",            "reports",   null,         "upload"},
+        new String[]{"reports.download",      "Descargar plantillas",        "reports",   null,         "download"},
+        new String[]{"reports.preview",       "Vista previa de reportes",    "reports",   null,         "preview"},
+        new String[]{"reports.delete",        "Eliminar plantillas",         "reports",   null,         "delete"},
+        new String[]{"reports.update",        "Actualizar plantillas",       "reports",   null,         "update"}
     );
 
     /** Permisos asignados por defecto a cada rol */
@@ -70,7 +75,7 @@ public class PermisosInitializer {
         "TECNICO", List.of("inventory.read", "clients.read", "clients.create", "clients.update",
                            "sales.read", "sales.create", "sales.invoice.pdf",
                            "orders.read", "orders.create", "orders.update", "orders.assign_tech",
-                           "orders.pdf", "audit.read"),
+                           "orders.pdf", "audit.read", "reports.read", "reports.preview"),
         "CLIENTE", List.of("inventory.read", "orders.read", "sales.read")
     );
 

@@ -1,0 +1,266 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Plantilla de Orden de Servicio - JasperReports 6.x -->
+<jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports"
+              xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+              xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports
+              http://jasperreports.sourceforge.net/xsd/jasperreport.xsd"
+              name="orden_servicio"
+              pageWidth="595" pageHeight="842"
+              columnWidth="535" leftMargin="30" rightMargin="30"
+              topMargin="30" bottomMargin="30"
+              uuid="a1b2c3d4-0002-0002-0002-000000000002">
+
+  <!-- ═══════════════════ Parámetros ═══════════════════ -->
+  <parameter name="EMPRESA_NOMBRE"        class="java.lang.String"><defaultValueExpression><![CDATA["Mi Empresa"]]></defaultValueExpression></parameter>
+  <parameter name="EMPRESA_NIT"           class="java.lang.String"><defaultValueExpression><![CDATA[""]]></defaultValueExpression></parameter>
+  <parameter name="EMPRESA_TELEFONO"      class="java.lang.String"><defaultValueExpression><![CDATA[""]]></defaultValueExpression></parameter>
+  <parameter name="ORDEN_ID"              class="java.lang.String"><defaultValueExpression><![CDATA[""]]></defaultValueExpression></parameter>
+  <parameter name="ORDEN_ESTADO"          class="java.lang.String"><defaultValueExpression><![CDATA[""]]></defaultValueExpression></parameter>
+  <parameter name="ORDEN_FECHA_INGRESO"   class="java.lang.String"><defaultValueExpression><![CDATA[""]]></defaultValueExpression></parameter>
+  <parameter name="ORDEN_FECHA_SALIDA"    class="java.lang.String"><defaultValueExpression><![CDATA["Pendiente"]]></defaultValueExpression></parameter>
+  <parameter name="ORDEN_GARANTIA"        class="java.lang.String"><defaultValueExpression><![CDATA[""]]></defaultValueExpression></parameter>
+  <parameter name="CLIENTE_NOMBRE"        class="java.lang.String"><defaultValueExpression><![CDATA[""]]></defaultValueExpression></parameter>
+  <parameter name="CLIENTE_DOCUMENTO"     class="java.lang.String"><defaultValueExpression><![CDATA[""]]></defaultValueExpression></parameter>
+  <parameter name="CLIENTE_TELEFONO"      class="java.lang.String"><defaultValueExpression><![CDATA[""]]></defaultValueExpression></parameter>
+  <parameter name="CLIENTE_EMAIL"         class="java.lang.String"><defaultValueExpression><![CDATA[""]]></defaultValueExpression></parameter>
+  <parameter name="EQUIPO_TIPO"           class="java.lang.String"><defaultValueExpression><![CDATA[""]]></defaultValueExpression></parameter>
+  <parameter name="EQUIPO_MARCA"          class="java.lang.String"><defaultValueExpression><![CDATA[""]]></defaultValueExpression></parameter>
+  <parameter name="EQUIPO_MODELO"         class="java.lang.String"><defaultValueExpression><![CDATA[""]]></defaultValueExpression></parameter>
+  <parameter name="EQUIPO_SERIE"          class="java.lang.String"><defaultValueExpression><![CDATA[""]]></defaultValueExpression></parameter>
+  <parameter name="TIPO_SERVICIO"         class="java.lang.String"><defaultValueExpression><![CDATA[""]]></defaultValueExpression></parameter>
+  <parameter name="DESCRIPCION_PROBLEMA"  class="java.lang.String"><defaultValueExpression><![CDATA[""]]></defaultValueExpression></parameter>
+  <parameter name="DIAGNOSTICO"           class="java.lang.String"><defaultValueExpression><![CDATA[""]]></defaultValueExpression></parameter>
+  <parameter name="SOLUCION"              class="java.lang.String"><defaultValueExpression><![CDATA[""]]></defaultValueExpression></parameter>
+  <parameter name="PARTES_CAMBIADAS"      class="java.lang.String"><defaultValueExpression><![CDATA[""]]></defaultValueExpression></parameter>
+  <parameter name="COSTO_SERVICIO"        class="java.lang.String"><defaultValueExpression><![CDATA["$ 0.00"]]></defaultValueExpression></parameter>
+  <parameter name="TOTAL_COSTO"           class="java.lang.String"><defaultValueExpression><![CDATA["$ 0.00"]]></defaultValueExpression></parameter>
+  <parameter name="TECNICO_NOMBRE"        class="java.lang.String"><defaultValueExpression><![CDATA[""]]></defaultValueExpression></parameter>
+  <parameter name="RECEPCIONISTA_NOMBRE"  class="java.lang.String"><defaultValueExpression><![CDATA[""]]></defaultValueExpression></parameter>
+  <parameter name="OBSERVACIONES"         class="java.lang.String"><defaultValueExpression><![CDATA[""]]></defaultValueExpression></parameter>
+
+  <!-- ═══════════════════ TITLE — Todo el contenido en una banda ═══════════════════ -->
+  <title>
+    <band height="700" splitType="Prevent">
+
+      <!-- ──────── ENCABEZADO (fondo azul) ──────── -->
+      <rectangle>
+        <reportElement x="0" y="0" width="535" height="60" backcolor="#1e3a5f" forecolor="#1e3a5f" uuid="r1"/>
+        <graphicElement><pen lineWidth="0"/></graphicElement>
+      </rectangle>
+      <textField isBlankWhenNull="true">
+        <reportElement x="10" y="6" width="300" height="24" forecolor="#FFFFFF" uuid="t1"/>
+        <textElement verticalAlignment="Middle"><font fontName="SansSerif" size="14" isBold="true"/></textElement>
+        <textFieldExpression><![CDATA[$P{EMPRESA_NOMBRE}]]></textFieldExpression>
+      </textField>
+      <textField isBlankWhenNull="true">
+        <reportElement x="10" y="32" width="300" height="12" forecolor="#b0c4de" uuid="t2"/>
+        <textElement><font fontName="SansSerif" size="8"/></textElement>
+        <textFieldExpression><![CDATA["NIT: " + $P{EMPRESA_NIT} + "  Tel: " + $P{EMPRESA_TELEFONO}]]></textFieldExpression>
+      </textField>
+      <staticText>
+        <reportElement x="340" y="6" width="185" height="26" forecolor="#FFFFFF" uuid="s1"/>
+        <textElement textAlignment="Right" verticalAlignment="Middle"><font fontName="SansSerif" size="16" isBold="true"/></textElement>
+        <text><![CDATA[ORDEN DE SERVICIO]]></text>
+      </staticText>
+      <textField isBlankWhenNull="true">
+        <reportElement x="340" y="34" width="185" height="12" forecolor="#b0c4de" uuid="t3"/>
+        <textElement textAlignment="Right"><font fontName="SansSerif" size="8"/></textElement>
+        <textFieldExpression><![CDATA["No. " + $P{ORDEN_ID} + "  Estado: " + $P{ORDEN_ESTADO}]]></textFieldExpression>
+      </textField>
+
+      <!-- ──────── SECCIÓN: Fechas ──────── -->
+      <rectangle>
+        <reportElement x="0" y="68" width="535" height="18" backcolor="#eef2f7" forecolor="#eef2f7" uuid="r2"/>
+        <graphicElement><pen lineWidth="0"/></graphicElement>
+      </rectangle>
+      <staticText>
+        <reportElement x="5" y="71" width="100" height="12" uuid="sl1"/>
+        <textElement><font fontName="SansSerif" size="7" isBold="true"/></textElement>
+        <text><![CDATA[Fecha Ingreso:]]></text>
+      </staticText>
+      <textField isBlankWhenNull="true">
+        <reportElement x="105" y="71" width="120" height="12" uuid="tf1"/>
+        <textElement><font fontName="SansSerif" size="7"/></textElement>
+        <textFieldExpression><![CDATA[$P{ORDEN_FECHA_INGRESO}]]></textFieldExpression>
+      </textField>
+      <staticText>
+        <reportElement x="260" y="71" width="95" height="12" uuid="sl2"/>
+        <textElement><font fontName="SansSerif" size="7" isBold="true"/></textElement>
+        <text><![CDATA[Fecha Salida Estimada:]]></text>
+      </staticText>
+      <textField isBlankWhenNull="true">
+        <reportElement x="360" y="71" width="120" height="12" uuid="tf2"/>
+        <textElement><font fontName="SansSerif" size="7"/></textElement>
+        <textFieldExpression><![CDATA[$P{ORDEN_FECHA_SALIDA}]]></textFieldExpression>
+      </textField>
+
+      <!-- ──────── SECCIÓN: Datos cliente ──────── -->
+      <staticText>
+        <reportElement x="0" y="96" width="535" height="14" backcolor="#d9e8f7" forecolor="#1e3a5f" uuid="sh1"/>
+        <box><pen lineWidth="0"/></box>
+        <textElement><font fontName="SansSerif" size="8" isBold="true"/></textElement>
+        <text><![CDATA[  DATOS DEL CLIENTE]]></text>
+      </staticText>
+      <!-- Fila cliente 1 -->
+      <staticText><reportElement x="5" y="114" width="80" height="12" uuid="cl1"/>
+        <textElement><font fontName="SansSerif" size="8" isBold="true"/></textElement><text><![CDATA[Nombre:]]></text></staticText>
+      <textField isBlankWhenNull="true"><reportElement x="85" y="114" width="200" height="12" uuid="clv1"/>
+        <textElement><font fontName="SansSerif" size="8"/></textElement>
+        <textFieldExpression><![CDATA[$P{CLIENTE_NOMBRE}]]></textFieldExpression></textField>
+      <staticText><reportElement x="295" y="114" width="80" height="12" uuid="cl2"/>
+        <textElement><font fontName="SansSerif" size="8" isBold="true"/></textElement><text><![CDATA[Documento:]]></text></staticText>
+      <textField isBlankWhenNull="true"><reportElement x="375" y="114" width="155" height="12" uuid="clv2"/>
+        <textElement><font fontName="SansSerif" size="8"/></textElement>
+        <textFieldExpression><![CDATA[$P{CLIENTE_DOCUMENTO}]]></textFieldExpression></textField>
+      <!-- Fila cliente 2 -->
+      <staticText><reportElement x="5" y="128" width="80" height="12" uuid="cl3"/>
+        <textElement><font fontName="SansSerif" size="8" isBold="true"/></textElement><text><![CDATA[Teléfono:]]></text></staticText>
+      <textField isBlankWhenNull="true"><reportElement x="85" y="128" width="200" height="12" uuid="clv3"/>
+        <textElement><font fontName="SansSerif" size="8"/></textElement>
+        <textFieldExpression><![CDATA[$P{CLIENTE_TELEFONO}]]></textFieldExpression></textField>
+      <staticText><reportElement x="295" y="128" width="80" height="12" uuid="cl4"/>
+        <textElement><font fontName="SansSerif" size="8" isBold="true"/></textElement><text><![CDATA[Email:]]></text></staticText>
+      <textField isBlankWhenNull="true"><reportElement x="375" y="128" width="155" height="12" uuid="clv4"/>
+        <textElement><font fontName="SansSerif" size="8"/></textElement>
+        <textFieldExpression><![CDATA[$P{CLIENTE_EMAIL}]]></textFieldExpression></textField>
+
+      <!-- ──────── SECCIÓN: Datos del equipo ──────── -->
+      <staticText>
+        <reportElement x="0" y="148" width="535" height="14" backcolor="#d9e8f7" forecolor="#1e3a5f" uuid="sh2"/>
+        <box><pen lineWidth="0"/></box>
+        <textElement><font fontName="SansSerif" size="8" isBold="true"/></textElement>
+        <text><![CDATA[  EQUIPO / ELECTRODOMÉSTICO]]></text>
+      </staticText>
+      <staticText><reportElement x="5" y="166" width="80" height="12" uuid="eq1"/>
+        <textElement><font fontName="SansSerif" size="8" isBold="true"/></textElement><text><![CDATA[Tipo:]]></text></staticText>
+      <textField isBlankWhenNull="true"><reportElement x="85" y="166" width="180" height="12" uuid="eqv1"/>
+        <textElement><font fontName="SansSerif" size="8"/></textElement>
+        <textFieldExpression><![CDATA[$P{EQUIPO_TIPO}]]></textFieldExpression></textField>
+      <staticText><reportElement x="275" y="166" width="60" height="12" uuid="eq2"/>
+        <textElement><font fontName="SansSerif" size="8" isBold="true"/></textElement><text><![CDATA[Marca:]]></text></staticText>
+      <textField isBlankWhenNull="true"><reportElement x="335" y="166" width="195" height="12" uuid="eqv2"/>
+        <textElement><font fontName="SansSerif" size="8"/></textElement>
+        <textFieldExpression><![CDATA[$P{EQUIPO_MARCA}]]></textFieldExpression></textField>
+      <staticText><reportElement x="5" y="180" width="80" height="12" uuid="eq3"/>
+        <textElement><font fontName="SansSerif" size="8" isBold="true"/></textElement><text><![CDATA[Modelo:]]></text></staticText>
+      <textField isBlankWhenNull="true"><reportElement x="85" y="180" width="180" height="12" uuid="eqv3"/>
+        <textElement><font fontName="SansSerif" size="8"/></textElement>
+        <textFieldExpression><![CDATA[$P{EQUIPO_MODELO}]]></textFieldExpression></textField>
+      <staticText><reportElement x="275" y="180" width="60" height="12" uuid="eq4"/>
+        <textElement><font fontName="SansSerif" size="8" isBold="true"/></textElement><text><![CDATA[N° Serie:]]></text></staticText>
+      <textField isBlankWhenNull="true"><reportElement x="335" y="180" width="195" height="12" uuid="eqv4"/>
+        <textElement><font fontName="SansSerif" size="8"/></textElement>
+        <textFieldExpression><![CDATA[$P{EQUIPO_SERIE}]]></textFieldExpression></textField>
+      <staticText><reportElement x="5" y="194" width="80" height="12" uuid="eq5"/>
+        <textElement><font fontName="SansSerif" size="8" isBold="true"/></textElement><text><![CDATA[Tipo Servicio:]]></text></staticText>
+      <textField isBlankWhenNull="true"><reportElement x="85" y="194" width="445" height="12" uuid="eqv5"/>
+        <textElement><font fontName="SansSerif" size="8"/></textElement>
+        <textFieldExpression><![CDATA[$P{TIPO_SERVICIO}]]></textFieldExpression></textField>
+
+      <!-- ──────── SECCIÓN: Diagnóstico ──────── -->
+      <staticText>
+        <reportElement x="0" y="214" width="535" height="14" backcolor="#d9e8f7" forecolor="#1e3a5f" uuid="sh3"/>
+        <box><pen lineWidth="0"/></box>
+        <textElement><font fontName="SansSerif" size="8" isBold="true"/></textElement>
+        <text><![CDATA[  DIAGNÓSTICO Y SOLUCIÓN]]></text>
+      </staticText>
+      <staticText><reportElement x="5" y="232" width="120" height="12" uuid="dg1"/>
+        <textElement><font fontName="SansSerif" size="8" isBold="true"/></textElement><text><![CDATA[Descripción del problema:]]></text></staticText>
+      <textField isBlankWhenNull="true" isStretchWithOverflow="true">
+        <reportElement x="5" y="244" width="525" height="30" uuid="dgv1"/>
+        <textElement><font fontName="SansSerif" size="8"/></textElement>
+        <textFieldExpression><![CDATA[$P{DESCRIPCION_PROBLEMA}]]></textFieldExpression></textField>
+      <staticText><reportElement x="5" y="278" width="80" height="12" uuid="dg2"/>
+        <textElement><font fontName="SansSerif" size="8" isBold="true"/></textElement><text><![CDATA[Diagnóstico:]]></text></staticText>
+      <textField isBlankWhenNull="true" isStretchWithOverflow="true">
+        <reportElement x="5" y="290" width="525" height="30" uuid="dgv2"/>
+        <textElement><font fontName="SansSerif" size="8"/></textElement>
+        <textFieldExpression><![CDATA[$P{DIAGNOSTICO}]]></textFieldExpression></textField>
+      <staticText><reportElement x="5" y="324" width="80" height="12" uuid="dg3"/>
+        <textElement><font fontName="SansSerif" size="8" isBold="true"/></textElement><text><![CDATA[Solución:]]></text></staticText>
+      <textField isBlankWhenNull="true" isStretchWithOverflow="true">
+        <reportElement x="5" y="336" width="525" height="30" uuid="dgv3"/>
+        <textElement><font fontName="SansSerif" size="8"/></textElement>
+        <textFieldExpression><![CDATA[$P{SOLUCION}]]></textFieldExpression></textField>
+      <staticText><reportElement x="5" y="370" width="100" height="12" uuid="dg4"/>
+        <textElement><font fontName="SansSerif" size="8" isBold="true"/></textElement><text><![CDATA[Partes cambiadas:]]></text></staticText>
+      <textField isBlankWhenNull="true">
+        <reportElement x="105" y="370" width="425" height="12" uuid="dgv4"/>
+        <textElement><font fontName="SansSerif" size="8"/></textElement>
+        <textFieldExpression><![CDATA[$P{PARTES_CAMBIADAS}]]></textFieldExpression></textField>
+
+      <!-- ──────── SECCIÓN: Costos ──────── -->
+      <staticText>
+        <reportElement x="0" y="390" width="535" height="14" backcolor="#d9e8f7" forecolor="#1e3a5f" uuid="sh4"/>
+        <box><pen lineWidth="0"/></box>
+        <textElement><font fontName="SansSerif" size="8" isBold="true"/></textElement>
+        <text><![CDATA[  COSTOS]]></text>
+      </staticText>
+      <staticText><reportElement x="5" y="408" width="120" height="14" uuid="cs1"/>
+        <textElement><font fontName="SansSerif" size="8" isBold="true"/></textElement><text><![CDATA[Costo del servicio:]]></text></staticText>
+      <textField isBlankWhenNull="true"><reportElement x="135" y="408" width="120" height="14" uuid="csv1"/>
+        <textElement><font fontName="SansSerif" size="8"/></textElement>
+        <textFieldExpression><![CDATA[$P{COSTO_SERVICIO}]]></textFieldExpression></textField>
+      <!-- Línea separadora total -->
+      <line><reportElement x="340" y="408" width="195" height="1" forecolor="#888888" uuid="csl1"/>
+        <graphicElement><pen lineWidth="0.5"/></graphicElement></line>
+      <staticText><reportElement x="340" y="414" width="100" height="16" uuid="cs2"/>
+        <textElement textAlignment="Right" verticalAlignment="Middle"><font fontName="SansSerif" size="10" isBold="true"/></textElement>
+        <text><![CDATA[TOTAL:]]></text></staticText>
+      <textField isBlankWhenNull="true"><reportElement x="440" y="414" width="90" height="16" uuid="csv2"/>
+        <textElement textAlignment="Right" verticalAlignment="Middle"><font fontName="SansSerif" size="10" isBold="true"/></textElement>
+        <textFieldExpression><![CDATA[$P{TOTAL_COSTO}]]></textFieldExpression></textField>
+
+      <!-- ──────── SECCIÓN: Garantía + Observaciones ──────── -->
+      <staticText><reportElement x="5" y="438" width="80" height="12" uuid="ga1"/>
+        <textElement><font fontName="SansSerif" size="8" isBold="true"/></textElement><text><![CDATA[Garantía:]]></text></staticText>
+      <textField isBlankWhenNull="true"><reportElement x="85" y="438" width="200" height="12" uuid="gav1"/>
+        <textElement><font fontName="SansSerif" size="8"/></textElement>
+        <textFieldExpression><![CDATA[$P{ORDEN_GARANTIA}]]></textFieldExpression></textField>
+      <staticText><reportElement x="5" y="454" width="80" height="12" uuid="ob1"/>
+        <textElement><font fontName="SansSerif" size="8" isBold="true"/></textElement><text><![CDATA[Observaciones:]]></text></staticText>
+      <textField isBlankWhenNull="true" isStretchWithOverflow="true"><reportElement x="85" y="454" width="445" height="24" uuid="obv1"/>
+        <textElement><font fontName="SansSerif" size="8"/></textElement>
+        <textFieldExpression><![CDATA[$P{OBSERVACIONES}]]></textFieldExpression></textField>
+
+      <!-- ──────── FIRMAS ──────── -->
+      <line><reportElement x="20" y="530" width="200" height="1" forecolor="#333333" uuid="fl1"/>
+        <graphicElement><pen lineWidth="0.5"/></graphicElement></line>
+      <textField isBlankWhenNull="true"><reportElement x="20" y="534" width="200" height="12" uuid="flt1"/>
+        <textElement textAlignment="Center"><font fontName="SansSerif" size="8"/></textElement>
+        <textFieldExpression><![CDATA[$P{TECNICO_NOMBRE}]]></textFieldExpression></textField>
+      <staticText><reportElement x="20" y="546" width="200" height="12" uuid="fls1"/>
+        <textElement textAlignment="Center"><font fontName="SansSerif" size="7" isItalic="true"/></textElement>
+        <text><![CDATA[Técnico responsable]]></text></staticText>
+
+      <line><reportElement x="315" y="530" width="200" height="1" forecolor="#333333" uuid="fl2"/>
+        <graphicElement><pen lineWidth="0.5"/></graphicElement></line>
+      <textField isBlankWhenNull="true"><reportElement x="315" y="534" width="200" height="12" uuid="flt2"/>
+        <textElement textAlignment="Center"><font fontName="SansSerif" size="8"/></textElement>
+        <textFieldExpression><![CDATA[$P{RECEPCIONISTA_NOMBRE}]]></textFieldExpression></textField>
+      <staticText><reportElement x="315" y="546" width="200" height="12" uuid="fls2"/>
+        <textElement textAlignment="Center"><font fontName="SansSerif" size="7" isItalic="true"/></textElement>
+        <text><![CDATA[Recepcionista / Responsable]]></text></staticText>
+
+    </band>
+  </title>
+
+  <!-- ═══════════════════ PAGE FOOTER ═══════════════════ -->
+  <pageFooter>
+    <band height="25">
+      <line><reportElement x="0" y="0" width="535" height="1" forecolor="#cccccc" uuid="pfl"/>
+        <graphicElement><pen lineWidth="0.5"/></graphicElement></line>
+      <textField isBlankWhenNull="true">
+        <reportElement x="0" y="5" width="350" height="14" forecolor="#888888" uuid="pf1"/>
+        <textElement><font fontName="SansSerif" size="7"/></textElement>
+        <textFieldExpression><![CDATA[$P{EMPRESA_NOMBRE} + " - Documento generado automáticamente"]]></textFieldExpression>
+      </textField>
+      <textField>
+        <reportElement x="420" y="5" width="115" height="14" forecolor="#888888" uuid="pf2"/>
+        <textElement textAlignment="Right"><font fontName="SansSerif" size="7"/></textElement>
+        <textFieldExpression><![CDATA["Pág. " + $V{PAGE_NUMBER} + " de " + $V{PAGE_COUNT}]]></textFieldExpression>
+      </textField>
+    </band>
+  </pageFooter>
+
+</jasperReport>

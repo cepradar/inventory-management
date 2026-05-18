@@ -110,7 +110,7 @@ function Sidebar({ onModuleChange, activeModule, isExpanded, toggleSidebar, side
           </li>
         )}
 
-        {can('config.roles.read') && (
+        {(can('config.roles.read') || can('reports.read')) && (
           <li>
             <button
               onClick={() => onModuleChange('settings')}

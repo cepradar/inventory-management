@@ -104,7 +104,34 @@
 			<groupId>com.github.librepdf</groupId>
 			<artifactId>openpdf</artifactId>
 			<version>1.3.30</version>
-		</dependency>	
+		</dependency>
+
+		<!-- JasperReports - Motor de plantillas PDF -->
+		<dependency>
+			<groupId>net.sf.jasperreports</groupId>
+			<artifactId>jasperreports</artifactId>
+			<version>6.21.3</version>
+			<exclusions>
+				<exclusion>
+					<groupId>com.fasterxml.jackson.core</groupId>
+					<artifactId>jackson-core</artifactId>
+				</exclusion>
+				<exclusion>
+					<groupId>com.fasterxml.jackson.core</groupId>
+					<artifactId>jackson-databind</artifactId>
+				</exclusion>
+				<exclusion>
+					<groupId>com.fasterxml.jackson.core</groupId>
+					<artifactId>jackson-annotations</artifactId>
+				</exclusion>
+			</exclusions>
+		</dependency>
+		<!-- Compilador ECJ para JRXML en tiempo de ejecución -->
+		<dependency>
+			<groupId>org.eclipse.jdt.core.compiler</groupId>
+			<artifactId>ecj</artifactId>
+			<version>4.6.1</version>
+		</dependency>
 	</dependencies>
 
 	<build>

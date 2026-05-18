@@ -1,5 +1,7 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import api from './utils/axiosConfig';
+import { usePermissions } from './utils/PermissionsContext';
+import ReportesModule from './ReportesModule';
 import {
   UsersIcon,
   ArchiveBoxIcon,
@@ -10,14 +12,16 @@ import {
   Cog6ToothIcon,
   ChevronDownIcon,
   ChevronRightIcon,
+  DocumentChartBarIcon,
 } from '@heroicons/react/24/outline';
 
 const CONFIG_OPTIONS = [
-  { id: 'roles', label: 'Tipos de usuarios' },
-  { id: 'documentos', label: 'Tipos de documento' },
-  { id: 'cat-electro', label: 'Categorias de electrodomesticos' },
-  { id: 'cat-productos', label: 'Categorias de productos' },
-  { id: 'permisos', label: 'Permisos por rol' }
+  { id: 'roles',       label: 'Tipos de usuarios',               perm: 'config.roles.read' },
+  { id: 'documentos', label: 'Tipos de documento',              perm: 'config.roles.read' },
+  { id: 'cat-electro', label: 'Categorias de electrodomesticos', perm: 'config.roles.read' },
+  { id: 'cat-productos', label: 'Categorias de productos',       perm: 'config.roles.read' },
+  { id: 'permisos',   label: 'Permisos por rol',                perm: 'config.roles.read' },
+  { id: 'reportes',   label: 'Reportes',                        perm: 'reports.read' },
 ];
 
 const MODULE_CONFIG = [
@@ -27,6 +31,7 @@ const MODULE_CONFIG = [
   { key: 'sales',    label: 'Ventas',               Icon: ShoppingCartIcon },
   { key: 'orders',   label: 'Órdenes de Servicio',  Icon: ClipboardDocumentListIcon },
   { key: 'audit',    label: 'Auditoría',            Icon: DocumentTextIcon },
+  { key: 'reports',  label: 'Reportes',             Icon: DocumentChartBarIcon },
   { key: 'config',   label: 'Configuración',        Icon: Cog6ToothIcon },
 ];
 
@@ -48,9 +53,21 @@ function ModuleCheckbox({ allActive, someActive, onChange }) {
 }
 
 export default function ConfigDashboard() {
+  const { permissions } = usePermissions();
+  const can = (c) => permissions.includes(c);
+
   const [activeOption, setActiveOption] = useState('roles');
+
+  // Ajustar opción activa según permisos disponibles
+  useEffect(() => {
+    if (permissions.length === 0) return;
+    if (!can('config.roles.read') && can('reports.read')) {
+      setActiveOption('reportes');
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [permissions]);
   const [roles, setRoles] = useState([]);
-  const [permissions, setPermissions] = useState([]);
+  const [allPerms, setAllPerms] = useState([]);
   const [rolePerms, setRolePerms] = useState([]);
   const [selectedRole, setSelectedRole] = useState('ADMIN');
   const [roleForm, setRoleForm] = useState({ name: '', color: '#4f46e5', description: '' });
@@ -76,7 +93,7 @@ export default function ConfigDashboard() {
   const fetchPermissions = async () => {
     try {
       const response = await api.get('/api/permissions');
-      setPermissions(response.data || []);
+      setAllPerms(response.data || []);
     } catch (err) {
       console.error('Error al cargar permisos:', err);
     }
@@ -186,7 +203,7 @@ export default function ConfigDashboard() {
         <div className="border border-gray-200 rounded-lg overflow-hidden">
           <div className="bg-gray-50 px-3 py-2 text-sm font-semibold text-gray-700">Configuracion</div>
           <div className="divide-y divide-gray-200">
-            {CONFIG_OPTIONS.map((opt) => (
+            {CONFIG_OPTIONS.filter((opt) => can(opt.perm)).map((opt) => (
               <button
                 key={opt.id}
                 onClick={() => setActiveOption(opt.id)}
@@ -372,7 +389,13 @@ export default function ConfigDashboard() {
             </div>
           )}
 
-          {activeOption !== 'roles' && activeOption !== 'permisos' && (
+          {activeOption === 'reportes' && (
+            <div className="-m-4">
+              <ReportesModule />
+            </div>
+          )}
+
+          {activeOption !== 'roles' && activeOption !== 'permisos' && activeOption !== 'reportes' && (
             <div className="text-sm text-gray-500">
               Esta seccion estara disponible proximamente.
             </div>

@@ -54,10 +54,12 @@ function Dashboard() {
   };
 
   // Si el módulo activo pierde acceso, volver al inicio
+  // (settings es accesible con config.roles.read O reports.read)
   useEffect(() => {
     if (permissions.length === 0) return;
     const required = MODULE_MIN_PERMISSION[activeModule];
     if (required && !permissions.includes(required)) {
+      if (activeModule === 'settings' && permissions.includes('reports.read')) return;
       setActiveModule('home');
     }
   }, [permissions]);
