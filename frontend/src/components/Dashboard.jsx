@@ -6,6 +6,7 @@ import Spinner      from './ui/Spinner';
 import { useNavigate }   from 'react-router-dom';
 import { usePermissions } from '../context/PermissionsContext';
 import { useCompanyInfo } from '../hooks/useCompanyInfo';
+import { useMobile }      from '../hooks/useMobile';
 
 // ── Lazy loading — cada módulo se carga solo cuando se necesita ───────────────
 const CrudManager          = lazy(() => import('./CrudManager'));
@@ -36,13 +37,18 @@ function Dashboard() {
   const [userName, setUserName]                       = useState(null);
   const [hasActiveForm, setHasActiveForm]             = useState(false);
   const [pendingModuleChange, setPendingModuleChange] = useState(null);
-  const [sidebarWidth, setSidebarWidth]               = useState(196);
 
   const { permissions } = usePermissions();
   const { companyInfo, logoUrl: companyLogoUrl } = useCompanyInfo('logo');
+  const { isMobile, isTablet }                   = useMobile();
 
   const sidebarRef = useRef(null);
   const navigate   = useNavigate();
+
+  // En móvil el sidebar empieza cerrado
+  useEffect(() => {
+    if (isMobile) setIsSidebarExpanded(false);
+  }, [isMobile]);
 
   // ── Leer credenciales del localStorage ──────────────────────────────────
   useEffect(() => {
@@ -74,29 +80,12 @@ function Dashboard() {
     }
   }, [permissions, activeModule, MODULE_MIN_PERMISSION]);
 
-  // ── Sidebar collapse al hacer click fuera ───────────────────────────────
-  useEffect(() => {
-    const handleOutsideClick = (event) => {
-      if (isSidebarExpanded && sidebarRef.current && !sidebarRef.current.contains(event.target)) {
-        setIsSidebarExpanded(false);
-      }
-    };
-    document.addEventListener('mousedown', handleOutsideClick);
-    return () => document.removeEventListener('mousedown', handleOutsideClick);
-  }, [isSidebarExpanded]);
-
-  // ── Ancho del sidebar en sync con estado ────────────────────────────────
-  useEffect(() => {
-    setSidebarWidth(isSidebarExpanded ? 196 : 44);
-  }, [isSidebarExpanded]);
-
-  useEffect(() => {
-    const handleResize = () => {
-      if (sidebarRef.current) setSidebarWidth(sidebarRef.current.offsetWidth);
-    };
-    window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
-  }, []);
+  // ── Ancho del sidebar (solo tablet/desktop) ─────────────────────────────
+  const sidebarWidth = useMemo(() => {
+    if (isMobile) return 0;
+    if (isTablet) return isSidebarExpanded ? 200 : 52;
+    return isSidebarExpanded ? 196 : 52;
+  }, [isMobile, isTablet, isSidebarExpanded]);
 
   // ── Handlers ────────────────────────────────────────────────────────────
   const toggleSidebar = useCallback(() => setIsSidebarExpanded((v) => !v), []);
@@ -187,8 +176,8 @@ function Dashboard() {
   }, [activeModule, activeInventoryView, userRole, companyLogoUrl, companyInfo]);
 
   return (
-    <div className="min-h-screen">
-      {/* Sidebar fijo */}
+    <div className="min-h-screen bg-gray-50">
+      {/* Sidebar / Drawer */}
       <AdminSidebar
         sidebarRef={sidebarRef}
         onModuleChange={handleModuleChange}
@@ -200,16 +189,16 @@ function Dashboard() {
         permissions={permissions}
       />
 
-      {/* Navbar fijo: calculamos offset según ancho real del sidebar */}
+      {/* Navbar fijo — en móvil ocupa todo el ancho; en desktop deja espacio al sidebar */}
       <div
         style={{
           position: 'fixed',
           top: 0,
-          left: sidebarWidth,
+          left: isMobile ? 0 : sidebarWidth,
           right: 0,
           height: 64,
           zIndex: 40,
-          transition: 'left 0.3s ease',
+          transition: 'left 0.25s ease',
         }}
       >
         <AdminNavbar
@@ -217,21 +206,21 @@ function Dashboard() {
           onHomeClick={() => handleModuleChange('home')}
           companyName={companyInfo?.razonSocial}
           userRole={userRole}
+          onMenuToggle={toggleSidebar}
         />
       </div>
 
-      {/* Contenido principal — desplazable dentro del área central */}
+      {/* Contenido principal */}
       <main
-        className="bg-gray-50 flex flex-col"
+        className="flex flex-col bg-gray-50"
         style={{
           marginTop: 64,
-          marginLeft: sidebarWidth,
-          minHeight: `calc(100vh - 64px)`,
-          overflowY: 'auto',
-          transition: 'margin-left 0.3s ease',
+          marginLeft: isMobile ? 0 : sidebarWidth,
+          minHeight: 'calc(100vh - 64px)',
+          transition: 'margin-left 0.25s ease',
         }}
       >
-        <div className="p-2 md:p-8 flex-1">
+        <div className="p-3 sm:p-5 md:p-8 flex-1">
           {renderContent()}
         </div>
       </main>

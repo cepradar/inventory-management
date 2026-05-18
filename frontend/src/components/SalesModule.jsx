@@ -699,9 +699,7 @@ const SalesModule = () => {
         {!mostrarFormulario && (
           <>
             {/* Tabla de ventas */}
-            <div className="overflow-x-auto">
-              <div className="min-w-[1000px]">
-                <DataTable
+            <DataTable
                   data={ventas}
                   columns={[
                     {
@@ -759,9 +757,7 @@ const SalesModule = () => {
                       render: (venta) => venta.usuarioNombre || "-"
                     }
                   ]}
-                />
-              </div>
-            </div>
+              />
 
             {/* Resumen */}
             {ventas.length > 0 && (

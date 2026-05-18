@@ -134,8 +134,7 @@ const AuditModule = () => {
             <p className="text-gray-500">Cargando movimientos...</p>
           </div>
         ) : (
-          <div className="overflow-x-auto">
-            <div className="min-w-[1100px]">
+          <div>
               <DataTable
                 title="Movimientos de auditoria"
                 data={movimientos}
@@ -218,7 +217,6 @@ const AuditModule = () => {
                   }
                 ]}
               />
-            </div>
           </div>
         )}
 
