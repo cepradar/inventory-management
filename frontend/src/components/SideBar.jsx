@@ -6,7 +6,6 @@ import {
   Cog6ToothIcon,
   DocumentTextIcon,
   ShoppingCartIcon,
-  WrenchScrewdriverIcon,
   UserGroupIcon,
   ClipboardDocumentListIcon,
   XMarkIcon,

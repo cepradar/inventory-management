@@ -78,7 +78,9 @@ public class SecurityConfig {
     // Requiere el rol ADMIN para configuración crítica
     .requestMatchers(HttpMethod.GET, "/api/categories/listarCategoria").hasAnyRole("ADMIN", "CLIENTE", "TECNICO")
     .requestMatchers(HttpMethod.GET, "/api/products/listar").hasAnyRole("ADMIN", "CLIENTE", "TECNICO")
-    .requestMatchers(HttpMethod.GET, "/api/servicios/listar").authenticated() // Permitir lectura de servicios para órdenes
+    .requestMatchers(HttpMethod.GET, "/api/servicios/activos").authenticated()  // Lista activos: cualquier usuario autenticado
+    .requestMatchers(HttpMethod.GET, "/api/servicios/**").hasAnyRole("ADMIN", "TECNICO")  // Listar/leer: admin y técnico
+    .requestMatchers("/api/servicios/**").hasRole("ADMIN")  // Crear/editar/eliminar: solo admin
     .requestMatchers("/api/products/**", "/api/categories/**", "/products/**").hasRole("ADMIN")
     .requestMatchers(HttpMethod.POST, "/api/auditoria/registrar").authenticated() // Permitir registro de eventos a usuarios autenticados
     .requestMatchers("/api/auditoria/**").hasAnyRole("ADMIN", "TECNICO")

@@ -17,6 +17,7 @@ const ClientManager        = lazy(() => import('./ClientManager'));
 const IngresoElectrodomestico = lazy(() => import('./IngresoElectrodomestico'));
 const OrdenServicio        = lazy(() => import('./OrdenServicio'));
 const ConfigDashboard      = lazy(() => import('./ConfigDashboard'));
+const ServicioManager      = lazy(() => import('./ServicioManager'));
 
 function ModuleSpinner() {
   return (
@@ -149,13 +150,47 @@ function Dashboard() {
         );
       case 'inventory':
         return (
-          <Suspense fallback={<ModuleSpinner />}>
-            <CrudManager
-              resourceType={activeInventoryView}
-              userRole={userRole}
-              onFormStateChange={setHasActiveForm}
-            />
-          </Suspense>
+          <div className="flex flex-col h-full">
+            {/* Pestañas Productos / Servicios */}
+            <div className="flex gap-1 px-4 pt-4 bg-white border-b border-gray-200">
+              <button
+                onClick={() => setActiveInventoryView('products')}
+                className={`px-4 py-2 text-sm font-medium rounded-t-md border-b-2 transition-colors ${
+                  activeInventoryView !== 'services'
+                    ? 'border-blue-600 text-blue-600 bg-blue-50'
+                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:bg-gray-50'
+                }`}
+              >
+                Productos
+              </button>
+              {permissions.includes('services.read') && (
+                <button
+                  onClick={() => setActiveInventoryView('services')}
+                  className={`px-4 py-2 text-sm font-medium rounded-t-md border-b-2 transition-colors ${
+                    activeInventoryView === 'services'
+                      ? 'border-blue-600 text-blue-600 bg-blue-50'
+                      : 'border-transparent text-gray-500 hover:text-gray-700 hover:bg-gray-50'
+                  }`}
+                >
+                  Servicios
+                </button>
+              )}
+            </div>
+            {/* Contenido de la pestaña activa */}
+            {activeInventoryView === 'services' ? (
+              <Suspense fallback={<ModuleSpinner />}>
+                <ServicioManager />
+              </Suspense>
+            ) : (
+              <Suspense fallback={<ModuleSpinner />}>
+                <CrudManager
+                  resourceType="products"
+                  userRole={userRole}
+                  onFormStateChange={setHasActiveForm}
+                />
+              </Suspense>
+            )}
+          </div>
         );
       case 'users':
         return <Suspense fallback={<ModuleSpinner />}><UserManager /></Suspense>;

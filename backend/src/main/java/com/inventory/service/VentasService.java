@@ -6,6 +6,7 @@ import com.inventory.dto.VentaDetalleRegistroDto;
 import com.inventory.dto.VentaRegistroDto;
 import com.inventory.model.Cliente;
 import com.inventory.model.Product;
+import com.inventory.model.Servicio;
 import com.inventory.model.User;
 import com.inventory.model.Venta;
 import com.inventory.model.VentaDetalle;
@@ -14,6 +15,7 @@ import com.inventory.repository.ClienteRepository;
 import com.inventory.repository.VentaRepository;
 import com.inventory.repository.VentaDetalleRepository;
 import com.inventory.repository.ProductRepository;
+import com.inventory.repository.ServicioRepository;
 import com.inventory.repository.UserRepository;
 import com.inventory.repository.OrdenDeServicioRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -33,6 +35,7 @@ public class VentasService {
 
     @Autowired private VentaRepository ventaRepository;
     @Autowired private ProductRepository productRepository;
+    @Autowired private ServicioRepository servicioRepository;
     @Autowired private UserRepository userRepository;
     @Autowired private ClienteRepository clienteRepository;
     @Autowired private AuditoriaService auditoriaService;
@@ -84,40 +87,65 @@ public class VentasService {
         // Guardar para obtener ID antes de crear detalles
         Venta ventaGuardada = ventaRepository.save(venta);
 
-        // Crear detalles y descontar inventario
+        // Crear detalles — soporta PRODUCTOS (con descuento de stock) y SERVICIOS (sin inventario)
         List<VentaDetalle> detalles = new java.util.ArrayList<>();
 
         for (VentaDetalleRegistroDto detalleDto : registroDto.getDetalles()) {
-            Product producto = productRepository.findById(detalleDto.getProductId())
-                .orElseThrow(() -> new RuntimeException(
-                    "Producto no encontrado: " + detalleDto.getProductId()));
+            String tipoItem = detalleDto.getTipoItem(); // PRODUCTO | SERVICIO
 
-            if (producto.getQuantity() < detalleDto.getCantidad()) {
-                throw new RuntimeException("Cantidad insuficiente para producto '"
-                    + producto.getName() + "'. Disponible: " + producto.getQuantity());
+            if ("SERVICIO".equalsIgnoreCase(tipoItem)) {
+                // ── Línea de SERVICIO técnico ─────────────────────────────────
+                if (detalleDto.getServicioId() == null) {
+                    throw new RuntimeException("servicioId es requerido para ítems de tipo SERVICIO");
+                }
+                Servicio servicio = servicioRepository.findById(detalleDto.getServicioId())
+                    .orElseThrow(() -> new RuntimeException(
+                        "Servicio no encontrado: " + detalleDto.getServicioId()));
+                if (!servicio.isActivo()) {
+                    throw new RuntimeException("El servicio '" + servicio.getNombre() + "' no está activo");
+                }
+
+                VentaDetalle detalle = new VentaDetalle(
+                    ventaGuardada, servicio, detalleDto.getCantidad(), detalleDto.getPrecioUnitario());
+                detalles.add(detalle);
+                // Los servicios NO descontan inventario ni generan auditoría de stock.
+
+            } else {
+                // ── Línea de PRODUCTO físico (comportamiento original) ────────
+                if (detalleDto.getProductId() == null) {
+                    throw new RuntimeException("productId es requerido para ítems de tipo PRODUCTO");
+                }
+                Product producto = productRepository.findById(detalleDto.getProductId())
+                    .orElseThrow(() -> new RuntimeException(
+                        "Producto no encontrado: " + detalleDto.getProductId()));
+
+                if (producto.getQuantity() < detalleDto.getCantidad()) {
+                    throw new RuntimeException("Cantidad insuficiente para producto '"
+                        + producto.getName() + "'. Disponible: " + producto.getQuantity());
+                }
+
+                VentaDetalle detalle = new VentaDetalle(
+                    ventaGuardada, producto, detalleDto.getCantidad(), detalleDto.getPrecioUnitario());
+                detalles.add(detalle);
+
+                // Descontar inventario
+                int cantidadInicial = producto.getQuantity();
+                producto.setQuantity(producto.getQuantity() - detalleDto.getCantidad());
+                productRepository.save(producto);
+
+                // Auditoría de movimiento de inventario
+                auditoriaService.registrarMovimiento(
+                    producto.getId(),
+                    cantidadInicial,
+                    producto.getQuantity(),
+                    detalleDto.getPrecioUnitario(),
+                    detalleDto.getPrecioUnitario(),
+                    "VC",
+                    "Venta a cliente: " + cliente.getNombre() + " " + cliente.getApellido(),
+                    registroDto.getUsuarioUsername(),
+                    "VENTA-" + ventaGuardada.getId()
+                );
             }
-
-            VentaDetalle detalle = new VentaDetalle(
-                ventaGuardada, producto, detalleDto.getCantidad(), detalleDto.getPrecioUnitario());
-            detalles.add(detalle);
-
-            // Actualizar inventario
-            int cantidadInicial = producto.getQuantity();
-            producto.setQuantity(producto.getQuantity() - detalleDto.getCantidad());
-            productRepository.save(producto);
-
-            // Auditoría
-            auditoriaService.registrarMovimiento(
-                producto.getId(),
-                cantidadInicial,
-                producto.getQuantity(),
-                detalleDto.getPrecioUnitario(),
-                detalleDto.getPrecioUnitario(),
-                "VC",
-                "Venta a cliente: " + cliente.getNombre() + " " + cliente.getApellido(),
-                registroDto.getUsuarioUsername(),
-                "VENTA-" + ventaGuardada.getId()
-            );
         }
 
         ventaGuardada.setDetalles(detalles);
@@ -196,13 +224,31 @@ public class VentasService {
     private VentaDto convertirADto(Venta venta) {
         List<VentaDetalleDto> detallesDto = venta.getDetalles() != null
             ? venta.getDetalles().stream()
-                .map(d -> new VentaDetalleDto(
-                    d.getProduct().getId(),
-                    d.getProduct().getName(),
-                    d.getCantidad(),
-                    d.getPrecioUnitario(),
-                    d.getSubtotal()
-                ))
+                .map(d -> {
+                    String tipoItem = d.getTipoItem() != null ? d.getTipoItem() : "PRODUCTO";
+                    if ("SERVICIO".equals(tipoItem) && d.getServicio() != null) {
+                        // Línea de servicio técnico
+                        return new VentaDetalleDto(
+                            null, null,
+                            d.getServicio().getId(),
+                            d.getServicio().getNombre(),
+                            "SERVICIO",
+                            d.getCantidad(), d.getPrecioUnitario(), d.getSubtotal());
+                    } else if (d.getProduct() != null) {
+                        // Línea de producto físico
+                        return new VentaDetalleDto(
+                            d.getProduct().getId(),
+                            d.getProduct().getName(),
+                            null, null,
+                            "PRODUCTO",
+                            d.getCantidad(), d.getPrecioUnitario(), d.getSubtotal());
+                    } else {
+                        // Datos inconsistentes — devolver vacío con lo que haya
+                        return new VentaDetalleDto(null, "(ítem desconocido)",
+                            null, null, tipoItem,
+                            d.getCantidad(), d.getPrecioUnitario(), d.getSubtotal());
+                    }
+                })
                 .collect(Collectors.toList())
             : java.util.Collections.emptyList();
 

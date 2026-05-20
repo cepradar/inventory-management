@@ -20,10 +20,10 @@ public class CategoryProductInitializer {
             }
             if (!categoryProductRepository.findById("U").isPresent()) {
                 categoryProductRepository.save(new CategoryProduct("U","REPUESTOS USADOS","USADOS"));
-            }
+            }/*
             if (!categoryProductRepository.findById("S").isPresent()) {
                 categoryProductRepository.save(new CategoryProduct("S","SERVICIOS","SERVICIOS"));
-            }
+            } */
         };
     }
 }

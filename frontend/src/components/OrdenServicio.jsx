@@ -42,6 +42,9 @@ export default function OrdenServicio() {
   const [ordenesParaEntregar, setOrdenesParaEntregar] = useState([]);
   const [selectedOrdenEntregarId, setSelectedOrdenEntregarId] = useState("");
 
+  // Servicios activos para dropdown de tipoServicio
+  const [serviciosActivos, setServiciosActivos] = useState([]);
+
   // Estado para el panel de venta en "Responder Orden"
   const [productos, setProductos] = useState([]);
   const [ventaItems, setVentaItems] = useState([]);
@@ -72,7 +75,18 @@ export default function OrdenServicio() {
   useEffect(() => {
     cargarOrdenes();
     cargarTecnicos();
+    cargarServiciosActivos();
   }, []);
+
+  const cargarServiciosActivos = async () => {
+    try {
+      const response = await api.get("/api/servicios/activos");
+      const data = Array.isArray(response.data) ? response.data : [];
+      setServiciosActivos(data);
+    } catch (err) {
+      console.error("Error al cargar servicios activos:", err);
+    }
+  };
 
   const cargarOrdenes = async () => {
     try {
@@ -757,9 +771,18 @@ export default function OrdenServicio() {
                       onChange={handleInputChange}
                       className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                     >
-                      <option value="REPARACION">Reparación</option>
-                      <option value="MANTENIMIENTO">Mantenimiento</option>
-                      <option value="DIAGNOSTICO">Diagnóstico</option>
+                      {serviciosActivos.length > 0 ? (
+                        serviciosActivos.map((s) => (
+                          <option key={s.id} value={s.nombre}>{s.nombre}</option>
+                        ))
+                      ) : (
+                        // Fallback mientras cargan los servicios
+                        <>
+                          <option value="REPARACION">Reparación</option>
+                          <option value="MANTENIMIENTO">Mantenimiento</option>
+                          <option value="DIAGNOSTICO">Diagnóstico</option>
+                        </>
+                      )}
                     </select>
                   </div>
 

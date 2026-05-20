@@ -89,7 +89,12 @@ public class PermisosInitializer {
         new String[]{"reports.toggle",   "Activar/Desactivar plantillas","config","reports", "toggle"},
         new String[]{"reports.delete",   "Eliminar plantillas",      "config", "reports", "delete"},
         new String[]{"reports.export",   "Exportar reportes",        "config", "reports", "export"},
-        new String[]{"reports.preview",  "Vista previa de reportes", "config", "reports", "preview"}
+        new String[]{"reports.preview",  "Vista previa de reportes", "config", "reports", "preview"},
+        // services — dominio independiente de servicios técnicos
+        new String[]{"services.read",   "Ver servicios",      "services", null, "read"},
+        new String[]{"services.create", "Crear servicios",    "services", null, "create"},
+        new String[]{"services.update", "Editar servicios",   "services", null, "update"},
+        new String[]{"services.delete", "Eliminar servicios", "services", null, "delete"}
     );
 
     /** Permisos asignados por defecto a cada rol */
@@ -100,6 +105,7 @@ public class PermisosInitializer {
                            "orders.read", "orders.create", "orders.update", "orders.assign_tech",
                            "orders.pdf", "audit.read",
                            "reports.read", "reports.preview",
+                           "services.read",
                            "config.user-types.read", "config.appliance-cat.read", "config.product-cat.read"),
         "CLIENTE", List.of("inventory.read", "orders.read", "sales.read")
     );
